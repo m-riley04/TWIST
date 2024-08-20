@@ -1,0 +1,6 @@
+@TWIST.Server_HostAddress = http://localhost:5157
+
+GET {{TWIST.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
