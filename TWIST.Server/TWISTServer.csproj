@@ -28,11 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Database\DataAccessors\" />
     <Folder Include="Models\" />
     <Folder Include="Hubs\" />
     <Folder Include="Helpers\" />
-    <Folder Include="Database\Records\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
