@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace TWIST.Server.Controllers
+namespace TWISTServer.Controllers
 {
     [ApiController]
     [Route("[controller]")]

@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35208.52
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWIST.Server", "TWIST.Server\TWIST.Server.csproj", "{87322F08-CA97-4708-B6FD-2466557AF20A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWISTServer", "TWIST.Server\TWISTServer.csproj", "{87322F08-CA97-4708-B6FD-2466557AF20A}"
 EndProject
-Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "twist.client", "twist.client\twist.client.esproj", "{015E2C0E-1D05-4AED-81A0-715827E88934}"
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "twistclient", "twist.client\twistclient.esproj", "{015E2C0E-1D05-4AED-81A0-715827E88934}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWISTUnitTests", "UnitTestProject1\TWISTUnitTests.csproj", "{F5F4E2D1-2EB2-43E3-8FEB-5AC9D2555E0C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,6 +25,10 @@ Global
 		{015E2C0E-1D05-4AED-81A0-715827E88934}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{015E2C0E-1D05-4AED-81A0-715827E88934}.Release|Any CPU.Build.0 = Release|Any CPU
 		{015E2C0E-1D05-4AED-81A0-715827E88934}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{F5F4E2D1-2EB2-43E3-8FEB-5AC9D2555E0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5F4E2D1-2EB2-43E3-8FEB-5AC9D2555E0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5F4E2D1-2EB2-43E3-8FEB-5AC9D2555E0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5F4E2D1-2EB2-43E3-8FEB-5AC9D2555E0C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
