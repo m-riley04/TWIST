@@ -1,4 +1,4 @@
-namespace TWIST.Server
+namespace TWISTServer
 {
     public class WeatherForecast
     {

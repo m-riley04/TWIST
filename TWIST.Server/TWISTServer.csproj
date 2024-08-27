@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,6 +7,10 @@
     <SpaRoot>..\twist.client</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
+    <UserSecretsId>6e444bdd-8e50-4b4d-9f0c-27c38f6263ab</UserSecretsId>
+    <Title>TWIST Server</Title>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/m-riley04/TWIST</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,12 +18,22 @@
       <Version>8.*-*</Version>
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\twist.client\twist.client.esproj">
+    <ProjectReference Include="..\twist.client\twistclient.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Database\DataAccessors\" />
+    <Folder Include="Models\" />
+    <Folder Include="Hubs\" />
+    <Folder Include="Helpers\" />
+    <Folder Include="Database\Records\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
