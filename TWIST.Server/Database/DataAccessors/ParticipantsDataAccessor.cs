@@ -33,7 +33,7 @@ participant_id = @participant_id;";
         public IEnumerable<ParticipantRecord> GetParticipantsByTeam(int teamId)
         {
             string sql = @"select 
-participant_id, team_id, role, user_id from participants, simulation_id, username 
+participant_id, team_id, role, user_id, simulation_id, username from participants
 WHERE 
 team_id = @team_id;";
             return Database.Query(
@@ -48,9 +48,9 @@ team_id = @team_id;";
         public IEnumerable<ParticipantRecord> GetParticipantsBySimulation(int simulationId)
         {
             string sql = @"select 
-participant_id, team_id, role, user_id from participants, simulation_id, username 
+participant_id, team_id, role, user_id, simulation_id, username from participants
 WHERE 
-team_id = @team_id;";
+simulation_id = @simulation_id;";
             return Database.Query(
                 sql,
                 ParticipantRecord.FromRow,

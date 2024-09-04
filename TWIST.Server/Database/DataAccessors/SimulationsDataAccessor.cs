@@ -42,7 +42,7 @@ VALUES
 
             SqlParameter[] parameters = [
                 new("@name", SqlDbType.NVarChar, -1) { Value = simulation.Name },
-                new("@participants", SqlDbType.DateTime) { Value = simulation.Participants },
+                new("@participants", SqlDbType.NVarChar, -1) { Value = simulation.Participants },
                 new("@start_date", SqlDbType.DateTime, 64) { Value = simulation.StartDate },
                 new("@end_date", SqlDbType.DateTime) { Value = simulation.EndDate},
                 new("@active", SqlDbType.Bit) { Value = simulation.Active },
