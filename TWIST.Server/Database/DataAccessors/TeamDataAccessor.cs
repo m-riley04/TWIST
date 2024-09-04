@@ -7,8 +7,6 @@ namespace TWISTServer.Database.DataAccessors
 {
     public class TeamDataAccessor : DataAccessor
     {
-        public TeamDataAccessor() { }
-
         public IEnumerable<TeamRecord> GetAllTeams()
         {
             string sql = $"select team_id, simulation_id, country, interest_group, members from teams;";

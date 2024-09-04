@@ -7,8 +7,6 @@ namespace TWISTServer.Database.DataAccessors
 {
     public class UserDataAccessor : DataAccessor
     {
-        public UserDataAccessor() { }
-
         public IEnumerable<UserRecord> GetAllUsers()
         {
             string sql = $"select user_id, email, username, password_hash, avatar_uri, type, creation_date, modification_date, login_date from users;";

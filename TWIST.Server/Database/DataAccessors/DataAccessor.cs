@@ -3,5 +3,7 @@
     public class DataAccessor
     {
         public readonly Database Database = new();
+
+        public DataAccessor() { }
     }
 }

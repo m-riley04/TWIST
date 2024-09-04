@@ -7,7 +7,6 @@ namespace TWISTServer.Database.DataAccessors
 {
     public class SimulationsDataAccessor : DataAccessor
     {
-        public SimulationsDataAccessor() { }
 
         public IEnumerable<SimulationRecord> GetAllSimulations()
         {
