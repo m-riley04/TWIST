@@ -18,25 +18,43 @@ namespace TWISTServer.Database.DataAccessors
             );
         }
 
+        public IEnumerable<UserRecord> GetUser(int userId)
+        {
+            string sql = @"select 
+user_id, email, username, password_hash, avatar_uri, type, creation_date, modification_date, login_date 
+from 
+users
+WHERE
+user_id = @user_id;";
+            return Database.Query(
+                sql,
+                UserRecord.FromRow,
+                [
+                    new("@user_id", SqlDbType.Int) { Value = userId },
+                ]
+            );
+        }
+
         public int InsertUser(UserRecord user)
         {
-            string sql = $"insert into users (email, username, password_hash, avatar_uri, type, creation_date, modification_date, login_date) " +
-                $"values (@email, @username, @password_hash, @avatar_uri, @type, @creation_date, @modification_date, @login_date)";
+            string sql = @"
+INSERT INTO users 
+(email, username, password_hash, avatar_uri, type, creation_date, modification_date, login_date) 
+VALUES 
+(@email, @username, @password_hash, @avatar_uri, @type, @creation_date, @modification_date, @login_date)";
 
-            return Database.NonQuery(
-                sql,
-                new SqlParameter[]
-                {
-                    new SqlParameter("@email", SqlDbType.NVarChar, 100) { Value = user.Email },
-                    new SqlParameter("@username", SqlDbType.NVarChar, 50) { Value = user.Username },
-                    new SqlParameter("@password_hash", SqlDbType.NVarChar, 64) { Value = user.PasswordHash },
-                    new SqlParameter("@avatar_uri", SqlDbType.NVarChar, 200) { Value = user.AvatarUri},
-                    new SqlParameter("@type", SqlDbType.Int) { Value = user.Type },
-                    new SqlParameter("@creation_date", SqlDbType.DateTime) { Value = user.CreationDate },
-                    new SqlParameter("@modification_date", SqlDbType.DateTime) { Value = user.ModificationDate },
-                    new SqlParameter("@login_date", SqlDbType.DateTime) { Value = user.LoginDate }
-                }
-            );
+            SqlParameter[] parameters = [
+                new("@email", SqlDbType.NVarChar, -1) { Value = user.Email },
+                new("@username", SqlDbType.NVarChar, -1) { Value = user.Username },
+                new("@password_hash", SqlDbType.NVarChar, 64) { Value = user.PasswordHash },
+                new("@avatar_uri", SqlDbType.NVarChar, -1) { Value = user.AvatarUri},
+                new("@type", SqlDbType.Int) { Value = user.Type },
+                new("@creation_date", SqlDbType.DateTime) { Value = user.CreationDate },
+                new("@modification_date", SqlDbType.DateTime) { Value = user.ModificationDate },
+                new("@login_date", SqlDbType.DateTime) { Value = user.LoginDate }
+            ];
+
+            return Database.NonQuery(sql, parameters);
         }
     }
 }

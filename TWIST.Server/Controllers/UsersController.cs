@@ -24,6 +24,13 @@ namespace TWISTServer.Controllers
             return dataAccessor.GetAllUsers();
         }
 
+        [HttpGet]
+        [Route("{id}")]
+        public IEnumerable<UserRecord> GetUser([FromRoute] int id)
+        {
+            return dataAccessor.GetUser(id);
+        }
+
         [HttpPut]
         [Route("")]
         public JsonResult Put([FromBody] UserRecord user)
