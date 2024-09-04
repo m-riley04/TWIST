@@ -16,6 +16,21 @@ namespace TWISTServer.Database.DataAccessors
             );
         }
 
+        public IEnumerable<ResponseRecord> GetResponsesByType(SurveyTypeEnum type)
+        {
+            string sql = @"select 
+response_id, participant_id, simulation_id, survey_type, responses, submission_date 
+FROM responses
+WHERE survey_type = @survey_type;";
+            return Database.Query(
+                sql,
+                ResponseRecord.FromRow,
+                [
+                    new("@survey_type", SqlDbType.Int) { Value = type },
+                ]
+            );
+        }
+
         public IEnumerable<ResponseRecord> GetResponse(int responseId)
         {
             string sql = @"select 
