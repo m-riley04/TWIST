@@ -46,6 +46,38 @@ simulation_id = @simulation_id;";
             );
         }
 
+        public IEnumerable<AskRecord> GetAsksByTeam(int teamId)
+        {
+            string sql = @"select 
+ask_id, team_id, simulation_id, description, points, status from asks 
+WHERE 
+team_id = @team_id;";
+            return Database.Query(
+                sql,
+                AskRecord.FromRow,
+                [
+                    new("@team_id", SqlDbType.Int) { Value = teamId },
+                ]
+            );
+        }
+
+        public IEnumerable<AskRecord> GetAsksBySimulationAndTeam(int simulationId, int teamId)
+        {
+            string sql = @"select 
+ask_id, team_id, simulation_id, description, points, status from asks 
+WHERE 
+simulation_id = @simulation_id AND
+team_id = @team_id;";
+            return Database.Query(
+                sql,
+                AskRecord.FromRow,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                    new("@team_id", SqlDbType.Int) { Value = teamId },
+                ]
+            );
+        }
+
         public int InsertAsk(AskRecord ask)
         {
             string sql = @"

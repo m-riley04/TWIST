@@ -46,6 +46,38 @@ simulation_id = @simulation_id;";
             );
         }
 
+        public IEnumerable<ConcessionRecord> GetConcessionsByTeam(int teamId)
+        {
+            string sql = @"select 
+concession_id, team_id, simulation_id, description, points, status from concessions 
+WHERE 
+team_id = @team_id;";
+            return Database.Query(
+                sql,
+                ConcessionRecord.FromRow,
+                [
+                    new("@team_id", SqlDbType.Int) { Value = teamId },
+                ]
+            );
+        }
+
+        public IEnumerable<ConcessionRecord> GetConcessionsBySimulationAndTeam(int simulationId, int teamId)
+        {
+            string sql = @"select 
+concession_id, team_id, simulation_id, description, points, status from concessions 
+WHERE 
+simulation_id = @simulation_id AND
+team_id = @team_id;";
+            return Database.Query(
+                sql,
+                ConcessionRecord.FromRow,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                    new("@team_id", SqlDbType.Int) { Value = teamId },
+                ]
+            );
+        }
+
         public int InsertConcession(ConcessionRecord concession)
         {
             string sql = @"
