@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using TWISTServer.Enums;
 
-namespace TWISTServer.Database.Records
+namespace TWISTServer.DatabaseComponents.Records
 {
     public record DocumentRecord(int DocumentId, int SimulationId, int TeamId, DocumentTypeEnum Type, 
         string Body, string Editors, DateTime CreationDate, DateTime ModifiedDate)

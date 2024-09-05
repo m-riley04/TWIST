@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using TWISTServer.Enums;
 
-namespace TWISTServer.Database.Records
+namespace TWISTServer.DatabaseComponents.Records
 {
     public record TeamRecord(int TeamId, int SimulationId, CountryEnum Country, InterestGroupEnum InterestGroup, string Members)
     {

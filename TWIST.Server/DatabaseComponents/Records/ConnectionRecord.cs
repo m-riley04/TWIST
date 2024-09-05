@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace TWISTServer.Database.Records
+namespace TWISTServer.DatabaseComponents.Records
 {
     public record ConnectionRecord(int ConnectionId, int SimulationId, string Participants, string SessionDescription, string IceCandidates)
     {

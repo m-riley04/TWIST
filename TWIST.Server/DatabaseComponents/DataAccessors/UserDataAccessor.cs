@@ -1,9 +1,9 @@
 ﻿using System.Data.SqlTypes;
-using TWISTServer.Database.Records;
+using TWISTServer.DatabaseComponents.Records;
 using System.Data;
 using System.Data.SqlClient;
 
-namespace TWISTServer.Database.DataAccessors
+namespace TWISTServer.DatabaseComponents.DataAccessors
 {
     public class UserDataAccessor : DataAccessor
     {

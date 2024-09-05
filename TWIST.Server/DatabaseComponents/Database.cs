@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Data.SqlClient;
 
-namespace TWISTServer.Database
+namespace TWISTServer.DatabaseComponents
 {
     /// <summary>
     /// Acts as an abstracted version of the database. Makes it easier so that we don't have to make direct SQLConnection calls.
@@ -67,7 +67,7 @@ namespace TWISTServer.Database
         public int ConnectionTimeout = 30;
 
         /// <summary>
-        /// The full connection string combining all properties of the Database class
+        /// The full connection string combining all properties of the DatabaseComponents class
         /// </summary>
         public string ConnectionString
         {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TWISTServer.Database.DataAccessors;
-using TWISTServer.Database.Records;
+using TWISTServer.DatabaseComponents.DataAccessors;
+using TWISTServer.DatabaseComponents.Records;
 using TWISTServer.Enums;
 
 namespace TWISTServer.Controllers

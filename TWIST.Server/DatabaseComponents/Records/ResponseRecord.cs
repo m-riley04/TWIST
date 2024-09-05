@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using TWISTServer.Enums;
 
-namespace TWISTServer.Database.Records
+namespace TWISTServer.DatabaseComponents.Records
 {
     public record ResponseRecord(int ResponseId, int ParticipantId, int SimulationId, SurveyTypeEnum SurveyType, string Responses, DateTime SubmissionDate)
     {

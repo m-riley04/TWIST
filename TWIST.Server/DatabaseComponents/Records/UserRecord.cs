@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using TWISTServer.Enums;
 
-namespace TWISTServer.Database.Records
+namespace TWISTServer.DatabaseComponents.Records
 {
     public record UserRecord(int UserId, string Email, string Username, string PasswordHash, string? AvatarUri, 
         UserType Type, DateTime CreationDate, DateTime ModificationDate, DateTime LoginDate)

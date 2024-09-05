@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics.Eventing.Reader;
-using TWISTServer.Database.DataAccessors;
-using TWISTServer.Database.Records;
+using TWISTServer.DatabaseComponents.DataAccessors;
+using TWISTServer.DatabaseComponents.Records;
 
 namespace TWISTServer.Controllers
 {
