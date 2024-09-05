@@ -1,4 +1,5 @@
-﻿using TWISTServer.DatabaseComponents;
+﻿using System.Data;
+using TWISTServer.DatabaseComponents;
 
 namespace TWISTServer.Interfaces
 {
@@ -7,7 +8,7 @@ namespace TWISTServer.Interfaces
     /// </summary>
     /// <remarks>For our use case, the tables this will work with are for tables that a) have a primary key, and b) increment that primary key column. </remarks>
     /// <typeparam name="T">The type of record that is used to transfer data.</typeparam>
-    public interface IDataAccessor<T>
+    public interface IDataAccessor<T> where T : IDatabaseRecord<T>
     {
         /// <summary>
         /// The database object that will be recieving and handling all SQL calls.
@@ -25,23 +26,29 @@ namespace TWISTServer.Interfaces
         public abstract string TableName { get; }
 
         /// <summary>
-        /// A dictionary representing the columns of the table, with the column name as the key and the column type as the value.
+        /// Gets a single row from the table (<see cref="TableName"/>) using the table's primary key (<see cref="PrimaryKeyColumn"/>) as an enumerable of records, where the record is of type <typeparamref name="T"/>
         /// </summary>
-        /// <remarks>The primary key column <b><i>must</i></b> be the first item in the dictionary, and should match that of the associated record. It is advised to have the items in-order.</remarks>
-        public abstract Dictionary<string, Type> Columns { get; }
+        /// <param name="id">The primary key value of the record</param>
+        /// <returns></returns>
+        public abstract IEnumerable<T> Get(int id);
 
+        /// <summary>
+        /// Gets all the rows of a table (<see cref="TableName"/>) as an enumerable of records, where the record is of type <typeparamref name="T"/>
+        /// </summary>
+        /// <returns></returns>
+        public abstract IEnumerable<T> GetAll();
 
         /// <summary>
         /// Inserts a single row into the table (<ref cref="TableName"/>) given the 
         /// </summary>
         /// <param name="record">A record holding the data to insert. The primary key value is ignored.</param>
-        /// <returns></returns>
+        /// <returns>The number of columns affected by the insertion. -1 if there was an error.</returns>
         public abstract int Insert(T record);
 
         /// <summary>
         /// Deletes a single row from a table <see cref="TableName"/> given an ID based on the primary key <see cref="PrimaryKeyColumn"/>, which is a NOT NULL INT
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">The primary key value of the record</param>
         /// <returns>The number of columns affected by the deletion. -1 if there was an error.</returns>
         public abstract int Delete(int id); 
 
