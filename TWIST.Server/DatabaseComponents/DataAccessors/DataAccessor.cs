@@ -8,6 +8,10 @@ using System.Text;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
+    /// <summary>
+    /// An extra layer of abstraction between the database (through raw SQL) and the higher-level code.
+    /// </summary>
+    /// <typeparam name="T">The database record type that the data accessor will be responsible for retrieving</typeparam>
     public abstract class DataAccessor<T> : IDataAccessor<T> where T : IDatabaseRecord<T>
     {
         public DataAccessor() { }

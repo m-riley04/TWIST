@@ -4,7 +4,8 @@ using TWISTServer.Interfaces;
 
 namespace TWISTServer.DatabaseComponents.Records
 {
-    public record SimulationRecord(int SimulationId, string Name, string Participants, DateTime StartDate, DateTime EndDate, bool Active) : IDatabaseRecord<SimulationRecord>
+    public record SimulationRecord(int SimulationId, string Name, string Participants, 
+        DateTime StartDate, DateTime EndDate, bool Active) : IDatabaseRecord<SimulationRecord>
     {
         public static Dictionary<string, SqlDbType> Columns { get; } = new Dictionary<string, SqlDbType>()
         {
