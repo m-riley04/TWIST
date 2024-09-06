@@ -19,7 +19,7 @@ namespace TWISTServer.Controllers
         {
             if (id.HasValue)
             {
-                return dataAccessor.GetParticipant(id.Value);
+                return dataAccessor.Get(id.Value);
             }
 
             if (simulationId.HasValue)
@@ -32,7 +32,7 @@ namespace TWISTServer.Controllers
                 return dataAccessor.GetParticipantsByTeam(teamId.Value);
             }
 
-            return dataAccessor.GetAllParticipants();
+            return dataAccessor.GetAll();
         }
 
         [HttpPut]

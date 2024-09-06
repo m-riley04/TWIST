@@ -18,17 +18,17 @@ namespace TWISTServer.Controllers
         {
             if (id.HasValue)
             {
-                return dataAccessor.GetSimulation(id.Value);
+                return dataAccessor.Get(id.Value);
             }
 
-            return dataAccessor.GetAllSimulations();
+            return dataAccessor.GetAll();
         }
 
         [HttpPut]
         [Route("")]
         public JsonResult AddSimulation([FromBody] SimulationRecord simulation)
         {
-            dataAccessor.InsertSimulation(simulation);
+            dataAccessor.Insert(simulation);
             return new JsonResult($"Successfully added simulation {simulation.Name}.");
         }
     }

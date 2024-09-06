@@ -5,16 +5,10 @@ using TWISTServer.Enums;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
-    public class ResponsesDataAccessor : DataAccessor
+    public class ResponsesDataAccessor : DataAccessor<ResponseRecord>
     {
-        public IEnumerable<ResponseRecord> GetAllResponses()
-        {
-            string sql = $"select response_id, participant_id, simulation_id, survey_type, responses, submission_date from responses;";
-            return Database.Query(
-                sql,
-                ResponseRecord.FromRow
-            );
-        }
+        public override string PrimaryKeyColumn => "response_id";
+        public override string TableName => "responses";
 
         public IEnumerable<ResponseRecord> GetResponsesByType(SurveyTypeEnum type)
         {
@@ -27,21 +21,6 @@ WHERE survey_type = @survey_type;";
                 ResponseRecord.FromRow,
                 [
                     new("@survey_type", SqlDbType.Int) { Value = type },
-                ]
-            );
-        }
-
-        public IEnumerable<ResponseRecord> GetResponse(int responseId)
-        {
-            string sql = @"select 
-response_id, participant_id, simulation_id, survey_type, responses, submission_date
-FROM responses WHERE 
-response_id = @response_id;";
-            return Database.Query(
-                sql,
-                ResponseRecord.FromRow,
-                [
-                    new("@response_id", SqlDbType.Int) { Value = responseId },
                 ]
             );
         }
@@ -76,25 +55,6 @@ survey_type = @survey_type;";
                     new("@survey_type", SqlDbType.Int) { Value = surveyType },
                 ]
             );
-        }
-
-        public int InsertResponse(ResponseRecord response)
-        {
-            string sql = @"
-INSERT INTO responses 
-(participant_id, simulation_id, survey_type, responses, submission_date) 
-VALUES 
-(@participant_id, @simulation_id, @survey_type, @responses, @submission_date)";
-
-            SqlParameter[] parameters = [
-                new("@participant_id", SqlDbType.Int) { Value = response.ParticipantId },
-                new("@simulation_id", SqlDbType.Int) { Value = response.SimulationId },
-                new("@survey_type", SqlDbType.Int) { Value = response.SurveyType },
-                new("@responses", SqlDbType.NVarChar, -1) { Value = response.Responses},
-                new("@submission_date", SqlDbType.DateTime) { Value = response.SubmissionDate},
-            ];
-
-            return Database.NonQuery(sql, parameters);
         }
     }
 }

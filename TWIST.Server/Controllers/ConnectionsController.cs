@@ -18,17 +18,17 @@ namespace TWISTServer.Controllers
         {
             if (id.HasValue)
             {
-                return dataAccessor.GetConnection(id.Value);
+                return dataAccessor.Get(id.Value);
             }
 
-            return dataAccessor.GetAllConnections();
+            return dataAccessor.GetAll();
         }
 
         [HttpPut]
         [Route("")]
         public JsonResult AddMessage([FromBody] ConnectionRecord connection)
         {
-            dataAccessor.InsertConnection(connection);
+            dataAccessor.Insert(connection);
             return new JsonResult($"Successfully added connection (for simulation #{connection.SimulationId}).");
         }
     }

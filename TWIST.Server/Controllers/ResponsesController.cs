@@ -19,10 +19,10 @@ namespace TWISTServer.Controllers
         {
             if (id.HasValue)
             {
-                return dataAccessor.GetResponse(id.Value);
+                return dataAccessor.Get(id.Value);
             }
 
-            return dataAccessor.GetAllResponses();
+            return dataAccessor.GetAll();
         }
 
         [HttpGet]
@@ -43,7 +43,7 @@ namespace TWISTServer.Controllers
         [Route("")]
         public JsonResult AddResponse([FromBody] ResponseRecord response)
         {
-            dataAccessor.InsertResponse(response);
+            dataAccessor.Insert(response);
             return new JsonResult($"Successfully added response (Type = {response.SurveyType}).");
         }
     }

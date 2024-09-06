@@ -1,10 +1,21 @@
 ﻿using System.Data;
 using TWISTServer.Enums;
+using TWISTServer.Interfaces;
 
 namespace TWISTServer.DatabaseComponents.Records
 {
-    public record ParticipantRecord(int ParticipantId, int TeamId, ParticipantRoleEnum Role, int? UserId, int SimulationId, string Username)
+    public record ParticipantRecord(int ParticipantId, int TeamId, ParticipantRoleEnum Role, int? UserId, int SimulationId, string Username) : IDatabaseRecord<ParticipantRecord>
     {
+
+        public static Dictionary<string, SqlDbType> Columns { get; } = new Dictionary<string, SqlDbType>()
+        {
+            { "participant_id", SqlDbType.Int },
+            { "team_id", SqlDbType.Int },
+            { "role", SqlDbType.Int },
+            { "user_id", SqlDbType.Int },
+            { "simulation_id", SqlDbType.Int },
+            { "username", SqlDbType.NVarChar },
+        };
         public static ParticipantRecord FromRow(DataRow row)
         {
             return new ParticipantRecord(

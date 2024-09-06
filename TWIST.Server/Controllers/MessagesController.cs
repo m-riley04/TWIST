@@ -18,17 +18,17 @@ namespace TWISTServer.Controllers
         {
             if (id.HasValue)
             {
-                return dataAccessor.GetMessage(id.Value);
+                return dataAccessor.Get(id.Value);
             }
 
-            return dataAccessor.GetAllMessages();
+            return dataAccessor.GetAll();
         }
 
         [HttpPut]
         [Route("")]
         public JsonResult AddMessage([FromBody] MessageRecord message)
         {
-            dataAccessor.InsertMessage(message);
+            dataAccessor.Insert(message);
             return new JsonResult($"Successfully added message (from participant #{message.ParticipantId}).");
         }
     }

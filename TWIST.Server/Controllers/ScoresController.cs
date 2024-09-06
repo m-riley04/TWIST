@@ -18,17 +18,17 @@ namespace TWISTServer.Controllers
         {
             if (id.HasValue)
             {
-                return dataAccessor.GetScore(id.Value);
+                return dataAccessor.Get(id.Value);
             }
 
-            return dataAccessor.GetAllScores();
+            return dataAccessor.GetAll();
         }
 
         [HttpPut]
         [Route("")]
         public JsonResult AddScore([FromBody] ScoreRecord score)
         {
-            dataAccessor.InsertScore(score);
+            dataAccessor.Insert(score);
             return new JsonResult($"Successfully added score of value {score.TotalScore}).");
         }
     }

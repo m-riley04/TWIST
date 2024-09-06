@@ -27,7 +27,7 @@ namespace TWISTServer.Controllers
             // Check for ID
             if (id.HasValue)
             {
-                return asksAccessor.GetAsk(id.Value);
+                return asksAccessor.Get(id.Value);
             }
 
             // Check for team ID
@@ -36,7 +36,7 @@ namespace TWISTServer.Controllers
                 return asksAccessor.GetAsksByTeam(teamId.Value);
             }
 
-            return asksAccessor.GetAllAsks();
+            return asksAccessor.GetAll();
         }
 
         [HttpGet]
@@ -52,7 +52,7 @@ namespace TWISTServer.Controllers
             // Check for ID
             if (id.HasValue)
             {
-                return concessionsAccessor.GetConcession(id.Value);
+                return concessionsAccessor.Get(id.Value);
             }
 
             // Check for team ID
@@ -61,14 +61,14 @@ namespace TWISTServer.Controllers
                 return concessionsAccessor.GetConcessionsByTeam(teamId.Value);
             }
 
-            return concessionsAccessor.GetAllConcessions();
+            return concessionsAccessor.GetAll();
         }
 
         [HttpPut]
         [Route("asks")]
         public JsonResult AddAsk([FromBody] AskRecord ask)
         {
-            asksAccessor.InsertAsk(ask);
+            asksAccessor.Insert(ask);
             return new JsonResult($"Successfully added ask (TeamId = {ask.TeamId})");
         }
 
@@ -76,7 +76,7 @@ namespace TWISTServer.Controllers
         [Route("concessions")]
         public JsonResult AddConcession([FromBody] ConcessionRecord concession)
         {
-            concessionsAccessor.InsertConcession(concession);
+            concessionsAccessor.Insert(concession);
             return new JsonResult($"Successfully added ask (TeamId = {concession.TeamId})");
         }
     }

@@ -2,27 +2,78 @@
 using System.Data;
 using TWISTServer.Interfaces;
 using TWISTServer.DatabaseComponents.Records;
+using System.Reflection;
+using TWISTServer.Extensions;
+using System.Text;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
-    public abstract class DataAccessor<T> : IDataAccessor<T>
+    public abstract class DataAccessor<T> : IDataAccessor<T> where T : IDatabaseRecord<T>
     {
-        public Database Database { get; } = new();
-
-        public virtual string PrimaryKeyColumn { get; } = "";
-        public virtual string TableName { get; } = "";
-
-        public virtual Dictionary<string, Type> Columns { get; } = new();
-
         public DataAccessor() { }
 
-        ///<inheritdoc/>///
-        public virtual int Insert(T record)
-        {
+        public Database Database { get; } = new();
 
+        public abstract string PrimaryKeyColumn { get; }
+        public abstract string TableName { get; }
+
+        //<inheritdoc/>
+        public virtual IEnumerable<T> Get(int id)
+        {
+            string sql = @$"SELECT {GetColumnsAsSql(T.Columns.Keys)} FROM {TableName} WHERE {PrimaryKeyColumn} = @{PrimaryKeyColumn};";
+            return Database.Query<T>(
+                sql,
+                T.FromRow,
+                [
+                    new($"@{PrimaryKeyColumn}", SqlDbType.Int) { Value = id },
+                ]
+            );
         }
 
-        ///<inheritdoc/>///
+        //<inheritdoc/>
+        public virtual IEnumerable<T> GetAll()
+        {
+            string sql = @$"SELECT {GetColumnsAsSql(T.Columns.Keys)} FROM {TableName};";
+            return Database.Query<T>(
+                sql,
+                T.FromRow
+            );
+        }
+
+        //<inheritdoc/>
+        public virtual int Insert(T record)
+        {
+            PropertyInfo[] recordProperties = record.GetType().GetProperties();
+            Dictionary<string, object?> columnNameValueDict = new();
+
+            // Go through and get the values of each column for the record
+            for (int i = 0; i < recordProperties.Length; i++)
+            {
+                var pName = recordProperties[i].Name.ToSnakeCase();
+                var pValue = recordProperties[i].GetValue(record);
+                Console.WriteLine($"{pName} = {pValue}");
+
+                columnNameValueDict.Add(pName, pValue);
+            }
+
+            // Create the SQL text input
+            string sql = $@"
+INSERT INTO {TableName} 
+({GetColumnsAsSql(T.Columns.Keys.Skip(1))}) 
+VALUES ({GetColumnsAsSql(T.Columns.Keys.Skip(1), "@")});";
+
+            // Construct the list of parameters
+            List<SqlParameter> parameters = new();
+            foreach (string columnName in T.Columns.Keys)
+            {
+                parameters.Add(new($"@{columnName}", T.Columns[columnName]) { Value = columnNameValueDict[columnName] });
+            }
+
+            // Call to the database
+            return Database.NonQuery(sql, parameters.ToArray());
+        }
+
+        //<inheritdoc/>
         public virtual int Delete(int id)
         {
             // Check if the primary key column is empty
@@ -44,6 +95,17 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
             ];
 
             return Database.NonQuery(sql, parameters);
+        }
+
+        /// <summary>
+        /// Transforms database columns into a single, comma-seperated string
+        /// </summary>
+        /// <param name="columns">An array of the column names</param>
+        /// <param name="prefix">A substring that will go before each column name in the string.</param>
+        /// <returns></returns>
+        private string GetColumnsAsSql(IEnumerable<string> columns, string prefix="")
+        {
+            return String.Join(",", columns.Select(s => prefix + s));
         }
     }
 }

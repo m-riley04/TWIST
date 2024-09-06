@@ -4,31 +4,10 @@ using TWISTServer.DatabaseComponents.Records;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
-    public class ParticipantsDataAccessor : DataAccessor
+    public class ParticipantsDataAccessor : DataAccessor<ParticipantRecord>
     {
-        public IEnumerable<ParticipantRecord> GetAllParticipants()
-        {
-            string sql = $"select participant_id, team_id, role, user_id, simulation_id, username from participants;";
-            return Database.Query(
-                sql,
-                ParticipantRecord.FromRow
-            );
-        }
-
-        public IEnumerable<ParticipantRecord> GetParticipant(int participantId)
-        {
-            string sql = @"select 
-participant_id, team_id, role, user_id, simulation_id, username 
-from participants WHERE 
-participant_id = @participant_id;";
-            return Database.Query(
-                sql,
-                ParticipantRecord.FromRow,
-                [
-                    new("@participant_id", SqlDbType.Int) { Value = participantId },
-                ]
-            );
-        }
+        public override string PrimaryKeyColumn => "participant_id";
+        public override string TableName => "participants";
 
         public IEnumerable<ParticipantRecord> GetParticipantsByTeam(int teamId)
         {
@@ -58,38 +37,6 @@ simulation_id = @simulation_id;";
                     new("@simulation_id", SqlDbType.Int) { Value = simulationId },
                 ]
             );
-        }
-
-        public int Insert(ParticipantRecord participant)
-        {
-            string sql = @"
-INSERT INTO participants 
-(team_id, role, user_id, simulation_id, username) 
-VALUES 
-(@team_id, @role, @user_id, @simulation_id, @username)";
-
-            SqlParameter[] parameters = [
-                new("@team_id", SqlDbType.Int) { Value = participant.TeamId },
-                new("@role", SqlDbType.Int) { Value = participant.Role },
-                new("@user_id", SqlDbType.Int) { Value = participant.UserId },
-                new("@simulation_id", SqlDbType.Int) { Value = participant.SimulationId },
-                new("@username", SqlDbType.NVarChar, -1) { Value = participant.Username },
-            ];
-
-            return Database.NonQuery(sql, parameters);
-        }
-
-        public int Delete(int participantId)
-        {
-            string sql = @"
-DELETE FROM participants 
-WHERE participant_id = @participant_id;";
-
-            SqlParameter[] parameters = [
-                new("@participant_id", SqlDbType.Int) { Value = participantId},
-            ];
-
-            return Database.NonQuery(sql, parameters);
         }
     }
 }

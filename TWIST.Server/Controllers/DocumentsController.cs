@@ -16,21 +16,21 @@ namespace TWISTServer.Controllers
         [Route("")]
         public IEnumerable<DocumentRecord> GetDocuments()
         {
-            return dataAccessor.GetAllDocuments();
+            return dataAccessor.GetAll();
         }
 
         [HttpGet]
         [Route("{id}")]
         public IEnumerable<DocumentRecord> GetDocument([FromRoute] int id)
         {
-            return dataAccessor.GetDocument(id);
+            return dataAccessor.Get(id);
         }
 
         [HttpPut]
         [Route("")]
         public JsonResult Put([FromBody] DocumentRecord document)
         {
-            dataAccessor.InsertDocument(document);
+            dataAccessor.Insert(document);
             return new JsonResult($"Successfully added document {document.Type}!");
         }
     }

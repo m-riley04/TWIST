@@ -21,21 +21,21 @@ namespace TWISTServer.Controllers
         [Route("")]
         public IEnumerable<UserRecord> GetUsers()
         {
-            return dataAccessor.GetAllUsers();
+            return dataAccessor.GetAll();
         }
 
         [HttpGet]
         [Route("{id}")]
         public IEnumerable<UserRecord> GetUser([FromRoute] int id)
         {
-            return dataAccessor.GetUser(id);
+            return dataAccessor.Get(id);
         }
 
         [HttpPut]
         [Route("")]
         public JsonResult Put([FromBody] UserRecord user)
         {
-            dataAccessor.InsertUser(user);
+            dataAccessor.Insert(user);
             return new JsonResult($"Successfully added user {user.Username}!");
         }
     }
