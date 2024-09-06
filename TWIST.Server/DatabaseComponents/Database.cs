@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Data.SqlClient;
 
-namespace TWISTServer.Database
+namespace TWISTServer.DatabaseComponents
 {
     /// <summary>
     /// Acts as an abstracted version of the database. Makes it easier so that we don't have to make direct SQLConnection calls.
@@ -67,7 +67,7 @@ namespace TWISTServer.Database
         public int ConnectionTimeout = 30;
 
         /// <summary>
-        /// The full connection string combining all properties of the Database class
+        /// The full connection string combining all properties of the DatabaseComponents class
         /// </summary>
         public string ConnectionString
         {
@@ -94,6 +94,46 @@ namespace TWISTServer.Database
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
+                    reader = command.ExecuteReader();
+                    table.Load(reader);
+                    reader.Close();
+                    connection.Close();
+                }
+            }
+
+            // Convert each row to a record
+            List<T> rows = new();
+            foreach (DataRow row in table.Rows)
+            {
+                rows.Add(recordConverterMethod(row));
+            }
+
+            return rows;
+        }
+
+        /// <summary>
+        /// Queries the database
+        /// </summary>
+        /// <typeparam name="T">The type of data record to return from the query.</typeparam>
+        /// <param name="query"></param>
+        /// <param name="recordConverterMethod">Function that returns a <typeparamref name="T"/> from a <see cref="DataRow"/></param>
+        /// <param name="parameters">Parameters of the SQL statement</param>
+        /// <returns>An enumerable of rows in the form of type <typeparamref name="T"/></returns>
+        public IEnumerable<T> Query<T>(string sql, Func<DataRow, T> recordConverterMethod, SqlParameter[] parameters)
+        {
+            DataTable table = new DataTable();
+            SqlDataReader reader;
+
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    foreach (SqlParameter parameter in parameters)
+                    {
+                        command.Parameters.Add(parameter);
+                    }
+
                     reader = command.ExecuteReader();
                     table.Load(reader);
                     reader.Close();
