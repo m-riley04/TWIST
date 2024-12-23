@@ -7,3 +7,17 @@ Many (if not most) softawre engineering environments utilize a ticketing system 
 The Kanban project can be found [here](https://github.com/users/m-riley04/projects/11).
 
 Each issue should have an associated PR and branch attached to it. The branch should be titled "T-#", where # is the issue id.
+
+
+# Dependencies
+
+# Components
+## Hosting
+Azure
+
+## Database
+Azure
+
+## Instructor Authentication
+Auth0
+
