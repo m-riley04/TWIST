@@ -1,19 +1,14 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
-import LoginPage from './pages/LoginPage/LoginPage';
-import { useAuth0 } from '@auth0/auth0-react';
-import LoginButton from './components/LoginButton';
+import ParticipantLoginPage from './pages/ParticipantLoginPage/ParticipantLoginPage';
+import InstructorPage from './pages/InstructorPage/InstructorPage';
 
 function App() {
-    const { isAuthenticated } = useAuth0();
-
     return (
         <BrowserRouter>
             <Routes>
-                {isAuthenticated ? 
-                    <Route path="/" element={<LoginPage/>} />
-                    : <LoginButton></LoginButton>
-                }
+                <Route path="/" element={<ParticipantLoginPage />} index />
+                <Route path="instructor" element={<InstructorPage />} />
             </Routes>
         </BrowserRouter>
     );
