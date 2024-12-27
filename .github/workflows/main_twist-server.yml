@@ -25,7 +25,7 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: Create output folder
-        run: mkdir ${{github.workspace}}/output
+        run: mkdir ${{github.workspace}}/output/Release
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{github.workspace}}/output
