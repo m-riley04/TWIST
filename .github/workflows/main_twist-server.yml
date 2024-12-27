@@ -24,8 +24,11 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
+      - name: Debug print
+        run: echo %APPDATA% && echo $env:APPDATA
+
       - name: Create certificate folder(s)
-        run: mkdir %APPDATA%\ASP.NET && mkdir %APPDATA%\ASP.NET\https
+        run: mkdir $env:APPDATA\\ASP.NET\\https
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{github.workspace}}/output
