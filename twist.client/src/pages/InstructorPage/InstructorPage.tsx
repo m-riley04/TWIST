@@ -2,7 +2,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import LogoutButton from "../../components/LogoutButton";
 
 const InstructorPage = () => {
-    const { isAuthenticated, error, isLoading, loginWithRedirect, user, getAccessTokenSilently } = useAuth0();
+    const { isAuthenticated, error, isLoading, loginWithRedirect, user } = useAuth0();
 
     if (error) return <div>Oops... {error.message}</div>;
 
@@ -15,6 +15,7 @@ const InstructorPage = () => {
             <p><i>Account: {user?.name}</i></p>
             <p>You can control, view, and create simulations here.</p>
             <LogoutButton />
+            <a href="/">Participant?</a>
         </>
     );
 
