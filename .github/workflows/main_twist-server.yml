@@ -24,8 +24,8 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: Create output folder
-        run: mkdir ${{github.workspace}}/output/Release
+      - name: Create certificate folder(s)
+        run: mkdir %APPDATA%\ASP.NET && mkdir %APPDATA%\ASP.NET\https
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{github.workspace}}/output
