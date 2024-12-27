@@ -24,9 +24,6 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: Debug print
-        run: echo %APPDATA% && echo $env:APPDATA
-
       - name: Create certificate folder(s)
         run: mkdir $env:APPDATA\\ASP.NET\\https
 
