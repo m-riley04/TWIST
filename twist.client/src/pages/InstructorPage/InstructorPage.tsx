@@ -1,6 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import LogoutButton from "../../components/LogoutButton";
-import SimulationsList from "../../components/SimulationList";
+import SimulationsList from "../../components/SimulationList/SimulationList";
 import { useState } from "react";
 import { useEffect } from "react";
 import axios from 'axios';
