@@ -1,9 +1,10 @@
-import type SimulationModel from '../models/SimulationModel';
+import type SimulationModel from '../../models/SimulationModel';
+import "./style.scss";
 
 const SimulationsList = ({ simulation }: { simulation: SimulationModel }) => {
 
     return (
-        <div>
+        <div className="simulationListItem" >
             <p>Name: {simulation.name}</p>
             <p>Round: {simulation.round}</p>
 

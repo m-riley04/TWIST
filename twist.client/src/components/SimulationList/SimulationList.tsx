@@ -1,4 +1,4 @@
-import type SimulationModel from '../models/SimulationModel';
+import type SimulationModel from '../../models/SimulationModel';
 import SimulationListItem from './SimulationListItem';
 
 const SimulationList = ({ simulations }: { simulations: SimulationModel[] }) => {
