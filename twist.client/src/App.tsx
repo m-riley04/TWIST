@@ -1,10 +1,10 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import './App.css';
 import ParticipantLoginPage from './pages/ParticipantLoginPage/ParticipantLoginPage';
 import InstructorPage from './pages/InstructorPage/InstructorPage';
 import CreateSimulationPage from './pages/CreateSimulationPage/CreateSimulationPage';
 import InstructorSimulationRoomPage from './pages/InstructorSimulationRoomPage/InstructorSimulationRoomPage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
+import './App.scss';
 
 function App() {
     return (
