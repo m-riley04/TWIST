@@ -4,6 +4,7 @@ import SimulationsList from "../../components/SimulationList/SimulationList";
 import { useState } from "react";
 import { useEffect } from "react";
 import axios from 'axios';
+import { Button } from "react-bootstrap";
 
 const InstructorPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect, user } = useAuth0();
@@ -30,7 +31,7 @@ const InstructorPage = () => {
             <p>You can control, view, and create simulations here.</p>
             <h2>Simulations</h2>
             <SimulationsList simulations={simulations} />
-            <button onClick={() => { window.location.assign("/instructor/create") }}>Create New Simulation</button>
+            <Button onClick={() => { window.location.assign("/instructor/create") }}>Create New Simulation</Button>
             <LogoutButton />
             <a href="/">Participant?</a>
         </>

@@ -5,7 +5,7 @@ const SimulationList = ({ simulations }: { simulations: SimulationModel[] }) => 
 
     return (
         <div>
-            {simulations.map((sim) => (<SimulationListItem simulation={sim} />))}
+            {simulations.map((sim, i) => (<SimulationListItem simulation={sim} key={i} />))}
         </div>
     );
 }

@@ -1,8 +1,8 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import axios from 'axios';
 import SimulationModel from "../../models/SimulationModel";
-import { FormEventHandler } from "react";
 import { FormEvent } from "react";
+import { Button, Form, FormLabel } from "react-bootstrap";
 
 const CreateSimulationPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect, user } = useAuth0();
@@ -41,15 +41,16 @@ const CreateSimulationPage = () => {
     if (isAuthenticated) return ( 
         <>
             <h1>Create Simulation</h1>
-            <form onSubmit={onCreateClicked} id="simulation-form">
-                <label htmlFor="name">Simulation Name</label>
-                <input id="name" name="name" placeholder="Name" />
-                <br/>
-                <button type="submit">Create</button>
-                <button type="reset">Reset</button>
-            </form>
+            <Form onSubmit={onCreateClicked} id="simulation-form">
+                <Form.Group>
+                    <Form.Label htmlFor="name">Simulation Name</Form.Label>
+                    <Form.Control id="name" name="name" placeholder="Name" />
+                    <Button type="submit">Create</Button>
+                    <Button type="reset">Reset</Button>
+                </Form.Group>
+            </Form>
 
-            <button onClick={() => { window.location.assign("/instructor") }}>Cancel</button>
+            <Button onClick={() => { window.location.assign("/instructor") }}>Cancel</Button>
         </>
     );
 
