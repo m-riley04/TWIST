@@ -5,8 +5,8 @@ const SimulationsList = ({ simulation }: { simulation: SimulationModel }) => {
 
     return (
         <div className="simulationListItem" >
-            <p>Name: {simulation.name}</p>
-            <p>Round: {simulation.round}</p>
+            <p>{simulation.name}</p>
+            <p>{simulation.round}</p>
 
             <button>View</button>
         </div>
