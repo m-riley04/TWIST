@@ -107,7 +107,7 @@ VALUES ({GetColumnsAsSql(T.Columns.Keys.Skip(1), "@")});";
         /// <param name="columns">An array of the column names</param>
         /// <param name="prefix">A substring that will go before each column name in the string.</param>
         /// <returns></returns>
-        private string GetColumnsAsSql(IEnumerable<string> columns, string prefix="")
+        protected string GetColumnsAsSql(IEnumerable<string> columns, string prefix="")
         {
             return String.Join(",", columns.Select(s => prefix + s));
         }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using TWISTServer.DatabaseComponents.DataAccessors;
 using TWISTServer.DatabaseComponents.Records;
 
@@ -22,6 +23,13 @@ namespace TWISTServer.Controllers
             }
 
             return dataAccessor.GetAll();
+        }
+
+        [HttpGet]
+        [Route("{code}")]
+        public IEnumerable<SimulationRecord> GetSimulationByCode([FromRoute] string code)
+        {
+            return dataAccessor.GetByCode(code);
         }
 
         [HttpPut]

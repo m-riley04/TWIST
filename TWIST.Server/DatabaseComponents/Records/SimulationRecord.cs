@@ -6,7 +6,7 @@ namespace TWISTServer.DatabaseComponents.Records
 {
     public record SimulationRecord(int SimulationId, string Name, string Participants, 
         DateTime StartDate, DateTime EndDate, bool Active, string Responses, string Asks, 
-        string Concessions, int Round) : IDatabaseRecord<SimulationRecord>
+        string Concessions, int Round, string Code) : IDatabaseRecord<SimulationRecord>
     {
         public static Dictionary<string, SqlDbType> Columns { get; } = new Dictionary<string, SqlDbType>()
         {
@@ -20,6 +20,7 @@ namespace TWISTServer.DatabaseComponents.Records
             { "asks", SqlDbType.NVarChar },
             { "concessions", SqlDbType.NVarChar },
             { "round", SqlDbType.Int },
+            { "code", SqlDbType.NVarChar },
         };
 
         public static SimulationRecord FromRow(DataRow row)
@@ -35,6 +36,7 @@ namespace TWISTServer.DatabaseComponents.Records
                 , row.Field<string>("asks") ?? ""
                 , row.Field<string>("concessions") ?? ""
                 , row.Field<int>("round")
+                , row.Field<string>("code") ?? ""
                 );
         }
     }
