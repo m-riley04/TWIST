@@ -9,7 +9,7 @@ const SimulationsList = ({ simulation }: { simulation: SimulationModel }) => {
             <p>{simulation.name}</p>
             <p>{simulation.round}</p>
 
-            <Button>View</Button>
+            <Button onClick={() => window.location.assign(`/instructor/room/${simulation.code}`)}>Open</Button>
         </div>
     );
 }
