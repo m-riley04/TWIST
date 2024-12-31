@@ -9,4 +9,5 @@ export default interface SimulationModel {
     asks: object[];
     concessions: object[];
     round: number;
+    code: string;
 };
