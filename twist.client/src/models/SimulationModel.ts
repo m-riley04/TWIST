@@ -1,9 +1,9 @@
 export default interface SimulationModel {
-    simulationId: number;
+    simulation_id: number;
     name: string;
     participants: object[];
-    startDate: Date;
-    endDate: Date;
+    start_date: Date;
+    end_date: Date;
     active: boolean;
     responses: object[];
     asks: object[];
