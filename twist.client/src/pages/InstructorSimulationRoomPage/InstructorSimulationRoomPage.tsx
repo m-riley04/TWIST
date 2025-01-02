@@ -3,32 +3,24 @@ import { Button } from "react-bootstrap";
 import { useEffect } from "react";
 import { useParams } from "react-router";
 import { useState } from "react";
-import axios from "axios";
 import SimulationModel from "../../models/SimulationModel";
+import { getSimulationFromCode } from "../../server/server_methods";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
     const params = useParams();
     const [simulation, setSimulation] = useState<SimulationModel>();
 
-
     useEffect(() => {
-        // TODO: Check if the simulation exists
+        // Check if code is valid
+        if (params.code === undefined) {
+            console.error("No code provided.");
+            return;
+        }
 
-        // TODO: Load simulation data
-        axios.get<SimulationModel[]>(`https://localhost:7026/api/simulations/${params?.code}`)
-            .then(response => response?.data)
-            .then(data => {
-                // Check if simulation exists
-                if (data?.length <= 0) {
-                    throw new Error("Simulation not found.");
-                }
-
-                // Get first simulation
-                return data[0];
-            })
-            .then(data => setSimulation(data))
-            .catch(error => console.error(error));
+        // Load simulation data
+        getSimulationFromCode(params.code)
+            .then(data => setSimulation(data));
 
         // TODO: Be able to close the room
 

@@ -5,19 +5,22 @@ import { useState } from "react";
 import { useEffect } from "react";
 import axios from 'axios';
 import { Button } from "react-bootstrap";
+import { getSimulations } from "../../server/server_methods";
+import SimulationModel from "../../models/SimulationModel";
 
 const InstructorPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect, user } = useAuth0();
-    const [simulations, setSimulations] = useState([]);
-
-    // Load data from API
+    const [simulations, setSimulations] = useState<SimulationModel[]>([]);
+    
     useEffect(() => {
-        /// TODO: Make this an environment variable for API URL
-        axios.get('https://localhost:7026/api/simulations')
-            .then((response) => setSimulations(response.data))
-            .catch((error) => console.log(error));
+        // Load simulations data from API
+        getSimulations()
+            .then(data => {
+                if (data !== undefined) {
+                    setSimulations(data);
+                }
+            });
     }, []);
-
 
     if (error) return <div>Oops... {error.message}</div>;
 

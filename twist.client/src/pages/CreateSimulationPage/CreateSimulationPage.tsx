@@ -3,53 +3,10 @@ import axios from 'axios';
 import SimulationModel from "../../models/SimulationModel";
 import { FormEvent } from "react";
 import { Button, Form, FormLabel } from "react-bootstrap";
+import { createSimulation, generateCode } from "../../server/server_methods";
 
 const CreateSimulationPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect, user } = useAuth0();
-
-    async function createSimulation(name: string, code: string) {
-        try {
-            await axios.put<SimulationModel>("https://localhost:7026/api/simulations", {
-                name: name,
-                participants: JSON.stringify([]),
-                start_date: new Date().toISOString(),
-                end_date: new Date().toISOString(),
-                active: false,
-                responses: JSON.stringify([]),
-                asks: JSON.stringify([]),
-                concessions: JSON.stringify([]),
-                round: 0,
-                code: code
-            });
-        } catch (error) {
-            console.log(`Unable to create simulation: ${error}`);
-        }
-    }
-
-    async function doesSimulationExist(code: string) {
-        try {
-            const response: SimulationModel[] = await axios
-                .get<SimulationModel[]>(`https://localhost:7026/api/simulations/${code}`)
-                .then(response => response.data);
-            
-            return response.length > 0;
-
-        } catch (error) {
-            console.error(`Unable to check code: ${error}`);
-            return true;
-        }
-    }
-
-    async function generateCode(timeout: number = 5): Promise<string> {
-        for (let i = 0; i < timeout; i++) {
-            const code = Math.random().toString(36).substring(7);
-            const exists = await doesSimulationExist(code);
-
-            if (!exists) return code;
-        }
-
-        throw new Error("Unable to generate unique code.");
-    }
 
     async function onCreateClicked(event: FormEvent) {
         event.preventDefault();
