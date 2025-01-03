@@ -26,5 +26,22 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
                 ]
             );
         }
+
+        /// <summary>
+        /// Close a simulation (non-deleting)
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="date"></param>
+        public virtual void CloseSimulation(string code, DateTime date)
+        {
+            string sql = @$"UPDATE {TableName} SET active = 0, end_date = @date WHERE code = @code;";
+            Database.NonQuery(
+                sql,
+                [
+                    new($"@code", SqlDbType.NVarChar) { Value = code },
+                    new($"@date", SqlDbType.DateTime) { Value = date },
+                ]
+            );
+        }
     }
 }

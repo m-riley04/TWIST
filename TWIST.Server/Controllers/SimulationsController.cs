@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using TWISTServer.DatabaseComponents.DataAccessors;
 using TWISTServer.DatabaseComponents.Records;
+using TWISTServer.Models;
 
 namespace TWISTServer.Controllers
 {
@@ -38,6 +39,14 @@ namespace TWISTServer.Controllers
         {
             dataAccessor.Insert(simulation);
             return new JsonResult($"Successfully added simulation {simulation.Name}.");
+        }
+
+        [HttpPost]
+        [Route("{code}/close")]
+        public JsonResult CloseSimulation([FromRoute(Name = "code")] string code, [FromBody] CloseSimulationRequest request)
+        {
+            dataAccessor.CloseSimulation(code, request.Date);
+            return new JsonResult($"Successfully closed simulation {code}.");
         }
     }
 }
