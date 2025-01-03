@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useParams } from "react-router";
 import { useState } from "react";
 import SimulationModel from "../../models/SimulationModel";
-import { getSimulationFromCode } from "../../server/server_methods";
+import { closeSimulation, getSimulationFromCode } from "../../server/simulation_management";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();

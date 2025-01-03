@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import axios from 'axios';
 import { Button } from "react-bootstrap";
-import { getSimulations } from "../../server/server_methods";
+import { getSimulations } from "../../server/simulation_management";
 import SimulationModel from "../../models/SimulationModel";
 
 const InstructorPage = () => {

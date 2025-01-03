@@ -3,7 +3,7 @@ import axios from 'axios';
 import SimulationModel from "../../models/SimulationModel";
 import { FormEvent } from "react";
 import { Button, Form, FormLabel } from "react-bootstrap";
-import { createSimulation, generateCode } from "../../server/server_methods";
+import { createSimulation, generateCode } from "../../server/simulation_management";
 
 const CreateSimulationPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect, user } = useAuth0();

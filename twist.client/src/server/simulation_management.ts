@@ -10,24 +10,48 @@ const API_URL = "https://localhost:7026/api";
  */
 export async function createSimulation(name: string, code: string): Promise<any | undefined> {
     try {
-        return await axios.put<SimulationModel>(`${API_URL}/simulations`, {
-            name: name,
-            participants: JSON.stringify([]),
-            start_date: new Date().toISOString(),
-            end_date: new Date().toISOString(),
-            active: false,
-            responses: JSON.stringify([]),
-            asks: JSON.stringify([]),
-            concessions: JSON.stringify([]),
-            round: 0,
-            code: code
-        });
+        return await axios
+            .put<SimulationModel>(`${API_URL}/simulations`, {
+                name: name,
+                participants: JSON.stringify([]),
+                start_date: new Date().toISOString(),
+                end_date: new Date().toISOString(),
+                active: true,
+                responses: JSON.stringify([]),
+                asks: JSON.stringify([]),
+                concessions: JSON.stringify([]),
+                round: 0,
+                code: code
+            });
     } catch (error) {
         console.log(`Unable to create simulation: ${error}`);
         return undefined;
     }
-
 }
+
+/**
+ * Closes a simulation (non-deleting) by updating the active status and the end date.
+ * @param code The code of the simulation to close.
+ * @param endDate The date that the simulation was closed/ended. 
+ * @returns
+ */
+export async function closeSimulation(code: string, endDate: Date = new Date()): Promise<any | undefined> {
+    try {
+        // Check for empty string
+        if (code === "") {
+            throw new Error("No code provided.");
+        }
+
+        return await axios
+            .post(`${API_URL}/simulations/${code}/close`, {
+                date: endDate.toISOString(),
+            })
+    } catch (error) {
+        console.error(`Unable to close simulation: ${error}`);
+        return undefined;
+    }
+}
+
 /**
  * Checks if a simulation exists.
  * @param code
