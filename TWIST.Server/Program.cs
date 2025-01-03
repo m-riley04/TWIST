@@ -1,3 +1,7 @@
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using Newtonsoft.Json;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -27,7 +31,8 @@ builder.Services.AddCors(options =>
 
 // JSON Serializer
 builder.Services.AddControllers()
-    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower);
+    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower)
+    .AddNewtonsoftJson();
 
 var app = builder.Build();
 
