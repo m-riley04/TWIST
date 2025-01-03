@@ -39,7 +39,22 @@ const InstructorSimulationRoomPage = () => {
             <h1>Simulation Room</h1>
             <h2>{simulation?.name}</h2>
             <h2>Room Code: {params?.code}</h2>
-            <Button>Close Room</Button>
+            <Button onClick={() => {
+                if (params.code === undefined) {
+                    console.error("Unable to close room: No code provided.")
+                    return;
+                }
+                closeSimulation(params.code, new Date())
+                    .then((response) => {
+                        // Check if the response failed
+                        if (response === undefined) {
+                            return;
+                        }
+
+                        // Navigate back to instructor home
+                        window.location.assign("/instructor");
+                    });
+            }}>Close Room</Button>
             <a href="/instructor">Instructor Home</a>
         </>
     );
