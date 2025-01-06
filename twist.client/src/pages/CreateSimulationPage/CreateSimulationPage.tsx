@@ -1,12 +1,10 @@
-import { useAuth0 } from "@auth0/auth0-react";
-import axios from 'axios';
-import SimulationModel from "../../models/SimulationModel";
-import { FormEvent } from "react";
-import { Button, Form, FormLabel } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
 import { createSimulation, generateCode } from "../../server/simulation_management";
+import { FormEvent } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const CreateSimulationPage = () => {
-    const { isAuthenticated, error, isLoading, loginWithRedirect, user } = useAuth0();
+    const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
 
     async function onCreateClicked(event: FormEvent) {
         event.preventDefault();
@@ -26,10 +24,9 @@ const CreateSimulationPage = () => {
         }
 
         // Create simulation
-        await createSimulation(name, code);
-
-        // Navigate to the room
-        window.location.assign(`/instructor/room/${code}`);
+        createSimulation(name, code)
+            .then(() => window.location.assign(`/instructor/room/${code}`)) // Navigate to the room
+            .catch((error) => console.error(`Unable to create new simulation: ${error}`));
     }
 
     if (error) return <div>Oops... {error.message}</div>;
