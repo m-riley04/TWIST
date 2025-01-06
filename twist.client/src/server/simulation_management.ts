@@ -134,7 +134,7 @@ export async function getSimulations(): Promise<SimulationModel[] | undefined> {
     try {
         const response: SimulationModel[] = await axios
             .get(`${API_URL}/simulations`)
-            .then((response) => response.data);
+            .then<SimulationModel[]>((response) => response.data);
         return response;
     } catch (error) {
         console.error(`Unable to retrieve simulations: ${error}`);
