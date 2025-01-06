@@ -3,7 +3,7 @@ export default interface SimulationModel {
     name: string;
     participants: object[];
     start_date: Date;
-    end_date: Date;
+    end_date: Date | null;
     active: boolean;
     responses: object[];
     asks: object[];
