@@ -22,8 +22,6 @@ const InstructorSimulationRoomPage = () => {
         getSimulationFromCode(params.code)
             .then(data => setSimulation(data));
 
-        // TODO: Be able to close the room
-
         // TODO: Be able to change room settings
 
         // TODO: Add QR code for participants to join
