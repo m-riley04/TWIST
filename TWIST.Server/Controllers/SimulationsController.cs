@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using TWISTServer.DatabaseComponents.DataAccessors;
 using TWISTServer.DatabaseComponents.Records;
 using TWISTServer.Models;
@@ -38,7 +37,7 @@ namespace TWISTServer.Controllers
         public JsonResult AddSimulation([FromBody] SimulationRecord simulation)
         {
             dataAccessor.Insert(simulation);
-            return new JsonResult($"Successfully added simulation {simulation.Name}.");
+            return new JsonResult($"Successfully added simulation {simulation.Code}.");
         }
 
         [HttpPost]
@@ -47,6 +46,14 @@ namespace TWISTServer.Controllers
         {
             dataAccessor.CloseSimulation(code, request.Date);
             return new JsonResult($"Successfully closed simulation {code}.");
+        }
+
+        [HttpDelete]
+        [Route("{code}")]
+        public JsonResult DeleteSimulation([FromRoute(Name = "code")] string code)
+        {
+            dataAccessor.Delete(code);
+            return new JsonResult($"Successfully deleted simulation {code}.");
         }
     }
 }

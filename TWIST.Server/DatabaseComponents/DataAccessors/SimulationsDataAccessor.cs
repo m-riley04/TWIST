@@ -11,7 +11,7 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
         public override string TableName => "simulations";
 
         /// <summary>
-        /// Get a simulation by its code
+        /// Get a simulation by its code.
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
@@ -40,6 +40,21 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
                 [
                     new($"@code", SqlDbType.NVarChar) { Value = code },
                     new($"@date", SqlDbType.DateTime) { Value = date },
+                ]
+            );
+        }
+
+        /// <summary>
+        /// Delete a simulation from the database.
+        /// </summary>
+        /// <param name="code"></param>
+        public virtual void Delete(string code)
+        {
+            string sql = @$"DELETE FROM {TableName} WHERE code = @code;";
+            Database.NonQuery(
+                sql,
+                [
+                    new($"@code", SqlDbType.NVarChar) { Value = code },
                 ]
             );
         }
