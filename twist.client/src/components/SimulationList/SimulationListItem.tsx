@@ -8,8 +8,8 @@ const SimulationsListItem = ({ simulation, onDeleteClicked }: { simulation: Simu
         <div className="simulationListItem" >
             <p>{simulation.name}</p>
             <p>{simulation.code}</p>
-            <p>{simulation.start_date.toDateString()}</p>
-            <p>{simulation.end_date?.toDateString()}</p>
+            <p>{new Date(simulation.start_date).toDateString()}</p>
+            <p>{simulation.end_date ? new Date(simulation.end_date).toDateString() : ""}</p>
             <p>{simulation.round}</p>
             <FormCheck checked={simulation.active} readOnly />
             <Button onClick={() => window.location.assign(`/instructor/room/${simulation.code}`)}>Open</Button>
