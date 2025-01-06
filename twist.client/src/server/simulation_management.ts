@@ -15,7 +15,7 @@ export async function createSimulation(name: string, code: string): Promise<any 
                 name: name,
                 participants: JSON.stringify([]),
                 start_date: new Date().toISOString(),
-                end_date: new Date().toISOString(),
+                end_date: null,
                 active: true,
                 responses: JSON.stringify([]),
                 asks: JSON.stringify([]),
@@ -24,7 +24,7 @@ export async function createSimulation(name: string, code: string): Promise<any 
                 code: code
             });
     } catch (error) {
-        console.log(`Unable to create simulation: ${error}`);
+        console.error(`Unable to create simulation: ${error}`);
         return undefined;
     }
 }
@@ -48,6 +48,21 @@ export async function closeSimulation(code: string, endDate: Date = new Date()):
             })
     } catch (error) {
         console.error(`Unable to close simulation: ${error}`);
+        return undefined;
+    }
+}
+
+export async function deleteSimulation(code: string): Promise<any | undefined> {
+    try {
+        // Check for empty string
+        if (code === "") {
+            throw new Error("No code provided.");
+        }
+
+        return await axios
+            .delete(`${API_URL}/simulations/${code}`);
+    } catch (error) {
+        console.error(`Unable to delete simulation: ${error}`);
         return undefined;
     }
 }
