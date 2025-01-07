@@ -5,12 +5,14 @@ import CreateSimulationPage from './pages/CreateSimulationPage/CreateSimulationP
 import InstructorSimulationRoomPage from './pages/InstructorSimulationRoomPage/InstructorSimulationRoomPage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
 import './App.scss';
+import ParticipantRoomPage from './pages/ParticipantRoomPage/ParticipantRoomPage';
 
 function App() {
     return (
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<ParticipantLoginPage />} index />
+                <Route path="room/:code" element={<ParticipantRoomPage />} />"
                 <Route path="instructor" element={<InstructorPage />}/>
                 <Route path="instructor/create" element={<CreateSimulationPage />} />
                 <Route path="instructor/room/:code" element={<InstructorSimulationRoomPage />} />
