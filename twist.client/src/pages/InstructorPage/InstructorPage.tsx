@@ -34,7 +34,7 @@ const InstructorPage = () => {
         deleteSimulation(selectedSimulation.code)
             .then(() => {
                 // Remove simulation from list
-                setSimulations(simulations.filter((sim, i) => i !== selectedIndex));
+                setSimulations(simulations.filter((_, i) => i !== selectedIndex));
             });
 
         // Close modal
