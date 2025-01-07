@@ -60,17 +60,28 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
                 columnNameValueDict.Add(pName, pValue);
             }
 
+            string[] columnsToInsert = T.Columns.Keys
+                .Where(c => c != PrimaryKeyColumn)
+                .ToArray();
+
             // Create the SQL text input
             string sql = $@"
 INSERT INTO {TableName} 
-({GetColumnsAsSql(T.Columns.Keys.Skip(1))}) 
-VALUES ({GetColumnsAsSql(T.Columns.Keys.Skip(1), "@")});";
+({GetColumnsAsSql(columnsToInsert)}) 
+VALUES ({GetColumnsAsSql(columnsToInsert, "@")});";
 
             // Construct the list of parameters
             List<SqlParameter> parameters = new();
-            foreach (string columnName in T.Columns.Keys)
+            foreach (string columnName in columnsToInsert)
             {
-                parameters.Add(new($"@{columnName}", T.Columns[columnName]) { Value = columnNameValueDict[columnName] });
+                object? value = columnNameValueDict[columnName];
+
+                // Convert null to DBNull.Value
+                parameters.Add(
+                    new($"@{columnName}", T.Columns[columnName]) { 
+                        Value = value ?? DBNull.Value
+                    }
+                );
             }
 
             // Call to the database
@@ -107,7 +118,7 @@ VALUES ({GetColumnsAsSql(T.Columns.Keys.Skip(1), "@")});";
         /// <param name="columns">An array of the column names</param>
         /// <param name="prefix">A substring that will go before each column name in the string.</param>
         /// <returns></returns>
-        private string GetColumnsAsSql(IEnumerable<string> columns, string prefix="")
+        protected string GetColumnsAsSql(IEnumerable<string> columns, string prefix="")
         {
             return String.Join(",", columns.Select(s => prefix + s));
         }

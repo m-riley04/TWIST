@@ -1,12 +1,13 @@
 export default interface SimulationModel {
-    simulationId: number;
+    simulation_id: number;
     name: string;
     participants: object[];
-    startDate: Date;
-    endDate: Date;
+    start_date: Date;
+    end_date: Date | null;
     active: boolean;
     responses: object[];
     asks: object[];
     concessions: object[];
     round: number;
+    code: string;
 };
