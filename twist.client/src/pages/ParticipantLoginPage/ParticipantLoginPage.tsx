@@ -1,6 +1,7 @@
 import { Button, Form } from "react-bootstrap";
 import { doesSimulationExist } from "../../server/simulation_management";
 import { useNavigate } from "react-router";
+import React from "react";
 
 const ParticipantLoginPage = () => {
     const navigate = useNavigate();
