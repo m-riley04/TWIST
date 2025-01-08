@@ -49,12 +49,13 @@ if (app.Environment.IsDevelopment())
 
 // Uses
 app.UseDefaultFiles();
-app.UseStaticFiles();
+//app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthorization();
 
 // Mappings
+app.MapStaticAssets();
 app.MapControllers();
 app.MapFallbackToFile("/index.html");
 app.MapHub<ChatHub>("/hub");
