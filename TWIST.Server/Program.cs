@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using System.Text.Json;
-using Newtonsoft.Json;
 using TWISTServer.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,13 +19,14 @@ builder.Services.AddCors(options =>
         /// TODO: Make this more secure/not only localhost
         builder.WithOrigins
             (
-                "http://localhost:7026", 
-                "https://localhost:7026", 
-                "http://localhost:5173", 
+                "http://localhost:7026",
+                "https://localhost:7026",
+                "http://localhost:5173",
                 "https://localhost:5173"
             )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -49,16 +49,16 @@ if (app.Environment.IsDevelopment())
 
 // Uses
 app.UseDefaultFiles();
-//app.UseStaticFiles();
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthorization();
 
 // Mappings
-app.MapStaticAssets();
+//app.MapStaticAssets();
 app.MapControllers();
 app.MapFallbackToFile("/index.html");
-app.MapHub<ChatHub>("/hub");
+app.MapHub<ChatHub>("/chatHub");
 
 // Run the app
 app.Run();

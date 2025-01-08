@@ -1,7 +1,8 @@
 import axios from 'axios';
 import SimulationModel from '../models/SimulationModel';
 
-const API_URL = "https://localhost:7026/api";
+const SERVER_URL = "https://localhost:7026";
+const API_URL = `${SERVER_URL}/api`;
 
 /**
  * Creates a new simulation from the given name and code.

@@ -42,7 +42,6 @@
     <Folder Include="DatabaseComponents\" />
     <Folder Include="Enums\" />
     <Folder Include="Extensions\" />
-    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>
