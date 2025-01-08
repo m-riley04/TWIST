@@ -2,13 +2,23 @@ import { Button, Container, Form } from "react-bootstrap";
 import { doesSimulationExist } from "../../server/simulation_management";
 import { useNavigate } from "react-router";
 import React from "react";
-import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-import { useEffect } from "react";
-import { useState } from "react";
+import { HubConnectionBuilder } from "@microsoft/signalr";
+
+const connection = new HubConnectionBuilder()
+    .withUrl("https://localhost:7026/chatHub")
+    .withAutomaticReconnect()
+    .build();
+
+connection.start()
+    .then(() => console.log('Connected to SignalR hub'))
+    .catch(err => console.error('Error connecting to hub:', err));
+
+connection.on("ReceiveMessage", (username: string, message: string) => {
+    console.log(`Received message from ${username}:`, message);
+});
 
 const ParticipantLoginPage = () => {
     const navigate = useNavigate();
-    const [connection, setConnection] = useState <HubConnection>();
 
     const handleSubmitCode = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -27,31 +37,6 @@ const ParticipantLoginPage = () => {
             })
             .catch((error) => console.error(error));
     }
-
-    useEffect(() => {
-        const con = new HubConnectionBuilder()
-            .withUrl("https://localhost:7026/chatHub")
-            .withAutomaticReconnect()
-            .build();
-
-        setConnection(con);
-
-        
-    }, [])
-
-    useEffect(() => {
-        if (connection === undefined) {
-            return;
-        }
-
-        connection.start()
-            .then(() => console.log('Connected to SignalR hub'))
-            .catch(err => console.error('Error connecting to hub:', err));
-
-        connection.on('ReceiveMessage', (username: string, message: string) => {
-            console.log(`Received message from ${username}:`, message);
-        });
-    }, [connection])
 
     return (
         <>
