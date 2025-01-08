@@ -3,8 +3,10 @@ import SimulationModel from "../../models/SimulationModel";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { getSimulationFromCode } from "../../server/simulation_management";
+import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 
 const ParticipantRoomPage = () => {
+    const [connection, setConnection] = useState<HubConnection>();
     const [simulation, setSimulation] = useState<SimulationModel>();
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
@@ -27,7 +29,29 @@ const ParticipantRoomPage = () => {
                 console.error(error);
             });
 
+        // Attempt to connect to the SignalR hub
+        const con = new HubConnectionBuilder()
+            .withUrl("https://localhost:7026/roomHub")
+            .withAutomaticReconnect()
+            .build();
+        setConnection(con);
+
     }, []);
+
+    useEffect(() => {
+        // Check if connection is defined
+        if (connection === undefined) return;
+
+        // Start connection
+        connection.start()
+            .then(() => console.log('Connected to SignalR hub'))
+            .catch(err => console.error('Error connecting to hub:', err));
+
+        // Connection signals/slots
+        connection.on("ParticipantJoined", (username: string) => {
+            console.log(`New participant joined:`, username);
+        });
+    }, [connection]);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -46,11 +70,18 @@ const ParticipantRoomPage = () => {
             console.error("Name must be provided.");
             return;
         }
+
+        // Attempt to join
+        connection?.invoke("JoinRoom", simulation?.code, email, name)
+            .then(() => console.log(`Joined simulation ${simulation?.code} as ${name}`))
+            .catch((error) => console.error(`Failed to join simulation: ${error}`));
     }
 
     if (error !== "") return <div>{error}</div>;
 
     if (loading) return <div>Loading...</div>;
+
+    if (connection?.state === "Connecting") return <div>Connecting sockets...</div>;
 
     return (
         <>
