@@ -4,7 +4,7 @@ using TWISTServer.Interfaces;
 
 namespace TWISTServer.DatabaseComponents.Records
 {
-    public record ParticipantRecord(int ParticipantId, CountryEnum? TeamId, 
+    public record ParticipantRecord(int ParticipantId, CountryEnum? Country, 
         ParticipantRoleEnum? Role, int SimulationId, 
         string Username, string Email) : IDatabaseRecord<ParticipantRecord>
     {

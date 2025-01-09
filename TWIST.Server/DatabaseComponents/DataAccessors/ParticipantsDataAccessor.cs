@@ -1,6 +1,7 @@
 ﻿using System.Data.SqlClient;
 using System.Data;
 using TWISTServer.DatabaseComponents.Records;
+using TWISTServer.Enums;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
@@ -9,25 +10,25 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
         public override string PrimaryKeyColumn => "participant_id";
         public override string TableName => "participants";
 
-        public IEnumerable<ParticipantRecord> GetParticipantsByTeam(int teamId)
+        public IEnumerable<ParticipantRecord> GetParticipantsByCountry(CountryEnum country)
         {
-            string sql = @"select 
-participant_id, team_id, role, user_id, simulation_id, username from participants
+            string sql = @$"select 
+{GetColumnsAsSql(ParticipantRecord.Columns.Keys)} from {TableName}
 WHERE 
-team_id = @team_id;";
+country = @country;";
             return Database.Query(
                 sql,
                 ParticipantRecord.FromRow,
                 [
-                    new("@team_id", SqlDbType.Int) { Value = teamId },
+                    new("@country", SqlDbType.Int) { Value = country },
                 ]
             );
         }
 
         public IEnumerable<ParticipantRecord> GetParticipantsBySimulation(int simulationId)
         {
-            string sql = @"select 
-participant_id, team_id, role, user_id, simulation_id, username from participants
+            string sql = @$"select 
+{GetColumnsAsSql(ParticipantRecord.Columns.Keys)} from {TableName}
 WHERE 
 simulation_id = @simulation_id;";
             return Database.Query(
