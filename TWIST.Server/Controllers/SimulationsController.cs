@@ -32,6 +32,36 @@ namespace TWISTServer.Controllers
             return dataAccessor.GetByCode(code);
         }
 
+        [HttpGet]
+        [Route("{code}/participants")]
+        public IEnumerable<ParticipantRecord> GetSimulationParticiapnts([FromRoute] string code)
+        {
+            // Get the simulation
+            SimulationRecord sim = dataAccessor.GetByCode(code).First();
+
+            ParticipantsDataAccessor participantAccessor = new ParticipantsDataAccessor();
+
+            List<ParticipantRecord> participants = new();
+
+            if (sim.Participants == null)
+            {
+                return participants.ToArray();
+            }
+
+            // Query for each participant
+            foreach (int participantId in sim.Participants)
+            {
+                var p = participantAccessor.Get(participantId);
+
+                if (p.Count() > 0)
+                {
+                    participants.Add(p.First());
+                }
+            }
+
+            return participants.ToArray();
+        }
+
         [HttpPut]
         [Route("")]
         public JsonResult AddSimulation([FromBody] SimulationRecord simulation)
