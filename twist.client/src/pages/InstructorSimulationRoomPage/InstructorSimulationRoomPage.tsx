@@ -5,11 +5,15 @@ import { useParams } from "react-router";
 import { useState } from "react";
 import SimulationModel from "../../models/SimulationModel";
 import { closeSimulation, getSimulationFromCode } from "../../server/simulation_management";
+import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import ParticipantModel from "../../models/ParticipantModel";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
     const params = useParams();
     const [simulation, setSimulation] = useState<SimulationModel>();
+    const [connection, setConnection] = useState<HubConnection>();
+    const [participants, setParticipants] = useState<ParticipantModel[]>([]);
 
     useEffect(() => {
         // Check if code is valid
@@ -25,7 +29,31 @@ const InstructorSimulationRoomPage = () => {
         // TODO: Be able to change room settings
 
         // TODO: Add QR code for participants to join
+
+        // Attempt to connect to the SignalR hub
+        const con = new HubConnectionBuilder()
+            .withUrl("https://localhost:7026/roomHub")
+            .withAutomaticReconnect()
+            .build();
+        setConnection(con);
     }, []);
+
+    useEffect(() => {
+        // Check if connection is defined
+        if (connection === undefined) return;
+
+        // Start connection
+        connection.start()
+            .then(() => console.log('Connected to SignalR hub'))
+            .catch(err => console.error('Error connecting to hub:', err));
+
+        // Connection signals/slots
+        connection.on("ParticipantJoined", (id: number, username: string, email: string) => {
+            // Add to participants list
+            setParticipants([...participants, { participant_id: id, simulation_id: 0, username: username, email: email }]);
+            console.log(`New participant joined:`, username);
+        });
+    }, [connection]);
 
     if (error) return <div>Oops... {error.message}</div>;
 
