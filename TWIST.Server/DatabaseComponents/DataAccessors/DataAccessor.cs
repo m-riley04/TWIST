@@ -76,6 +76,12 @@ VALUES ({GetColumnsAsSql(columnsToInsert, "@")});";
             {
                 object? value = columnNameValueDict[columnName];
 
+                // If this is the participants column, serialize the IEnumerable<int> to JSON
+                if (value is IEnumerable<int> enumerable)
+                {
+                    value = JsonSerializer.Serialize(enumerable);
+                }
+
                 // Convert null to DBNull.Value
                 parameters.Add(
                     new($"@{columnName}", T.Columns[columnName]) { 
