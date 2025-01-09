@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { getSimulationFromCode } from "../../server/simulation_management";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import { SERVER_URL } from "../../server/server_consts";
 
 const ParticipantRoomPage = () => {
     const [connection, setConnection] = useState<HubConnection>();
@@ -11,6 +12,7 @@ const ParticipantRoomPage = () => {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const params = useParams();
+    const [signedIn, setSignedIn] = useState(false);
 
     useEffect(() => {
         // Check if the code is valid
@@ -31,7 +33,7 @@ const ParticipantRoomPage = () => {
 
         // Attempt to connect to the SignalR hub
         const con = new HubConnectionBuilder()
-            .withUrl("https://localhost:7026/roomHub")
+            .withUrl(`${SERVER_URL}/roomHub`)
             .withAutomaticReconnect()
             .build();
         setConnection(con);
@@ -47,10 +49,6 @@ const ParticipantRoomPage = () => {
             .then(() => console.log('Connected to SignalR hub'))
             .catch(err => console.error('Error connecting to hub:', err));
 
-        // Connection signals/slots
-        connection.on("ParticipantJoined", (username: string) => {
-            console.log(`New participant joined:`, username);
-        });
     }, [connection]);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -72,8 +70,11 @@ const ParticipantRoomPage = () => {
         }
 
         // Attempt to join
-        connection?.invoke("JoinRoom", simulation?.code, email, name)
-            .then(() => console.log(`Joined simulation ${simulation?.code} as ${name}`))
+        connection?.invoke("JoinRoom", simulation, name, email)
+            .then(() => {
+                setSignedIn(true);
+                console.log(`Joined simulation ${simulation?.code} as ${name}`);
+            })
             .catch((error) => console.error(`Failed to join simulation: ${error}`));
     }
 
@@ -88,17 +89,21 @@ const ParticipantRoomPage = () => {
             <p>You are now joining...</p>
             <h1>{simulation?.name}</h1>
             <p>Enter your details to be logged in.</p>
-            <Form onSubmit={handleSubmit}>
-                <Form.Group>
-                    <Form.Label htmlFor="email">Email:</Form.Label><br />
-                    <Form.Control id="email" title="Email" type="email" placeholder="Enter your email here..." />
+            {
+                signedIn ? 
+                <p>You are signed in! Please wait for the instructor to start the simulation.</p>
+                : <Form onSubmit={handleSubmit}>
+                    <Form.Group>
+                        <Form.Label htmlFor="email">Email:</Form.Label><br />
+                        <Form.Control id="email" title="Email" type="email" placeholder="Enter your email here..." />
 
-                    <Form.Label htmlFor="name">Name:</Form.Label><br />
-                    <Form.Control id="name" title="Name" type="text" placeholder="Enter your name here..." />
+                        <Form.Label htmlFor="name">Name:</Form.Label><br />
+                        <Form.Control id="name" title="Name" type="text" placeholder="Enter your name here..." />
 
-                    <Button type="submit">Join</Button>
-                </Form.Group>
-            </Form>
+                        <Button type="submit">Join</Button>
+                    </Form.Group>
+                </Form>
+            }
 
             <a href="/">Back</a>
         </>
