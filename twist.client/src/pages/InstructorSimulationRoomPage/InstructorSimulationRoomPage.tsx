@@ -3,18 +3,19 @@ import { Button, Container } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import SimulationModel from "../../models/SimulationModel";
-import { closeSimulation, getParticipants, getSimulationFromCode } from "../../server/simulation_management";
+import { closeSimulation, getSimulationFromCode } from "../../server/simulation_management";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import ParticipantModel from "../../models/ParticipantModel";
 import ParticipantList from "../../components/ParticipantList/ParticipantList";
+import { getParticipants } from "../../server/participant_management";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
-    const params = useParams();
     const [simulation, setSimulation] = useState<SimulationModel>();
     const [connection, setConnection] = useState<HubConnection>();
     const [participants, setParticipants] = useState<ParticipantModel[]>([]);
     const navigate = useNavigate();
+    const params = useParams();
 
     useEffect(() => {
         // Check if code is valid
@@ -25,7 +26,8 @@ const InstructorSimulationRoomPage = () => {
 
         // Load simulation data
         getSimulationFromCode(params.code)
-            .then(data => setSimulation(data));
+            .then(data => setSimulation(data))
+            .catch(error => console.error(`Unable to load simulation: ${error}`));
 
         // TODO: Be able to change room settings
 
@@ -43,8 +45,9 @@ const InstructorSimulationRoomPage = () => {
         if (simulation === undefined) return;
 
         // Get the participants
-        getParticipants(simulation.code)
-            .then(data => setParticipants(data));
+        getParticipants(simulation.simulation_id)
+            .then(data => setParticipants(data))
+            .catch(error => console.error(`Unable to load participants: ${error}`));
 
     }, [simulation])
 
@@ -58,10 +61,10 @@ const InstructorSimulationRoomPage = () => {
             .catch(err => console.error('Error connecting to hub:', err));
 
         // Connection signals/slots
-        connection.on("ParticipantJoined", (id: number, username: string, email: string) => {
+        connection.on("ParticipantJoined", (participant: ParticipantModel) => {
             // Add to participants list
-            setParticipants([...participants, { participant_id: id, simulation_id: 0, username: username, email: email }]);
-            console.log(`New participant joined:`, username);
+            setParticipants((prev) => [...prev, participant]);
+            console.log(`New participant joined:`, participant.username);
         });
     }, [connection]);
 
