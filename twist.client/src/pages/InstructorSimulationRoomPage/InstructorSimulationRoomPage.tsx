@@ -1,7 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { Button, Container } from "react-bootstrap";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import SimulationModel from "../../models/SimulationModel";
 import { closeSimulation, getParticipants, getSimulationFromCode } from "../../server/simulation_management";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
@@ -14,6 +14,7 @@ const InstructorSimulationRoomPage = () => {
     const [simulation, setSimulation] = useState<SimulationModel>();
     const [connection, setConnection] = useState<HubConnection>();
     const [participants, setParticipants] = useState<ParticipantModel[]>([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Check if code is valid
@@ -64,6 +65,26 @@ const InstructorSimulationRoomPage = () => {
         });
     }, [connection]);
 
+    const handleCloseRoom = () => {
+        if (params.code === undefined) {
+            console.error("Unable to close room: No code provided.")
+            return;
+        }
+        closeSimulation(params.code, new Date())
+            .then((response) => {
+                // Check if the response failed
+                if (response === undefined) {
+                    return;
+                }
+
+                // Navigate back to instructor home
+                navigate("/instructor");
+            })
+            .catch((error) => {
+                console.error(`Unable to close room: ${error}`);
+            });
+    }
+
     if (error) return <div>Oops... {error.message}</div>;
 
     if (isLoading) return <div>Loading...</div>;
@@ -77,22 +98,7 @@ const InstructorSimulationRoomPage = () => {
             <Container>
                 <ParticipantList participants={participants} />
             </Container>
-            <Button onClick={() => {
-                if (params.code === undefined) {
-                    console.error("Unable to close room: No code provided.")
-                    return;
-                }
-                closeSimulation(params.code, new Date())
-                    .then((response) => {
-                        // Check if the response failed
-                        if (response === undefined) {
-                            return;
-                        }
-
-                        // Navigate back to instructor home
-                        window.location.assign("/instructor");
-                    });
-            }}>Close Room</Button>
+            <Button onClick={() => handleCloseRoom}>Close Room</Button>
             <a href="/instructor">Instructor Home</a>
         </>
     );
