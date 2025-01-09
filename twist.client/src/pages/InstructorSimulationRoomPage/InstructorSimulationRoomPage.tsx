@@ -1,12 +1,12 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { Button } from "react-bootstrap";
-import { useEffect } from "react";
+import { Button, Container } from "react-bootstrap";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { useState } from "react";
 import SimulationModel from "../../models/SimulationModel";
-import { closeSimulation, getSimulationFromCode } from "../../server/simulation_management";
+import { closeSimulation, getParticipants, getSimulationFromCode } from "../../server/simulation_management";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import ParticipantModel from "../../models/ParticipantModel";
+import ParticipantList from "../../components/ParticipantList/ParticipantList";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
@@ -39,6 +39,15 @@ const InstructorSimulationRoomPage = () => {
     }, []);
 
     useEffect(() => {
+        if (simulation === undefined) return;
+
+        // Get the participants
+        getParticipants(simulation.code)
+            .then(data => setParticipants(data));
+
+    }, [simulation])
+
+    useEffect(() => {
         // Check if connection is defined
         if (connection === undefined) return;
 
@@ -65,6 +74,9 @@ const InstructorSimulationRoomPage = () => {
             <h1>Simulation Room</h1>
             <h2>{simulation?.name}</h2>
             <h2>Room Code: {params?.code}</h2>
+            <Container>
+                <ParticipantList participants={participants} />
+            </Container>
             <Button onClick={() => {
                 if (params.code === undefined) {
                     console.error("Unable to close room: No code provided.")
