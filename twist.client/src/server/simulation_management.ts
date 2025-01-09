@@ -1,9 +1,9 @@
 import axios from 'axios';
 import SimulationModel from '../models/SimulationModel';
 import ParticipantModel from '../models/ParticipantModel';
+import { API_URL } from './server_consts';
 
-const SERVER_URL = "https://localhost:7026";
-const API_URL = `${SERVER_URL}/api`;
+
 
 /**
  * Creates a new simulation from the given name and code.
@@ -135,19 +135,5 @@ export async function getSimulations(): Promise<SimulationModel[] | undefined> {
     } catch (error) {
         console.error(`Unable to retrieve simulations: ${error}`);
         return undefined;
-    }
-}
-
-/**
- * Gets all the participants in a simulation.
- */
-export async function getParticipants(code: string): Promise<ParticipantModel[]> {
-    try {
-        return await axios
-            .get(`${API_URL}/simulations/${code}/participants`)
-            .then<ParticipantModel[]>((response) => response.data);
-    } catch (error) {
-        console.error(`Unable to retrieve participants: ${error}`);
-        return [];
     }
 }
