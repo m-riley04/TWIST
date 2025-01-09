@@ -9,7 +9,9 @@ namespace TWISTServer.Hubs
 {
     public interface IRoomClient
     {
-        Task ParticipantJoined(int id, string username, string email);
+        Task ParticipantJoined(ParticipantRecord record);
+        Task ParticipantKicked(string username, string email);
+        Task ParticipantLeft(int id, string username, string email);
     }
 
     public class RoomHub : Hub<IRoomClient>
@@ -28,7 +30,25 @@ namespace TWISTServer.Hubs
                 throw new HubException("Simulation not found");
             }
 
-            SimulationRecord sim = sims.First();
+        public async Task KickParticipant(SimulationRecord sim, ParticipantRecord participant)
+        {
+            // Remove the participant from the participants table
+            partAccessor.Delete(participant.ParticipantId);
+
+            // Remove participant from simulation record
+            var newParticipants = sim.Participants.Where(p => p != participant.ParticipantId);
+            simAccessor.UpdateParticipants(sim.SimulationId, newParticipants);
+
+            // Remove the participant from main group
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, sim.Code);
+
+            // Remove the participant from team
+            string teamName = $"{sim.Code}_{participant.Country}";
+            await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
+
+            // Send signal to all in simulation
+            await Clients.Group(sim.Code).ParticipantKicked(participant.Email, participant.Username);
+        }
 
             /// Add the participant to participants table
             ParticipantRecord participant = new ParticipantRecord(0, null, null, sim.SimulationId, username, email);
