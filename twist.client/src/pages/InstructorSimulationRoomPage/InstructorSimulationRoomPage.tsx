@@ -85,6 +85,21 @@ const InstructorSimulationRoomPage = () => {
             });
     }
 
+    const handleKickParticipant = (participant: ParticipantModel) => {
+        if (connection === undefined) {
+            console.error("Unable to kick participant: No connection to hub.");
+            return;
+        }
+
+        connection.invoke("KickParticipant", simulation, participant)
+            .then(() => {
+                // Remove participant from list
+                setParticipants((prev) => prev.filter((p) => p.email !== participant.email));
+                console.log(`Kicked participant '${participant.email}'`);
+            })
+            .catch((error) => console.error(`Unable to kick participant: ${error}`));
+    }
+
     if (error) return <div>Oops... {error.message}</div>;
 
     if (isLoading) return <div>Loading...</div>;
@@ -96,9 +111,9 @@ const InstructorSimulationRoomPage = () => {
             <h2>{simulation?.name}</h2>
             <h2>Room Code: {params?.code}</h2>
             <Container>
-                <ParticipantList participants={participants} />
+                <ParticipantList participants={participants} onKickClicked={handleKickParticipant} />
             </Container>
-            <Button onClick={() => handleCloseRoom}>Close Room</Button>
+            <Button onClick={handleCloseRoom}>Close Room</Button>
             <a href="/instructor">Instructor Home</a>
         </>
     );
