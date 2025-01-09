@@ -1,5 +1,6 @@
 import axios from 'axios';
 import SimulationModel from '../models/SimulationModel';
+import ParticipantModel from '../models/ParticipantModel';
 
 const SERVER_URL = "https://localhost:7026";
 const API_URL = `${SERVER_URL}/api`;
@@ -9,24 +10,19 @@ const API_URL = `${SERVER_URL}/api`;
  * @param name
  * @param code
  */
-export async function createSimulation(name: string, code: string): Promise<any | undefined> {
-    try {
-        return await axios
-            .put<SimulationModel>(`${API_URL}/simulations`, {
-                name: name,
-                participants: JSON.stringify([]),
-                start_date: new Date().toISOString(),
-                active: true,
-                responses: JSON.stringify([]),
-                asks: JSON.stringify([]),
-                concessions: JSON.stringify([]),
-                round: 0,
-                code: code
-            });
-    } catch (error) {
-        console.error(`Unable to create simulation: ${error}`);
-        return undefined;
-    }
+export async function createSimulation(name: string, code: string) {
+    return await axios
+        .put<SimulationModel>(`${API_URL}/simulations`, {
+            name: name,
+            participants: [],
+            start_date: new Date().toISOString(),
+            active: true,
+            responses: JSON.stringify([]),
+            asks: JSON.stringify([]),
+            concessions: JSON.stringify([]),
+            round: 0,
+            code: code
+        });
 }
 
 /**
@@ -139,5 +135,19 @@ export async function getSimulations(): Promise<SimulationModel[] | undefined> {
     } catch (error) {
         console.error(`Unable to retrieve simulations: ${error}`);
         return undefined;
+    }
+}
+
+/**
+ * Gets all the participants in a simulation.
+ */
+export async function getParticipants(code: string): Promise<ParticipantModel[]> {
+    try {
+        return await axios
+            .get(`${API_URL}/simulations/${code}/participants`)
+            .then<ParticipantModel[]>((response) => response.data);
+    } catch (error) {
+        console.error(`Unable to retrieve participants: ${error}`);
+        return [];
     }
 }
