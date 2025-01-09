@@ -39,5 +39,22 @@ simulation_id = @simulation_id;";
                 ]
             );
         }
+
+        public IEnumerable<ParticipantRecord> GetParticipantFromSimulationAndEmail(int simulationId, string email)
+        {
+            string sql = @$"select
+{GetColumnsAsSql(ParticipantRecord.Columns.Keys)} from {TableName}
+WHERE
+simulation_id = @simulation_id
+AND email = @email;";
+            return Database.Query(
+                sql,
+                ParticipantRecord.FromRow,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                    new("@email", SqlDbType.NVarChar) { Value = email },
+                ]
+            );
+        }
     }
 }
