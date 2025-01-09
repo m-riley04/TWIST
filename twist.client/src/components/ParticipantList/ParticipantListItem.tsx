@@ -8,6 +8,7 @@ const COUNTRIES: string[] = ["USA", "China"];
 const ParticipantListItem = ({ participant }: { participant: ParticipantModel }) => {
     return (
         <div className="participantListItem" >
+            <p>{participant.participant_id}</p>
             <p>{participant.username}</p>
             <p>{participant.email}</p>
             <Dropdown>{COUNTRIES.map((c, i) => <DropdownItem key={i}>{c}</DropdownItem>)}</Dropdown>
