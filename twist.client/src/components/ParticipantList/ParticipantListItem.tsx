@@ -5,7 +5,7 @@ import "./style.scss";
 const ROLES: string[] = ["Protectionist", "Pro-Trade", "Security"];
 const COUNTRIES: string[] = ["USA", "China"];
 
-const ParticipantListItem = ({ participant }: { participant: ParticipantModel }) => {
+const ParticipantListItem = ({ participant, onKickClicked }: { participant: ParticipantModel, onKickClicked: () => void }) => {
     return (
         <div className="participantListItem" >
             <p>{participant.participant_id}</p>
@@ -13,7 +13,7 @@ const ParticipantListItem = ({ participant }: { participant: ParticipantModel })
             <p>{participant.email}</p>
             <Dropdown>{COUNTRIES.map((c, i) => <DropdownItem key={i}>{c}</DropdownItem>)}</Dropdown>
             <Dropdown>{ROLES.map((r, i) => <DropdownItem key={i}>{r}</DropdownItem>)}</Dropdown>
-            <Button>Remove</Button>
+            <Button onClick={onKickClicked}>Kick</Button>
         </div>
     );
 }
