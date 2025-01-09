@@ -1,5 +1,6 @@
 enum CountryEnum {
-    US,
+    NONE=0,
+    USA,
     PRC
 }
 
