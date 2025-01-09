@@ -62,7 +62,7 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
 
         public void UpdateParticipants(int id, IEnumerable<int> participantIds)
         {
-            string sql = @$"UPDATE {TableName} SET participants = @participants WHERE simulation_id = @id;";
+            string sql = @$"UPDATE {TableName} SET participants = @participants WHERE {PrimaryKeyColumn} = @id;";
             Database.NonQuery(
                 sql,
                 [
