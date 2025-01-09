@@ -35,8 +35,8 @@ namespace TWISTServer.Hubs
             int participantId = partAccessor.InsertAndReturnId(participant);
 
             // Add participant to simulation record
-            sim.Participants.Append(participantId);
-            simAccessor.UpdateParticipants(sim.SimulationId, sim.Participants);
+            var newParticipants = sim.Participants.Append(participantId);
+            simAccessor.UpdateParticipants(sim.SimulationId, newParticipants);
 
             // Send signal to all clients
             await Clients.All.ParticipantJoined(participantId, email, username);
