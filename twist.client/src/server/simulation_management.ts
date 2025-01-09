@@ -16,7 +16,6 @@ export async function createSimulation(name: string, code: string): Promise<any 
                 name: name,
                 participants: JSON.stringify([]),
                 start_date: new Date().toISOString(),
-                end_date: null,
                 active: true,
                 responses: JSON.stringify([]),
                 asks: JSON.stringify([]),
