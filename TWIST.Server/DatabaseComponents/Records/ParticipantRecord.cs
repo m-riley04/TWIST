@@ -4,14 +4,14 @@ using TWISTServer.Interfaces;
 
 namespace TWISTServer.DatabaseComponents.Records
 {
-    public record ParticipantRecord(int ParticipantId, int? TeamId, 
+    public record ParticipantRecord(int ParticipantId, CountryEnum? TeamId, 
         ParticipantRoleEnum? Role, int SimulationId, 
         string Username, string Email) : IDatabaseRecord<ParticipantRecord>
     {
         public static Dictionary<string, SqlDbType> Columns { get; } = new Dictionary<string, SqlDbType>()
         {
             { "participant_id", SqlDbType.Int },
-            { "team_id", SqlDbType.Int },
+            { "country", SqlDbType.Int },
             { "role", SqlDbType.Int },
             { "simulation_id", SqlDbType.Int },
             { "username", SqlDbType.NVarChar },
@@ -21,8 +21,8 @@ namespace TWISTServer.DatabaseComponents.Records
         {
             return new ParticipantRecord(
                 row.Field<int>("participant_id")
-                , row.Field<int>("team_id")
-                , (ParticipantRoleEnum)row.Field<int>("role")
+                , Convert.ToBoolean(row.Field<int?>("country")) ? (CountryEnum)row.Field<int?>("role") : CountryEnum.None
+                , Convert.ToBoolean(row.Field<int?>("role")) ? (ParticipantRoleEnum)row.Field<int?>("role") : ParticipantRoleEnum.None
                 , row.Field<int>("simulation_id")
                 , row.Field<string>("username") ?? ""
                 , row.Field<string>("email") ?? ""
