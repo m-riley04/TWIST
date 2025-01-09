@@ -50,16 +50,15 @@ namespace TWISTServer.Hubs
             await Clients.Group(sim.Code).ParticipantKicked(participant.Email, participant.Username);
         }
 
-            /// Add the participant to participants table
-            ParticipantRecord participant = new ParticipantRecord(0, null, null, sim.SimulationId, username, email);
-            int participantId = partAccessor.InsertAndReturnId(participant);
+        public async Task ChangeParticipantRole(string code, ParticipantRecord request)
+        {
+            throw new NotImplementedException();
+        }
 
-            // Add participant to simulation record
-            var newParticipants = sim.Participants.Append(participantId);
-            simAccessor.UpdateParticipants(sim.SimulationId, newParticipants);
+        public async Task ChangeParticipantCountry(string code, ParticipantRecord request)
+        {
 
-            // Send signal to all clients
-            await Clients.All.ParticipantJoined(participantId, email, username);
+            throw new NotImplementedException();
         }
     }
 }
