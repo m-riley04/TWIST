@@ -1,10 +1,11 @@
-﻿using System.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using System.Data;
 using TWISTServer.Interfaces;
 using TWISTServer.DatabaseComponents.Records;
 using System.Reflection;
 using TWISTServer.Extensions;
 using System.Text;
+using System.Text.Json;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
