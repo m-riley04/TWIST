@@ -25,6 +25,7 @@ country = @country;";
             );
         }
 
+        public IEnumerable<ParticipantRecord> GetParticipantsByConnectionId(string connectionId)
         public IEnumerable<ParticipantRecord> GetParticipantsBySimulation(int simulationId)
         {
             string sql = @$"select 
