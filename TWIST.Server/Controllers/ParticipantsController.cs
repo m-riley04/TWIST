@@ -37,7 +37,7 @@ namespace TWISTServer.Controllers
         }
 
         [HttpGet]
-        [Route("simulation/{id}")]
+        [Route("simulation/{simulationId}")]
         public IEnumerable<ParticipantRecord> GetParticipantsFromSimulation([FromRoute] int simulationId)
         {
             return dataAccessor.GetParticipantsBySimulation(simulationId);
