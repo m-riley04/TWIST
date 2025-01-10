@@ -66,6 +66,23 @@ const InstructorSimulationRoomPage = () => {
             setParticipants((prev) => [...prev, participant]);
             console.log(`New participant joined:`, participant.username);
         });
+
+        connection.on("ParticipantLeft", (participant: ParticipantModel) => {
+            // Remove from participants list
+            setParticipants((prev) => prev.filter((p) => p.participant_id !== participant.participant_id));
+            console.log(`Participant left:`, participant.username);
+        });
+
+        connection.on("ParticipantDisconnected", (participant: ParticipantModel) => {
+            // Update the participant list
+            setParticipants((prev) => prev.map((p) => {
+                if (p.participant_id === participant.participant_id) {
+                    p.connection_id = participant.connection_id;
+                }
+                return p;
+            }));
+        });
+
     }, [connection]);
 
     const handleCloseRoom = () => {
