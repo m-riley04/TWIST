@@ -8,4 +8,5 @@ export default interface ParticipantModel {
     simulation_id: number;
     username: string;
     email: string;
+    connection_id?: string;
 };
