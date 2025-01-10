@@ -26,6 +26,20 @@ country = @country;";
         }
 
         public IEnumerable<ParticipantRecord> GetParticipantsByConnectionId(string connectionId)
+        {
+            string sql = @$"select 
+{GetColumnsAsSql(ParticipantRecord.Columns.Keys)} from {TableName}
+WHERE 
+connection_id = @connection_id;";
+            return Database.Query(
+                sql,
+                ParticipantRecord.FromRow,
+                [
+                    new("@connection_id", SqlDbType.Int) { Value = connectionId },
+                ]
+            );
+        }
+
         public IEnumerable<ParticipantRecord> GetParticipantsBySimulation(int simulationId)
         {
             string sql = @$"select 
