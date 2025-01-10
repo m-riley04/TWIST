@@ -57,5 +57,19 @@ AND email = @email;";
                 ]
             );
         }
+
+        public void UpdateParticipantConnectionId(int participantId, string? connectionId)
+        {
+            string sql = @$"UPDATE {TableName}
+SET connection_id = @connection_id
+WHERE participant_id = @participant_id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@connection_id", SqlDbType.NVarChar) { Value = connectionId },
+                    new("@participant_id", SqlDbType.Int) { Value = participantId },
+                ]
+            );
+        }
     }
 }
