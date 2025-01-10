@@ -1,13 +1,24 @@
 ﻿using System.Data;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using TWISTServer.Enums;
 using TWISTServer.Interfaces;
 
 namespace TWISTServer.DatabaseComponents.Records
 {
-    public record SimulationRecord(int SimulationId, string Name, IEnumerable<int> Participants, 
-        DateTime StartDate, DateTime? EndDate, bool Active, string? Responses, string? Asks, 
-        string? Concessions, int Round, string Code) : IDatabaseRecord<SimulationRecord>
+    public record SimulationRecord(
+        [property: JsonPropertyName("simulation_id")] int SimulationId, 
+        string Name, 
+        IEnumerable<int> Participants,
+        [property: JsonPropertyName("start_date")] DateTime StartDate,
+        [property: JsonPropertyName("end_date")] DateTime? EndDate, 
+        bool Active, 
+        string? Responses, 
+        string? Asks, 
+        string? Concessions, 
+        int Round, 
+        string Code
+    ) : IDatabaseRecord<SimulationRecord>
     {
         public static Dictionary<string, SqlDbType> Columns { get; } = new Dictionary<string, SqlDbType>()
         {
