@@ -1,5 +1,5 @@
 ﻿using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace TWISTServer.DatabaseComponents
 {
@@ -180,6 +180,28 @@ namespace TWISTServer.DatabaseComponents
             }
 
             return table.GetChanges()?.Rows.Count ?? 0;
+        }
+
+        /// <summary>
+        /// Executes a scalar request onto the database
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public int ExecuteScalar(string sql, SqlParameter[] parameters)
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    foreach (SqlParameter parameter in parameters)
+                    {
+                        command.Parameters.Add(parameter);
+                    }
+                    return Convert.ToInt32(command.ExecuteScalar());
+                }
+            }
         }
     }
 }

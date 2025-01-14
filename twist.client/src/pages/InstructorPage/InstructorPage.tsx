@@ -3,7 +3,7 @@ import LogoutButton from "../../components/LogoutButton";
 import SimulationsList from "../../components/SimulationList/SimulationList";
 import { useState } from "react";
 import { useEffect } from "react";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Container, Modal } from "react-bootstrap";
 import { deleteSimulation, getSimulations } from "../../server/simulation_management";
 import SimulationModel from "../../models/SimulationModel";
 
@@ -34,7 +34,7 @@ const InstructorPage = () => {
         deleteSimulation(selectedSimulation.code)
             .then(() => {
                 // Remove simulation from list
-                setSimulations(simulations.filter((sim, i) => i !== selectedIndex));
+                setSimulations(simulations.filter((_, i) => i !== selectedIndex));
             });
 
         // Close modal
@@ -75,8 +75,10 @@ const InstructorPage = () => {
             <h1>Instructor Home</h1>
             <p><i>Account: {user?.name}</i></p>
             <p>You can control, view, and create simulations here.</p>
-            <h2>Simulations</h2>
-            <SimulationsList simulations={simulations} onDeleteClicked={handleDeleteClicked} />
+            <Container>
+                <h2>Simulations</h2>
+                <SimulationsList simulations={simulations} onDeleteClicked={handleDeleteClicked} />
+            </Container>
             <Button onClick={() => { window.location.assign("/instructor/create") }}>Create New Simulation</Button>
             <LogoutButton />
             <a href="/">Participant Home</a>

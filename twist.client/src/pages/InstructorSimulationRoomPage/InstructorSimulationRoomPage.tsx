@@ -1,31 +1,183 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { Button } from "react-bootstrap";
-import { useEffect } from "react";
-import { useParams } from "react-router";
-import { useState } from "react";
+import { Button, Container } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router";
 import SimulationModel from "../../models/SimulationModel";
 import { closeSimulation, getSimulationFromCode } from "../../server/simulation_management";
+import { HubConnection } from "@microsoft/signalr";
+import ParticipantModel from "../../models/ParticipantModel";
+import ParticipantList from "../../components/ParticipantList/ParticipantList";
+import { getParticipants } from "../../server/participant_management";
+import CountryEnum from "../../enums/CountryEnum";
+import RoleEnum from "../../enums/RoleEnum";
+import { useRoomHub } from "../../signalr/useRoomHub";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
-    const params = useParams();
     const [simulation, setSimulation] = useState<SimulationModel>();
+    const [participants, setParticipants] = useState<ParticipantModel[]>([]);
+    const navigate = useNavigate();
+    const params = useParams();
 
+    const simCode = params.code ?? "";
+    const connection: HubConnection | undefined = useRoomHub(simCode);
+
+    // Initialize simulation data
     useEffect(() => {
         // Check if code is valid
-        if (params.code === undefined) {
+        if (!simCode) {
             console.error("No code provided.");
             return;
         }
 
         // Load simulation data
-        getSimulationFromCode(params.code)
-            .then(data => setSimulation(data));
+        getSimulationFromCode(simCode)
+            .then(data => setSimulation(data))
+            .catch(error => console.error(`Unable to load simulation: ${error}`));
 
         // TODO: Be able to change room settings
 
         // TODO: Add QR code for participants to join
-    }, []);
+    }, [simCode]);
+
+    // Initialize participants
+    useEffect(() => {
+        if (!simulation) return;
+
+        // Get the participants
+        getParticipants(simulation.simulation_id)
+            .then(data => setParticipants(data))
+            .catch(error => console.error(`Unable to load participants: ${error}`));
+
+    }, [simulation])
+
+    // Initialize connection
+    useEffect(() => {
+        // Check if connection is defined
+        if (!connection) return;
+
+        if (connection.state === "Connected") {
+            console.log("Connected to SignalR hub.");
+        }
+
+        // Connection signals/slots
+        connection.on("ParticipantJoined", (participant: ParticipantModel) => {
+            // Check if participant is already in list
+            if (participants.find((p) => p.participant_id === participant.participant_id)) {
+                console.error(`Participant '${participant.username}' already in list`);
+                return;
+            }
+
+            // Add to participants list
+            setParticipants((prev) => [...prev, participant]);
+            console.log(`New participant joined:`, participant.username);
+        });
+
+        connection.on("ParticipantLeft", (participant: ParticipantModel) => {
+            // Remove from participants list
+            setParticipants((prev) => prev.filter((p) => p.participant_id !== participant.participant_id));
+            console.log(`Participant left:`, participant.username);
+        });
+
+        connection.on("ParticipantDisconnected", (participant: ParticipantModel) => {
+            // Update the participant list
+            setParticipants((prev) => prev.map((p) => {
+                if (p.participant_id === participant.participant_id) {
+                    p.connection_id = participant.connection_id;
+                }
+                return p;
+            }));
+        });
+
+        // Cleanup
+        return () => {
+            connection.stop().catch(console.error);
+        }
+
+    }, [connection]);
+
+    const handleCloseRoom = () => {
+        if (params.code === undefined) {
+            console.error("Unable to close room: No code provided.")
+            return;
+        }
+        closeSimulation(params.code, new Date())
+            .then((response) => {
+                // Check if the response failed
+                if (response === undefined) {
+                    return;
+                }
+
+                // Navigate back to instructor home
+                navigate("/instructor");
+            })
+            .catch((error) => {
+                console.error(`Unable to close room: ${error}`);
+            });
+    }
+
+    const handleStartSimulation = () => { 
+        connection?.invoke("StartSimulation", simulation)
+            .then(() => {
+                console.log("Simulation started.")
+            })
+            .catch((error) => console.error(`Unable to start simulation: ${error}`));
+    }
+
+    const handleKickParticipant = (participant: ParticipantModel) => {
+        if (connection === undefined) {
+            console.error("Unable to kick participant: No connection to hub.");
+            return;
+        }
+
+        connection.invoke("KickParticipant", simulation, participant)
+            .then(() => {
+                // Remove participant from list
+                setParticipants((prev) => prev.filter((p) => p.email !== participant.email));
+                console.log(`Kicked participant '${participant.email}'`);
+            })
+            .catch((error) => console.error(`Unable to kick participant: ${error}`));
+    }
+
+    const handleCountryChanged = (participant: ParticipantModel, country: CountryEnum) => {
+        if (connection === undefined) {
+            console.error("Unable to update participant: No connection to hub.");
+            return;
+        }
+
+        connection.invoke("UpdateParticipantCountry", simulation, participant, country)
+            .then(() => {
+                // Update participant in list
+                setParticipants((prev) => prev.map((p) => {
+                    if (p.participant_id === participant.participant_id) {
+                        p.country = country;
+                    }
+                    return p;
+                }));
+                console.log(`Updated participant '${participant.email}' country to ${country}`);
+            })
+            .catch((error) => console.error(`Unable to update participant: ${error}`));
+    }
+
+    const handleRoleChanged = (participant: ParticipantModel, role: RoleEnum) => {
+        if (connection === undefined) {
+            console.error("Unable to update participant: No connection to hub.");
+            return;
+        }
+
+        connection.invoke("UpdateParticipantRole", simulation, participant, role)
+            .then(() => {
+                // Update participant in list
+                setParticipants((prev) => prev.map((p) => {
+                    if (p.participant_id === participant.participant_id) {
+                        p.role = role;
+                    }
+                    return p;
+                }));
+                console.log(`Updated participant '${participant.email}' role to ${role}`);
+            })
+            .catch((error) => console.error(`Unable to update participant: ${error}`));
+    }
 
     if (error) return <div>Oops... {error.message}</div>;
 
@@ -37,22 +189,11 @@ const InstructorSimulationRoomPage = () => {
             <h1>Simulation Room</h1>
             <h2>{simulation?.name}</h2>
             <h2>Room Code: {params?.code}</h2>
-            <Button onClick={() => {
-                if (params.code === undefined) {
-                    console.error("Unable to close room: No code provided.")
-                    return;
-                }
-                closeSimulation(params.code, new Date())
-                    .then((response) => {
-                        // Check if the response failed
-                        if (response === undefined) {
-                            return;
-                        }
-
-                        // Navigate back to instructor home
-                        window.location.assign("/instructor");
-                    });
-            }}>Close Room</Button>
+            <Container>
+                <ParticipantList participants={participants} onKickClicked={handleKickParticipant} onCountryChanged={handleCountryChanged} onRoleChanged={handleRoleChanged} />
+            </Container>
+            <Button onClick={handleStartSimulation}>Start Simulation</Button>
+            <Button onClick={handleCloseRoom}>Close Room</Button>
             <a href="/instructor">Instructor Home</a>
         </>
     );

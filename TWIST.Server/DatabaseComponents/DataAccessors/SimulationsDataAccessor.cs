@@ -2,6 +2,7 @@
 using TWISTServer.DatabaseComponents.Records;
 using System.Data;
 using System.Data.SqlClient;
+using System.Text.Json;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
@@ -55,6 +56,18 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
                 sql,
                 [
                     new($"@code", SqlDbType.NVarChar) { Value = code },
+                ]
+            );
+        }
+
+        public void UpdateParticipants(int id, IEnumerable<int> participantIds)
+        {
+            string sql = @$"UPDATE {TableName} SET participants = @participants WHERE {PrimaryKeyColumn} = @id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new($"@participants", SqlDbType.NVarChar) { Value = JsonSerializer.Serialize(participantIds) },
+                    new($"@id", SqlDbType.Int) { Value = id },
                 ]
             );
         }

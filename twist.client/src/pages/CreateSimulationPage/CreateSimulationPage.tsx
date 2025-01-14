@@ -2,9 +2,11 @@ import { Button, Form } from "react-bootstrap";
 import { createSimulation, generateCode } from "../../server/simulation_management";
 import { FormEvent } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router";
 
 const CreateSimulationPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
+    const navigate = useNavigate();
 
     async function onCreateClicked(event: FormEvent) {
         event.preventDefault();
@@ -13,20 +15,21 @@ const CreateSimulationPage = () => {
         const form = document.getElementById("simulation-form") as HTMLFormElement;
         const data = new FormData(form);
         const name = data.get("name") as string;
-
-        // Check and generate code
-        let code;
+        
         try {
-            code = await generateCode();
+            // Check and generate code
+            const code = await generateCode();
+
+            // Create simulation
+            await createSimulation(name, code);
+
+            // Navigate AFTER
+            navigate(`/instructor/room/${code}`);
+
         } catch (error) {
             console.error(`Unable to create new simulation: ${error}`);
             return;
         }
-
-        // Create simulation
-        createSimulation(name, code)
-            .then(() => window.location.assign(`/instructor/room/${code}`)) // Navigate to the room
-            .catch((error) => console.error(`Unable to create new simulation: ${error}`));
     }
 
     if (error) return <div>Oops... {error.message}</div>;

@@ -1,6 +1,7 @@
 ﻿using System.Data.SqlClient;
 using System.Data;
 using TWISTServer.DatabaseComponents.Records;
+using TWISTServer.Enums;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
@@ -9,25 +10,40 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
         public override string PrimaryKeyColumn => "participant_id";
         public override string TableName => "participants";
 
-        public IEnumerable<ParticipantRecord> GetParticipantsByTeam(int teamId)
+        public IEnumerable<ParticipantRecord> GetParticipantsByCountry(CountryEnum country)
         {
-            string sql = @"select 
-participant_id, team_id, role, user_id, simulation_id, username from participants
+            string sql = @$"select 
+{GetColumnsAsSql(ParticipantRecord.Columns.Keys)} from {TableName}
 WHERE 
-team_id = @team_id;";
+country = @country;";
             return Database.Query(
                 sql,
                 ParticipantRecord.FromRow,
                 [
-                    new("@team_id", SqlDbType.Int) { Value = teamId },
+                    new("@country", SqlDbType.Int) { Value = country },
+                ]
+            );
+        }
+
+        public IEnumerable<ParticipantRecord> GetParticipantsByConnectionId(string connectionId)
+        {
+            string sql = @$"select 
+{GetColumnsAsSql(ParticipantRecord.Columns.Keys)} from {TableName}
+WHERE 
+connection_id = @connection_id;";
+            return Database.Query(
+                sql,
+                ParticipantRecord.FromRow,
+                [
+                    new("@connection_id", SqlDbType.Int) { Value = connectionId },
                 ]
             );
         }
 
         public IEnumerable<ParticipantRecord> GetParticipantsBySimulation(int simulationId)
         {
-            string sql = @"select 
-participant_id, team_id, role, user_id, simulation_id, username from participants
+            string sql = @$"select 
+{GetColumnsAsSql(ParticipantRecord.Columns.Keys)} from {TableName}
 WHERE 
 simulation_id = @simulation_id;";
             return Database.Query(
@@ -35,6 +51,64 @@ simulation_id = @simulation_id;";
                 ParticipantRecord.FromRow,
                 [
                     new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                ]
+            );
+        }
+
+        public IEnumerable<ParticipantRecord> GetParticipantFromSimulationAndEmail(int simulationId, string email)
+        {
+            string sql = @$"select
+{GetColumnsAsSql(ParticipantRecord.Columns.Keys)} from {TableName}
+WHERE
+simulation_id = @simulation_id
+AND email = @email;";
+            return Database.Query(
+                sql,
+                ParticipantRecord.FromRow,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                    new("@email", SqlDbType.NVarChar) { Value = email },
+                ]
+            );
+        }
+
+        public void UpdateParticipantConnectionId(int participantId, string? connectionId)
+        {
+            string sql = @$"UPDATE {TableName}
+SET connection_id = @connection_id
+WHERE participant_id = @participant_id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@connection_id", SqlDbType.NVarChar) { Value = connectionId },
+                    new("@participant_id", SqlDbType.Int) { Value = participantId },
+                ]
+            );
+        }
+
+        public void UpdateParticipantRole(int participantId, ParticipantRoleEnum role)
+        {
+            string sql = @$"UPDATE {TableName}
+SET role = @role
+WHERE participant_id = @participant_id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@role", SqlDbType.Int) { Value = role },
+                    new("@participant_id", SqlDbType.Int) { Value = participantId },
+                ]
+            );
+        }
+        public void UpdateParticipantCountry(int participantId, CountryEnum country)
+        {
+            string sql = @$"UPDATE {TableName}
+SET country = @country
+WHERE participant_id = @participant_id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@country", SqlDbType.Int) { Value = country },
+                    new("@participant_id", SqlDbType.Int) { Value = participantId },
                 ]
             );
         }

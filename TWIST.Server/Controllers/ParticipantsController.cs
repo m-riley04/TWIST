@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TWISTServer.DatabaseComponents.DataAccessors;
 using TWISTServer.DatabaseComponents.Records;
+using TWISTServer.Enums;
 
 namespace TWISTServer.Controllers
 {
@@ -15,7 +16,7 @@ namespace TWISTServer.Controllers
         [HttpGet]
         [Route("")]
         public IEnumerable<ParticipantRecord> GetParticipants([FromQuery(Name = "id")] int? id, 
-            [FromQuery(Name = "team")] int? teamId, [FromQuery(Name = "simulation")] int? simulationId)
+            [FromQuery(Name = "country")] int? country, [FromQuery(Name = "simulation")] int? simulationId)
         {
             if (id.HasValue)
             {
@@ -27,12 +28,19 @@ namespace TWISTServer.Controllers
                 return dataAccessor.GetParticipantsBySimulation(simulationId.Value);
             }
 
-            if (teamId.HasValue)
+            if (country.HasValue)
             {
-                return dataAccessor.GetParticipantsByTeam(teamId.Value);
+                return dataAccessor.GetParticipantsByCountry((CountryEnum)country.Value);
             }
 
             return dataAccessor.GetAll();
+        }
+
+        [HttpGet]
+        [Route("simulation/{simulationId}")]
+        public IEnumerable<ParticipantRecord> GetParticipantsFromSimulation([FromRoute] int simulationId)
+        {
+            return dataAccessor.GetParticipantsBySimulation(simulationId);
         }
 
         [HttpPut]

@@ -1,10 +1,11 @@
-﻿using System.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using System.Data;
 using TWISTServer.Interfaces;
 using TWISTServer.DatabaseComponents.Records;
 using System.Reflection;
 using TWISTServer.Extensions;
 using System.Text;
+using System.Text.Json;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
@@ -76,6 +77,12 @@ VALUES ({GetColumnsAsSql(columnsToInsert, "@")});";
             {
                 object? value = columnNameValueDict[columnName];
 
+                // If this is the participants column, serialize the IEnumerable<int> to JSON
+                if (value is IEnumerable<int> enumerable)
+                {
+                    value = JsonSerializer.Serialize(enumerable);
+                }
+
                 // Convert null to DBNull.Value
                 parameters.Add(
                     new($"@{columnName}", T.Columns[columnName]) { 
@@ -86,6 +93,50 @@ VALUES ({GetColumnsAsSql(columnsToInsert, "@")});";
 
             // Call to the database
             return Database.NonQuery(sql, parameters.ToArray());
+        }
+
+        public virtual int InsertAndReturnId(T record)
+        {
+            // 1) Build the parameter dictionary exactly like `Insert(...)` does
+            PropertyInfo[] recordProperties = record.GetType().GetProperties();
+            Dictionary<string, object?> columnNameValueDict = new();
+
+            for (int i = 0; i < recordProperties.Length; i++)
+            {
+                var pName = recordProperties[i].Name.ToSnakeCase();
+                var pValue = recordProperties[i].GetValue(record);
+                columnNameValueDict.Add(pName, pValue);
+            }
+
+            // 2) Exclude the primary key column from the INSERT
+            string[] columnsToInsert = T.Columns.Keys
+                .Where(c => c != PrimaryKeyColumn)
+                .ToArray();
+
+            // 3) Create the INSERT statement that returns the newly inserted ID using the OUTPUT clause
+            string sql = $@"
+INSERT INTO {TableName} 
+    ({GetColumnsAsSql(columnsToInsert)}) 
+OUTPUT inserted.{PrimaryKeyColumn} -- Return the newly inserted PK
+VALUES 
+    ({GetColumnsAsSql(columnsToInsert, "@")});
+";
+
+            // 4) Build the SqlParameters
+            List<SqlParameter> parameters = new();
+            foreach (string columnName in columnsToInsert)
+            {
+                object? value = columnNameValueDict[columnName];
+                parameters.Add(
+                    new($"@{columnName}", T.Columns[columnName])
+                    {
+                        Value = value ?? DBNull.Value
+                    }
+                );
+            }
+
+            // 5) Run it and get the scalar result (the newly inserted ID)
+            return Database.ExecuteScalar(sql, parameters.ToArray());
         }
 
         //<inheritdoc/>

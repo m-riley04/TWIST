@@ -2,8 +2,9 @@
 {
     public enum ParticipantRoleEnum
     {
-        Participant,
-        Spectator,
-        Instructor
+        None = 0,
+        Protectionist,
+        ProTrade,
+        Security
     }
 }

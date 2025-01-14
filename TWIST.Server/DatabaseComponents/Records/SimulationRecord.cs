@@ -1,12 +1,24 @@
 ﻿using System.Data;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using TWISTServer.Enums;
 using TWISTServer.Interfaces;
 
 namespace TWISTServer.DatabaseComponents.Records
 {
-    public record SimulationRecord(int SimulationId, string Name, string Participants, 
-        DateTime StartDate, DateTime? EndDate, bool Active, string? Responses, string? Asks, 
-        string? Concessions, int Round, string Code) : IDatabaseRecord<SimulationRecord>
+    public record SimulationRecord(
+        [property: JsonPropertyName("simulation_id")] int SimulationId, 
+        string Name, 
+        IEnumerable<int> Participants,
+        [property: JsonPropertyName("start_date")] DateTime StartDate,
+        [property: JsonPropertyName("end_date")] DateTime? EndDate, 
+        bool Active, 
+        string? Responses, 
+        string? Asks, 
+        string? Concessions, 
+        int Round, 
+        string Code
+    ) : IDatabaseRecord<SimulationRecord>
     {
         public static Dictionary<string, SqlDbType> Columns { get; } = new Dictionary<string, SqlDbType>()
         {
@@ -25,10 +37,14 @@ namespace TWISTServer.DatabaseComponents.Records
 
         public static SimulationRecord FromRow(DataRow row)
         {
+            // Deserialize participants list
+            var participantsJson = row.Field<string>("participants") ?? "[]";
+            var participants = JsonSerializer.Deserialize<IEnumerable<int>>(participantsJson) ?? [];
+
             return new SimulationRecord(
                 row.Field<int>("simulation_id")
                 , row.Field<string>("name") ?? ""
-                , row.Field<string>("participants") ?? ""
+                , participants
                 , row.Field<DateTime>("start_date")
                 , row.Field<DateTime?>("end_date")
                 , row.Field<bool>("active")

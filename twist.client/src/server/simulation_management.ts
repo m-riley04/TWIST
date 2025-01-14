@@ -1,32 +1,28 @@
 import axios from 'axios';
 import SimulationModel from '../models/SimulationModel';
+import ParticipantModel from '../models/ParticipantModel';
+import { API_URL } from './server_consts';
 
-const API_URL = "https://localhost:7026/api";
+
 
 /**
  * Creates a new simulation from the given name and code.
  * @param name
  * @param code
  */
-export async function createSimulation(name: string, code: string): Promise<any | undefined> {
-    try {
-        return await axios
-            .put<SimulationModel>(`${API_URL}/simulations`, {
-                name: name,
-                participants: JSON.stringify([]),
-                start_date: new Date().toISOString(),
-                end_date: null,
-                active: true,
-                responses: JSON.stringify([]),
-                asks: JSON.stringify([]),
-                concessions: JSON.stringify([]),
-                round: 0,
-                code: code
-            });
-    } catch (error) {
-        console.error(`Unable to create simulation: ${error}`);
-        return undefined;
-    }
+export async function createSimulation(name: string, code: string) {
+    return await axios
+        .put<SimulationModel>(`${API_URL}/simulations`, {
+            name: name,
+            participants: [],
+            start_date: new Date().toISOString(),
+            active: true,
+            responses: JSON.stringify([]),
+            asks: JSON.stringify([]),
+            concessions: JSON.stringify([]),
+            round: 0,
+            code: code
+        });
 }
 
 /**
