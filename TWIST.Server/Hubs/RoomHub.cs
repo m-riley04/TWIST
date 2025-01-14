@@ -31,7 +31,7 @@ namespace TWISTServer.Hubs
             if (_ == null)
             {
                 // Add the participant to participants table
-                newParticipant = new ParticipantRecord(0, CountryEnum.None, ParticipantRoleEnum.None, sim.SimulationId, username, email, Context.ConnectionId);
+                newParticipant = new ParticipantRecord(0, CountryEnum.NONE, ParticipantRoleEnum.NONE, sim.SimulationId, username, email, Context.ConnectionId);
                 int participantId = partAccessor.InsertAndReturnId(newParticipant);
                 newParticipant = newParticipant with { ParticipantId = participantId };
 
@@ -146,6 +146,78 @@ namespace TWISTServer.Hubs
 
             // Send signal
             await Clients.Group(sim.Code).ParticipantUpdated(participant);
+        }
+
+        // TODO: Implement these methods
+        public async Task RandomlyAssignCountry(SimulationRecord sim, ParticipantRecord participant)
+        {
+            // Get all participants
+            var participants = partAccessor.GetParticipantFromSimulationAndEmail(sim.SimulationId, participant.Email).ToList();
+            
+            // Get all countries
+            var countries = Enum.GetValues<CountryEnum>().ToList();
+            
+            // Remove the participant's current country
+            countries.Remove(participant.Country ?? 0);
+            
+            // Remove the participant from their current team
+            string teamName = $"{sim.Code}_{participant.Country}";
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
+            
+            // Assign a random country
+            var random = new Random();
+            var newCountry = countries[random.Next(countries.Count)];
+            
+            // Update the participant's country
+            partAccessor.UpdateParticipantCountry(participant.ParticipantId, newCountry);
+            
+            // Add the participant to new team
+            teamName = $"{sim.Code}_{newCountry}";
+            await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
+            
+            // Send signal
+            await Clients.Group(sim.Code).ParticipantUpdated(participant);
+        }
+
+        // TODO: Implement these methods
+        public async Task RandomlyAssignRole(SimulationRecord sim, ParticipantRecord participant)
+        {
+            // Get all participants
+            var participants = partAccessor.GetParticipantFromSimulationAndEmail(sim.SimulationId, participant.Email).ToList();
+
+            // Get all roles
+            var roles = Enum.GetValues<ParticipantRoleEnum>().ToList();
+
+            // Remove the participant's current role
+            roles.Remove(participant.Role ?? 0);
+
+            // Assign a random role
+            var random = new Random();
+            var newRole = roles[random.Next(roles.Count)];
+
+            // Update the participant's role
+            partAccessor.UpdateParticipantRole(participant.ParticipantId, newRole);
+
+            // Send signal
+            await Clients.Group(sim.Code).ParticipantUpdated(participant);
+        }
+
+        // TODO: Implement these methods
+        public async Task RandomlyAssignCountryToAll(SimulationRecord sim, ParticipantRecord[] participants)
+        {
+            foreach (ParticipantRecord p in participants)
+            {
+                await RandomlyAssignCountry(sim, p);
+            }
+        }
+
+        // TODO: Implement these methods
+        public async Task RandomlyAssignRoleToAll(SimulationRecord sim, ParticipantRecord[] participants)
+        {
+            foreach (ParticipantRecord p in participants)
+            {
+                await RandomlyAssignRole(sim, p);
+            }
         }
 
         public async Task StartSimulation(SimulationRecord sim)
