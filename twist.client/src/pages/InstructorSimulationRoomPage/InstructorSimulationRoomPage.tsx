@@ -4,47 +4,45 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import SimulationModel from "../../models/SimulationModel";
 import { closeSimulation, getSimulationFromCode } from "../../server/simulation_management";
-import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import { HubConnection } from "@microsoft/signalr";
 import ParticipantModel from "../../models/ParticipantModel";
 import ParticipantList from "../../components/ParticipantList/ParticipantList";
 import { getParticipants } from "../../server/participant_management";
 import CountryEnum from "../../enums/CountryEnum";
 import RoleEnum from "../../enums/RoleEnum";
+import { useRoomHub } from "../../signalr/useRoomHub";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
     const [simulation, setSimulation] = useState<SimulationModel>();
-    const [connection, setConnection] = useState<HubConnection>();
     const [participants, setParticipants] = useState<ParticipantModel[]>([]);
     const navigate = useNavigate();
     const params = useParams();
 
+    const simCode = params.code ?? "";
+    const connection: HubConnection | undefined = useRoomHub(simCode);
+
+    // Initialize simulation data
     useEffect(() => {
         // Check if code is valid
-        if (params.code === undefined) {
+        if (!simCode) {
             console.error("No code provided.");
             return;
         }
 
         // Load simulation data
-        getSimulationFromCode(params.code)
+        getSimulationFromCode(simCode)
             .then(data => setSimulation(data))
             .catch(error => console.error(`Unable to load simulation: ${error}`));
 
         // TODO: Be able to change room settings
 
         // TODO: Add QR code for participants to join
+    }, [simCode]);
 
-        // Attempt to connect to the SignalR hub
-        const con = new HubConnectionBuilder()
-            .withUrl("https://localhost:7026/roomHub")
-            .withAutomaticReconnect()
-            .build();
-        setConnection(con);
-    }, []);
-
+    // Initialize participants
     useEffect(() => {
-        if (simulation === undefined) return;
+        if (!simulation) return;
 
         // Get the participants
         getParticipants(simulation.simulation_id)
@@ -53,14 +51,14 @@ const InstructorSimulationRoomPage = () => {
 
     }, [simulation])
 
+    // Initialize connection
     useEffect(() => {
         // Check if connection is defined
-        if (connection === undefined) return;
+        if (!connection) return;
 
-        // Start connection
-        connection.start()
-            .then(() => console.log('Connected to SignalR hub'))
-            .catch(err => console.error('Error connecting to hub:', err));
+        if (connection.state === "Connected") {
+            console.log("Connected to SignalR hub.");
+        }
 
         // Connection signals/slots
         connection.on("ParticipantJoined", (participant: ParticipantModel) => {
@@ -91,6 +89,11 @@ const InstructorSimulationRoomPage = () => {
             }));
         });
 
+        // Cleanup
+        return () => {
+            connection.stop().catch(console.error);
+        }
+
     }, [connection]);
 
     const handleCloseRoom = () => {
@@ -111,6 +114,10 @@ const InstructorSimulationRoomPage = () => {
             .catch((error) => {
                 console.error(`Unable to close room: ${error}`);
             });
+    }
+
+    const handleStartSimulation = () => {
+
     }
 
     const handleKickParticipant = (participant: ParticipantModel) => {
@@ -134,8 +141,6 @@ const InstructorSimulationRoomPage = () => {
             return;
         }
 
-        console.log(country);
-
         connection.invoke("UpdateParticipantCountry", simulation, participant, country)
             .then(() => {
                 // Update participant in list
@@ -155,8 +160,6 @@ const InstructorSimulationRoomPage = () => {
             console.error("Unable to update participant: No connection to hub.");
             return;
         }
-
-        console.log(role);
 
         connection.invoke("UpdateParticipantRole", simulation, participant, role)
             .then(() => {
@@ -185,6 +188,7 @@ const InstructorSimulationRoomPage = () => {
             <Container>
                 <ParticipantList participants={participants} onKickClicked={handleKickParticipant} onCountryChanged={handleCountryChanged} onRoleChanged={handleRoleChanged} />
             </Container>
+            <Button onClick={handleStartSimulation}>Start Simulation</Button>
             <Button onClick={handleCloseRoom}>Close Room</Button>
             <a href="/instructor">Instructor Home</a>
         </>
