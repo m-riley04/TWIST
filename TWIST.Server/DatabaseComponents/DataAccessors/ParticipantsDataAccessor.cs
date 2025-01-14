@@ -85,5 +85,32 @@ WHERE participant_id = @participant_id;";
                 ]
             );
         }
+
+        public void UpdateParticipantRole(int participantId, ParticipantRoleEnum role)
+        {
+            string sql = @$"UPDATE {TableName}
+SET role = @role
+WHERE participant_id = @participant_id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@role", SqlDbType.Int) { Value = role },
+                    new("@participant_id", SqlDbType.Int) { Value = participantId },
+                ]
+            );
+        }
+        public void UpdateParticipantCountry(int participantId, CountryEnum country)
+        {
+            string sql = @$"UPDATE {TableName}
+SET country = @country
+WHERE participant_id = @participant_id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@country", SqlDbType.Int) { Value = country },
+                    new("@participant_id", SqlDbType.Int) { Value = participantId },
+                ]
+            );
+        }
     }
 }
