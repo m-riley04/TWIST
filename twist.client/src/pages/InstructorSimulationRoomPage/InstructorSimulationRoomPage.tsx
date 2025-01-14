@@ -8,6 +8,8 @@ import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import ParticipantModel from "../../models/ParticipantModel";
 import ParticipantList from "../../components/ParticipantList/ParticipantList";
 import { getParticipants } from "../../server/participant_management";
+import CountryEnum from "../../enums/CountryEnum";
+import RoleEnum from "../../enums/RoleEnum";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
@@ -62,6 +64,12 @@ const InstructorSimulationRoomPage = () => {
 
         // Connection signals/slots
         connection.on("ParticipantJoined", (participant: ParticipantModel) => {
+            // Check if participant is already in list
+            if (participants.find((p) => p.participant_id === participant.participant_id)) {
+                console.error(`Participant '${participant.username}' already in list`);
+                return;
+            }
+
             // Add to participants list
             setParticipants((prev) => [...prev, participant]);
             console.log(`New participant joined:`, participant.username);
@@ -120,6 +128,50 @@ const InstructorSimulationRoomPage = () => {
             .catch((error) => console.error(`Unable to kick participant: ${error}`));
     }
 
+    const handleCountryChanged = (participant: ParticipantModel, country: CountryEnum) => {
+        if (connection === undefined) {
+            console.error("Unable to update participant: No connection to hub.");
+            return;
+        }
+
+        console.log(country);
+
+        connection.invoke("UpdateParticipantCountry", simulation, participant, country)
+            .then(() => {
+                // Update participant in list
+                setParticipants((prev) => prev.map((p) => {
+                    if (p.participant_id === participant.participant_id) {
+                        p.country = country;
+                    }
+                    return p;
+                }));
+                console.log(`Updated participant '${participant.email}' country to ${country}`);
+            })
+            .catch((error) => console.error(`Unable to update participant: ${error}`));
+    }
+
+    const handleRoleChanged = (participant: ParticipantModel, role: RoleEnum) => {
+        if (connection === undefined) {
+            console.error("Unable to update participant: No connection to hub.");
+            return;
+        }
+
+        console.log(role);
+
+        connection.invoke("UpdateParticipantRole", simulation, participant, role)
+            .then(() => {
+                // Update participant in list
+                setParticipants((prev) => prev.map((p) => {
+                    if (p.participant_id === participant.participant_id) {
+                        p.role = role;
+                    }
+                    return p;
+                }));
+                console.log(`Updated participant '${participant.email}' role to ${role}`);
+            })
+            .catch((error) => console.error(`Unable to update participant: ${error}`));
+    }
+
     if (error) return <div>Oops... {error.message}</div>;
 
     if (isLoading) return <div>Loading...</div>;
@@ -131,7 +183,7 @@ const InstructorSimulationRoomPage = () => {
             <h2>{simulation?.name}</h2>
             <h2>Room Code: {params?.code}</h2>
             <Container>
-                <ParticipantList participants={participants} onKickClicked={handleKickParticipant} />
+                <ParticipantList participants={participants} onKickClicked={handleKickParticipant} onCountryChanged={handleCountryChanged} onRoleChanged={handleRoleChanged} />
             </Container>
             <Button onClick={handleCloseRoom}>Close Room</Button>
             <a href="/instructor">Instructor Home</a>
