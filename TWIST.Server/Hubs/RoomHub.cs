@@ -14,6 +14,7 @@ namespace TWISTServer.Hubs
         Task ParticipantKicked(ParticipantRecord record);
         Task ParticipantLeft(ParticipantRecord record);
         Task ParticipantDisconnected(ParticipantRecord record);
+        Task ParticipantUpdated(ParticipantRecord record);
     }
 
     public class RoomHub : Hub<IRoomClient>
@@ -72,7 +73,14 @@ namespace TWISTServer.Hubs
             // Update the participant's connection id
             partAccessor.UpdateParticipantConnectionId(participant.ParticipantId, null);
 
-            return Clients.Group(participant.SimulationId.ToString()).ParticipantDisconnected(participant);
+            // Get simulation
+            var sim = simAccessor.Get(participant.SimulationId).FirstOrDefault();
+            if (sim == null)
+            {
+                return base.OnDisconnectedAsync(exception);
+            }
+
+            return Clients.Group(sim.Code).ParticipantDisconnected(participant);
         }
 
         public async Task LeaveRoom(SimulationRecord sim, ParticipantRecord participant)
@@ -82,14 +90,14 @@ namespace TWISTServer.Hubs
             simAccessor.UpdateParticipants(sim.SimulationId, newParticipants);
 
             // Remove the participant from main group
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, sim.SimulationId.ToString());
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, sim.Code);
 
             // Remove the participant from team
-            string teamName = $"{sim.SimulationId}_{participant.Country}";
+            string teamName = $"{sim.Code}_{participant.Country}";
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
 
             // Send signal to all in simulation
-            await Clients.Group(sim.SimulationId.ToString()).ParticipantLeft(participant);
+            await Clients.Group(sim.Code).ParticipantLeft(participant);
         }
 
         public async Task KickParticipant(SimulationRecord sim, ParticipantRecord participant)
@@ -102,25 +110,40 @@ namespace TWISTServer.Hubs
             simAccessor.UpdateParticipants(sim.SimulationId, newParticipants);
 
             // Remove the participant from main group
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, sim.SimulationId.ToString());
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, sim.Code);
 
             // Remove the participant from team
-            string teamName = $"{sim.SimulationId}_{participant.Country}";
+            string teamName = $"{sim.Code}_{participant.Country}";
             await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
 
             // Send signal to all in simulation
-            await Clients.Group(sim.SimulationId.ToString()).ParticipantKicked(participant);
+            await Clients.Group(sim.Code).ParticipantKicked(participant);
         }
 
-        public async Task ChangeParticipantRole(string code, ParticipantRecord request)
+        public async Task UpdateParticipantRole(SimulationRecord sim, ParticipantRecord participant, ParticipantRoleEnum newRole)
         {
-            throw new NotImplementedException();
+            // Update the participant's role
+            partAccessor.UpdateParticipantRole(participant.ParticipantId, newRole);
+
+            // Send signal
+            await Clients.Group(sim.Code).ParticipantUpdated(participant);
         }
 
-        public async Task ChangeParticipantCountry(string code, ParticipantRecord request)
+        public async Task UpdateParticipantCountry(SimulationRecord sim, ParticipantRecord participant, CountryEnum newCountry)
         {
+            // Update database
+            partAccessor.UpdateParticipantCountry(participant.ParticipantId, newCountry);
 
-            throw new NotImplementedException();
+            // Remove the participant from current team
+            string teamName = $"{sim.Code}_{participant.Country}";
+            await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
+
+            // Add the participant to new team
+            teamName = $"{sim.Code}_{newCountry}";
+            await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
+
+            // Send signal
+            await Clients.Group(sim.Code).ParticipantUpdated(participant);
         }
     }
 }
