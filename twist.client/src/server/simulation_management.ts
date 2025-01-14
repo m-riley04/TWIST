@@ -1,6 +1,5 @@
 import axios from 'axios';
 import SimulationModel from '../models/SimulationModel';
-import ParticipantModel from '../models/ParticipantModel';
 import { API_URL } from './server_consts';
 
 
