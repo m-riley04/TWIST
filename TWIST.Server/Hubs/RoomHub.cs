@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 using TWISTServer.Controllers;
 using TWISTServer.DatabaseComponents.DataAccessors;
 using TWISTServer.DatabaseComponents.Records;
@@ -15,6 +16,7 @@ namespace TWISTServer.Hubs
         Task ParticipantLeft(ParticipantRecord record);
         Task ParticipantDisconnected(ParticipantRecord record);
         Task ParticipantUpdated(ParticipantRecord record);
+        Task SimulationStarted();
     }
 
     public class RoomHub : Hub<IRoomClient>
@@ -144,6 +146,13 @@ namespace TWISTServer.Hubs
 
             // Send signal
             await Clients.Group(sim.Code).ParticipantUpdated(participant);
+        }
+
+        public async Task StartSimulation(SimulationRecord sim)
+        {
+
+            // Signal
+            await Clients.Group(sim.Code).SimulationStarted();
         }
     }
 }

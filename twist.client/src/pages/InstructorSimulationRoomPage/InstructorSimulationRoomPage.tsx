@@ -116,8 +116,12 @@ const InstructorSimulationRoomPage = () => {
             });
     }
 
-    const handleStartSimulation = () => {
-
+    const handleStartSimulation = () => { 
+        connection?.invoke("StartSimulation", simulation)
+            .then(() => {
+                console.log("Simulation started.")
+            })
+            .catch((error) => console.error(`Unable to start simulation: ${error}`));
     }
 
     const handleKickParticipant = (participant: ParticipantModel) => {

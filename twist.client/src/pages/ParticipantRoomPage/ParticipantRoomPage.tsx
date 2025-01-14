@@ -1,4 +1,4 @@
-import { Button, Form } from "react-bootstrap";
+import { Button, Container, Form } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { getSimulationFromCode } from "../../server/simulation_management";
@@ -6,8 +6,6 @@ import { HubConnection } from "@microsoft/signalr";
 import { useRoomHub } from "../../signalr/useRoomHub";
 import ParticipantPageLoadingStatus from "../../components/ParticipantPageLoadingStatus/ParticipantPageLoadingStatus";
 import SimulationModel from "../../models/SimulationModel";
-import { RoleStringMap } from "../../enums/RoleEnum";
-import { CountryStringMap } from "../../enums/CountryEnum";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -55,6 +53,10 @@ const ParticipantRoomPage = () => {
             console.log(`Participant ${participant.name} joined.`);
         });
 
+        connection.on("SimulationStarted", () => {
+            console.log("Simulation started.");
+        })
+
         // Cleanup
         return () => {
             connection.stop().catch(console.error);
@@ -100,9 +102,6 @@ const ParticipantRoomPage = () => {
     if (signedIn) return (
         <>
             <p>You are signed in! Please wait for the instructor to start the simulation.</p>
-            <p>Name: { }</p>
-            <p>Current Country: {CountryStringMap.get(0)}</p>
-            <p>Current Role: {RoleStringMap.get(0)}</p>
             <a href="/">Back</a>
         </>
     );
@@ -112,17 +111,19 @@ const ParticipantRoomPage = () => {
             <p>You are now joining...</p>
             <h1>{simulation?.name}</h1>
             <p>Enter your details to be logged in.</p>
-            <Form onSubmit={handleSubmit}>
-                <Form.Group>
-                    <Form.Label htmlFor="email">Email:</Form.Label><br />
-                    <Form.Control id="email" title="Email" type="email" placeholder="Enter your email here..." />
+            <Container>
+                <Form onSubmit={handleSubmit}>
+                    <Form.Group>
+                        <Form.Label htmlFor="email">Email:</Form.Label>
+                        <Form.Control id="email" title="Email" type="email" placeholder="Enter your email here..." />
 
-                    <Form.Label htmlFor="name">Name:</Form.Label><br />
-                    <Form.Control id="name" title="Name" type="text" placeholder="Enter your name here..." />
+                        <Form.Label htmlFor="name">Name:</Form.Label>
+                        <Form.Control id="name" title="Name" type="text" placeholder="Enter your name here..." />
 
-                    <Button type="submit">Join</Button>
-                </Form.Group>
-            </Form>
+                        <Button type="submit">Join</Button>
+                    </Form.Group>
+                </Form>
+            </Container>
 
             <a href="/">Back</a>
         </>
