@@ -89,6 +89,10 @@ const InstructorSimulationRoomPage = () => {
             }));
         });
 
+        connection.on("SimulationStarted", (simulation: SimulationModel ) => {
+
+        })
+
         // Cleanup
         return () => {
             connection.stop().catch(console.error);
