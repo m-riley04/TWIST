@@ -3,52 +3,50 @@ import SimulationModel from "../../models/SimulationModel";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { getSimulationFromCode } from "../../server/simulation_management";
-import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-import { SERVER_URL } from "../../server/server_consts";
+import { HubConnection } from "@microsoft/signalr";
+import { useRoomHub } from "../../signalr/useRoomHub";
 
 const ParticipantRoomPage = () => {
-    const [connection, setConnection] = useState<HubConnection>();
     const [simulation, setSimulation] = useState<SimulationModel>();
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const params = useParams();
     const [signedIn, setSignedIn] = useState(false);
 
+    const simCode = params.code ?? "";
+    const connection: HubConnection | undefined = useRoomHub(simCode);
+
     useEffect(() => {
         // Check if the code is valid
-        if (params.code === undefined) {
+        if (!simCode) {
             setError("No code provided.");
             console.error("No code provided");
             return;
         }
 
         // Get the simulation from the code
-        getSimulationFromCode(params.code)
+        getSimulationFromCode(simCode)
             .then((data) => setSimulation(data))
             .then(() => setLoading(false))
             .catch((error) => {
                 setError(`Unable to load simulation from code: ${error}`);
                 console.error(error);
             });
+    }, [simCode]);
 
-        // Attempt to connect to the SignalR hub
-        const con = new HubConnectionBuilder()
-            .withUrl(`${SERVER_URL}/roomHub`)
-            .withAutomaticReconnect()
-            .build();
-        setConnection(con);
-
-    }, []);
-
+    // Initialize connection
     useEffect(() => {
         // Check if connection is defined
-        if (connection === undefined) return;
+        if (!connection) return;
 
-        // Start connection
-        connection.start()
-            .then(() => console.log('Connected to SignalR hub'))
-            .catch(err => console.error('Error connecting to hub:', err));
+        if (connection.state === "Connected") {
+            console.log("Connected to SignalR hub.");
+        }
 
+        // Cleanup
+        return () => {
+            connection.stop().catch(console.error);
+        }
     }, [connection]);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -82,7 +80,7 @@ const ParticipantRoomPage = () => {
 
     if (loading) return <div>Loading...</div>;
 
-    if (connection?.state === "Connecting") return <div>Connecting sockets...</div>;
+    if (connection?.state === "Connecting") return <div>Connecting to SignalR hub...</div>;
 
     return (
         <>
