@@ -1,36 +1,45 @@
 import { Button, Form } from "react-bootstrap";
-import SimulationModel from "../../models/SimulationModel";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { getSimulationFromCode } from "../../server/simulation_management";
 import { HubConnection } from "@microsoft/signalr";
 import { useRoomHub } from "../../signalr/useRoomHub";
+import ParticipantPageLoadingStatus from "../../components/ParticipantPageLoadingStatus/ParticipantPageLoadingStatus";
+import SimulationModel from "../../models/SimulationModel";
+import { RoleStringMap } from "../../enums/RoleEnum";
+import { CountryStringMap } from "../../enums/CountryEnum";
 
 const ParticipantRoomPage = () => {
-    const [simulation, setSimulation] = useState<SimulationModel>();
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(true);
-    const params = useParams();
+    const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
+    const [isConnected, setIsConnected] = useState(false);
+    const [error, setError] = useState<string>("");
     const [signedIn, setSignedIn] = useState(false);
 
+    const [simulation, setSimulation] = useState<SimulationModel>();
+
+    const params = useParams();
     const simCode = params.code ?? "";
     const connection: HubConnection | undefined = useRoomHub(simCode);
 
     useEffect(() => {
         // Check if the code is valid
         if (!simCode) {
-            setError("No code provided.");
-            console.error("No code provided");
+            const e = "No code provided";
+            console.error(e);
+            setError(e);
             return;
         }
 
         // Get the simulation from the code
         getSimulationFromCode(simCode)
-            .then((data) => setSimulation(data))
-            .then(() => setLoading(false))
+            .then((data) => {
+                setSimulation(data);
+                setIsSimulationLoaded(true);
+                console.log("Simulation loaded.");
+            })
             .catch((error) => {
-                setError(`Unable to load simulation from code: ${error}`);
                 console.error(error);
+                setError(error);
             });
     }, [simCode]);
 
@@ -39,9 +48,12 @@ const ParticipantRoomPage = () => {
         // Check if connection is defined
         if (!connection) return;
 
-        if (connection.state === "Connected") {
-            console.log("Connected to SignalR hub.");
-        }
+        setIsConnected(true);
+
+        // Connect signals
+        connection.on("ParticipantUpdated", (participant) => {
+            console.log(`Participant ${participant.name} joined.`);
+        });
 
         // Cleanup
         return () => {
@@ -76,32 +88,41 @@ const ParticipantRoomPage = () => {
             .catch((error) => console.error(`Failed to join simulation: ${error}`));
     }
 
-    if (error !== "") return <div>{error}</div>;
+    if (error) return <p>Error: {error}</p>;
 
-    if (loading) return <div>Loading...</div>;
+    if (!isConnected || !isSimulationLoaded) return (
+        <ParticipantPageLoadingStatus
+            connection={isConnected ? "connected" : "connecting"}
+            simulation={isSimulationLoaded ? "loaded" : "loading"}
+        />
+    );
 
-    if (connection?.state === "Connecting") return <div>Connecting to SignalR hub...</div>;
+    if (signedIn) return (
+        <>
+            <p>You are signed in! Please wait for the instructor to start the simulation.</p>
+            <p>Name: { }</p>
+            <p>Current Country: {CountryStringMap.get(0)}</p>
+            <p>Current Role: {RoleStringMap.get(0)}</p>
+            <a href="/">Back</a>
+        </>
+    );
 
     return (
         <>
             <p>You are now joining...</p>
             <h1>{simulation?.name}</h1>
             <p>Enter your details to be logged in.</p>
-            {
-                signedIn ? 
-                <p>You are signed in! Please wait for the instructor to start the simulation.</p>
-                : <Form onSubmit={handleSubmit}>
-                    <Form.Group>
-                        <Form.Label htmlFor="email">Email:</Form.Label><br />
-                        <Form.Control id="email" title="Email" type="email" placeholder="Enter your email here..." />
+            <Form onSubmit={handleSubmit}>
+                <Form.Group>
+                    <Form.Label htmlFor="email">Email:</Form.Label><br />
+                    <Form.Control id="email" title="Email" type="email" placeholder="Enter your email here..." />
 
-                        <Form.Label htmlFor="name">Name:</Form.Label><br />
-                        <Form.Control id="name" title="Name" type="text" placeholder="Enter your name here..." />
+                    <Form.Label htmlFor="name">Name:</Form.Label><br />
+                    <Form.Control id="name" title="Name" type="text" placeholder="Enter your name here..." />
 
-                        <Button type="submit">Join</Button>
-                    </Form.Group>
-                </Form>
-            }
+                    <Button type="submit">Join</Button>
+                </Form.Group>
+            </Form>
 
             <a href="/">Back</a>
         </>
