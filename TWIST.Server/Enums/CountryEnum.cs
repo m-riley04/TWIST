@@ -2,7 +2,7 @@
 {
     public enum CountryEnum
     {
-        None = 0,
+        NONE = 0,
         USA,
         PRC
     }
