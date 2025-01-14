@@ -10,15 +10,38 @@ export function useRoomHub(simCode: string) {
             .withUrl(`${SERVER_URL}/roomHub`)
             .withAutomaticReconnect()
             .build();
-    
-            conn.start()
-                .catch(console.error);
-            setConnection(conn);
+
+        setConnection(conn);
 
         return () => {
-            conn.stop().catch(console.error);
+            // We don't stop here. We'll stop in the second effect's cleanup.
         };
     }, [simCode]);
+
+    useEffect(() => {
+        if (!connection) return;
+
+        if (connection.state !== "Disconnected") {
+            console.error("Cannot start connection when it is not in the Disconnected state.");
+            return;
+        }
+
+        let didCancel = false;
+
+        connection.start()
+            .then(() => {
+                if (!didCancel) {
+                    console.log("Connection started.");
+                }
+            })
+            .catch(console.error);
+
+        return () => {
+            didCancel = true;
+            connection.stop().catch(console.error);
+        };
+    }, [connection]);
+
 
     return connection;
 }
