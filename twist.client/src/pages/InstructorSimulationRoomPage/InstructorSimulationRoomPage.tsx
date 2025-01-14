@@ -90,7 +90,7 @@ const InstructorSimulationRoomPage = () => {
         });
 
         connection.on("SimulationStarted", (simulation: SimulationModel ) => {
-
+            // TODO
         })
 
         // Cleanup
@@ -183,6 +183,14 @@ const InstructorSimulationRoomPage = () => {
             .catch((error) => console.error(`Unable to update participant: ${error}`));
     }
 
+    const handleRandomlyAssignCountry = () => {
+
+    }
+
+    const handleRandomlyAssignRole = () => {
+
+    }
+
     if (error) return <div>Oops... {error.message}</div>;
 
     if (isLoading) return <div>Loading...</div>;
@@ -196,8 +204,11 @@ const InstructorSimulationRoomPage = () => {
             <Container>
                 <ParticipantList participants={participants} onKickClicked={handleKickParticipant} onCountryChanged={handleCountryChanged} onRoleChanged={handleRoleChanged} />
             </Container>
+            <Button onClick={handleRandomlyAssignCountry}>Randomly Assign Countries</Button>
+            <Button onClick={handleRandomlyAssignRole}>Randomly Assign Roles</Button>
             <Button onClick={handleStartSimulation}>Start Simulation</Button>
-            <Button onClick={handleCloseRoom}>Close Room</Button>
+            <Button onClick={handleCloseRoom} variant="danger">Close Room</Button>
+            <br/>
             <a href="/instructor">Instructor Home</a>
         </>
     );
