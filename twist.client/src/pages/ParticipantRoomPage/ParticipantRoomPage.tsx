@@ -66,6 +66,14 @@ const ParticipantRoomPage = () => {
             setIsStarted(false);
             console.log("Simulation stopped.");
         })
+
+        connection.on("ParticipantKicked", (participant) => {
+            if (participant.connection_id === connection.connectionId) {
+                console.log("You have been kicked.");
+                navigate("/");
+            }
+        })
+
         // Cleanup
         return () => {
             connection.stop().catch(console.error);
@@ -99,8 +107,10 @@ const ParticipantRoomPage = () => {
             .catch((error) => console.error(`Failed to join simulation: ${error}`));
     }
 
+    // Error screen
     if (error) return <p>Error: {error}</p>;
 
+    // Loading screen
     if (!isConnected || !isSimulationLoaded) return (
         <ParticipantPageLoadingStatus
             connection={isConnected ? "connected" : "connecting"}
@@ -108,13 +118,45 @@ const ParticipantRoomPage = () => {
         />
     );
 
-    if (signedIn) return (
-        <>
-            <p>You are signed in! Please wait for the instructor to start the simulation.</p>
-            <a href="/">Back</a>
-        </>
-    );
+    // Round screens
+    if (isStarted && signedIn) {
+        switch (simulation?.round) {
+            case RoundEnum.DOMESTIC:
+                return (
+                    <>
+                        <h1>Round 1 - Domestic</h1>
+                    </>
+                );
+            case RoundEnum.INTERNATIONAL:
+                return (
+                    <>
+                        <h1>Round 2 - International</h1>
+                    </>
+                );
+            case RoundEnum.FINAL_TALLY:
+                return (
+                    <>
+                        <h1>Final Tally</h1>
+                        <h2>China</h2>
+                        <p>{ } points</p>
 
+                        <h2>USA</h2>
+                        <p>{ } points</p>
+
+                        <h2>{ } wins!</h2>
+                    </>
+                );
+        }
+    } else if (signedIn) { // Waiting room
+        return (
+            <>
+                <p>You are signed in! Please wait for the instructor to start the simulation.</p>
+                <a href="/">Back</a>
+            </>
+        );
+    }
+
+    // Default joining screen
     return (
         <>
             <p>You are now joining...</p>
