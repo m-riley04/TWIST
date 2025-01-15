@@ -17,6 +17,7 @@ namespace TWISTServer.Hubs
         Task ParticipantDisconnected(ParticipantRecord record);
         Task ParticipantUpdated(ParticipantRecord record);
         Task SimulationStarted();
+        Task RoundUpdated(RoundEnum round);
     }
 
     public class RoomHub : Hub<IRoomClient>
@@ -222,9 +223,13 @@ namespace TWISTServer.Hubs
 
         public async Task StartSimulation(SimulationRecord sim)
         {
+        public async Task UpdateRound(SimulationRecord sim, RoundEnum round)
+        {
+            // Update the simulation record
+            simAccessor.UpdateRound(sim.SimulationId, round);
 
             // Signal
-            await Clients.Group(sim.Code).SimulationStarted();
+            await Clients.Group(sim.Code).RoundUpdated(round);
         }
     }
 }

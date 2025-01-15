@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { Button, Container } from "react-bootstrap";
+import { Button, Container, Dropdown, DropdownButton } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import SimulationModel from "../../models/SimulationModel";
@@ -11,6 +11,7 @@ import { getParticipants } from "../../server/participant_management";
 import CountryEnum from "../../enums/CountryEnum";
 import RoleEnum from "../../enums/RoleEnum";
 import { useRoomHub } from "../../signalr/useRoomHub";
+import RoundEnum from "../../enums/RoundEnum";
 import QRCode from "react-qr-code";
 
 // TODO: make this into an env variable
@@ -191,8 +192,17 @@ const InstructorSimulationRoomPage = () => {
 
     }
 
-    const handleRandomlyAssignRole = () => {
+    const handleUpdateRound = (newRound: RoundEnum) => {
+        connection?.invoke("UpdateRound", simulation, newRound)
+            .then(() => {
+                setSimulation((prev) => {
+                    if (!prev) return; // Null check
 
+                    return ({ ...prev, round: newRound });
+                });
+                console.log(`Updated to round ${newRound}`)
+            })
+            .catch((error) => console.error(`Unable to update round: ${error}`));
     }
 
     if (error) return <div>Oops... {error.message}</div>;
@@ -204,6 +214,10 @@ const InstructorSimulationRoomPage = () => {
         <>
             <h1>Simulation Room</h1>
             <h2>{simulation?.name}</h2>
+            <p>Current Round: {simulation?.round}</p>
+            <DropdownButton title={`Round ${simulation?.round}`}>
+                {(Object.values(RoundEnum).filter(n => !isNaN(Number(n))) as RoundEnum[]).map((val, i) => <Dropdown.Item key={i} eventKey={val} onClick={() => handleUpdateRound(val)}>{val}</Dropdown.Item>)}
+            </DropdownButton>
             <h2>Room Code: {params?.code}</h2>
             <QRCode value={`https://${WEB_DOMAIN}/room/${params.code}`}/>
             <Container>
