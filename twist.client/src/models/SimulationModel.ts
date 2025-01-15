@@ -1,3 +1,5 @@
+import RoundEnum from "../enums/RoundEnum";
+
 export default interface SimulationModel {
     simulation_id: number;
     name: string;
@@ -8,6 +10,6 @@ export default interface SimulationModel {
     responses: object[];
     asks: object[];
     concessions: object[];
-    round: number;
+    round: RoundEnum;
     code: string;
 };

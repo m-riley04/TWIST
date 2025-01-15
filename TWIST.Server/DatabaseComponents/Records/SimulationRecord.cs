@@ -16,7 +16,7 @@ namespace TWISTServer.DatabaseComponents.Records
         string? Responses, 
         string? Asks, 
         string? Concessions, 
-        int Round, 
+        RoundEnum Round, 
         string Code
     ) : IDatabaseRecord<SimulationRecord>
     {
@@ -51,7 +51,7 @@ namespace TWISTServer.DatabaseComponents.Records
                 , row.Field<string?>("responses")
                 , row.Field<string?>("asks")
                 , row.Field<string?>("concessions")
-                , row.Field<int>("round")
+                , row.Field<RoundEnum>("round")
                 , row.Field<string>("code") ?? ""
                 );
         }

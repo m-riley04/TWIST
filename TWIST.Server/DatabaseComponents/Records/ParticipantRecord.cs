@@ -29,8 +29,8 @@ namespace TWISTServer.DatabaseComponents.Records
         {
             return new ParticipantRecord(
                 row.Field<int>("participant_id")
-                , Convert.ToBoolean(row.Field<int?>("country")) ? (CountryEnum)row.Field<int?>("role") : CountryEnum.NONE
-                , Convert.ToBoolean(row.Field<int?>("role")) ? (ParticipantRoleEnum)row.Field<int?>("role") : ParticipantRoleEnum.NONE
+                , row.Field<CountryEnum?>("country") ?? CountryEnum.NONE
+                , row.Field<ParticipantRoleEnum?>("role") ?? ParticipantRoleEnum.NONE
                 , row.Field<int>("simulation_id")
                 , row.Field<string>("username") ?? ""
                 , row.Field<string>("email") ?? ""
