@@ -125,7 +125,19 @@ const InstructorSimulationRoomPage = () => {
             });
     }
 
-    const handleStartSimulation = () => { 
+    const handleStartSimulation = () => {
+        // Check if simulation is loaded
+        if (!simulation) {
+            console.error("Unable to start simulation: No simulation loaded.");
+            return;
+        }
+
+        // Check current round
+        if (simulation?.round === RoundEnum.NONE) {
+            console.error("Unable to start simulation: No starting round selected.");
+            return;
+        }
+
         connection?.invoke("StartSimulation", simulation)
             .then(() => {
                 console.log("Simulation started.")
@@ -189,7 +201,13 @@ const InstructorSimulationRoomPage = () => {
     }
 
     const handleRandomlyAssignCountry = () => {
+        connection?.invoke("RandomlyAssignCountries", simulation)
+            .catch((error) => console.error(`Unable to randomly assign countries: ${error}`));
+    }
 
+    const handleRandomlyAssignRole = () => {
+        connection?.invoke("RandomlyAssignRoles", simulation)
+            .catch((error) => console.error(`Unable to randomly assign roles: ${error}`));
     }
 
     const handleUpdateRound = (newRound: RoundEnum) => {

@@ -1,11 +1,12 @@
 import { Button, Container, Form } from "react-bootstrap";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { getSimulationFromCode } from "../../server/simulation_management";
 import { HubConnection } from "@microsoft/signalr";
 import { useRoomHub } from "../../signalr/useRoomHub";
 import ParticipantPageLoadingStatus from "../../components/ParticipantPageLoadingStatus/ParticipantPageLoadingStatus";
 import SimulationModel from "../../models/SimulationModel";
+import RoundEnum from "../../enums/RoundEnum";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -13,8 +14,11 @@ const ParticipantRoomPage = () => {
     const [error, setError] = useState<string>("");
     const [signedIn, setSignedIn] = useState(false);
 
+    // Simulation data
     const [simulation, setSimulation] = useState<SimulationModel>();
+    const [isStarted, setIsStarted] = useState<boolean>(false);
 
+    const navigate = useNavigate();
     const params = useParams();
     const simCode = params.code ?? "";
     const connection: HubConnection | undefined = useRoomHub(simCode);
@@ -54,9 +58,14 @@ const ParticipantRoomPage = () => {
         });
 
         connection.on("SimulationStarted", () => {
+            setIsStarted(true);
             console.log("Simulation started.");
         })
 
+        connection.on("SimulationStopped", () => {
+            setIsStarted(false);
+            console.log("Simulation stopped.");
+        })
         // Cleanup
         return () => {
             connection.stop().catch(console.error);
