@@ -149,6 +149,19 @@ const InstructorSimulationRoomPage = () => {
     }
 
     const handleStopSimulation = () => {
+        // Check if simulation is loaded
+        if (!simulation) {
+            console.error("Unable to start simulation: No simulation loaded.");
+            return;
+        }
+
+        // Check current round
+        if (simulation?.round === RoundEnum.NONE) {
+            console.error("Unable to start simulation: No starting round selected.");
+            return;
+        }
+    }
+
     const handleKickParticipant = (participant: ParticipantModel) => {
         if (connection === undefined) {
             console.error("Unable to kick participant: No connection to hub.");
@@ -227,6 +240,28 @@ const InstructorSimulationRoomPage = () => {
             .catch((error) => console.error(`Unable to update round: ${error}`));
     }
 
+    const handleNextRound = () => {
+        if (!simulation) return;
+
+        if (simulation?.round === RoundEnum.FINAL_TALLY) {
+            console.error("Cannot go to next round: Already at final tally.");
+            return;
+        }
+
+        handleUpdateRound(simulation?.round + 1);
+    }
+
+    const handlePreviousRound = () => {
+        if (!simulation) return;
+
+        if (simulation?.round === RoundEnum.NONE) {
+            console.error("Cannot go to previous round: No round selected.");
+            return;
+        }
+
+        handleUpdateRound(simulation?.round - 1);
+    }
+
     if (error) return <div>Oops... {error.message}</div>;
 
     if (isLoading) return <div>Loading...</div>;
@@ -251,6 +286,9 @@ const InstructorSimulationRoomPage = () => {
             <Button onClick={handleStartSimulation}>Start Simulation</Button>
             <Button onClick={handleStopSimulation} variant="warning">Stop Simulation</Button>
             <Button onClick={handleCloseRoom} variant="danger">Close Room</Button>
+
+            <Button onClick={handlePreviousRound}>Previous Round</Button>
+            <Button onClick={handleNextRound}>Next Round</Button>
             <br/>
             <a href="/instructor">Instructor Home</a>
         </>
