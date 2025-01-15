@@ -148,6 +148,7 @@ const InstructorSimulationRoomPage = () => {
             .catch((error) => console.error(`Unable to start simulation: ${error}`));
     }
 
+    const handleStopSimulation = () => {
     const handleKickParticipant = (participant: ParticipantModel) => {
         if (connection === undefined) {
             console.error("Unable to kick participant: No connection to hub.");
@@ -247,6 +248,7 @@ const InstructorSimulationRoomPage = () => {
             <Button onClick={handleRandomlyAssignCountry}>Randomly Assign Countries</Button>
             <Button onClick={handleRandomlyAssignRole}>Randomly Assign Roles</Button>
             <Button onClick={handleStartSimulation}>Start Simulation</Button>
+            <Button onClick={handleStopSimulation} variant="warning">Stop Simulation</Button>
             <Button onClick={handleCloseRoom} variant="danger">Close Room</Button>
             <br/>
             <a href="/instructor">Instructor Home</a>
