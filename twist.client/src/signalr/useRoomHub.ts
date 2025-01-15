@@ -7,7 +7,7 @@ export function useRoomHub(simCode: string) {
 
     useEffect(() => {
         const conn = new HubConnectionBuilder()
-            .withUrl(`${SERVER_URL}/roomHub`)
+            .withUrl(`${SERVER_URL}/room-hub`)
             .withAutomaticReconnect()
             .build();
 
