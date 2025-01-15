@@ -67,6 +67,14 @@ const ParticipantRoomPage = () => {
             console.log("Simulation stopped.");
         })
 
+        connection.on("RoundUpdated", (round: RoundEnum) => {
+            setSimulation((prev) => {
+                if (!prev) return; // Null check
+
+                return ({ ...prev, round: round });
+            });
+        });
+
         connection.on("ParticipantKicked", (participant) => {
             if (participant.connection_id === connection.connectionId) {
                 console.log("You have been kicked.");
