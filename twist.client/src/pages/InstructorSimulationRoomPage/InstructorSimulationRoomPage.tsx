@@ -11,6 +11,10 @@ import { getParticipants } from "../../server/participant_management";
 import CountryEnum from "../../enums/CountryEnum";
 import RoleEnum from "../../enums/RoleEnum";
 import { useRoomHub } from "../../signalr/useRoomHub";
+import QRCode from "react-qr-code";
+
+// TODO: make this into an env variable
+const WEB_DOMAIN = "localhost:5173";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
@@ -201,6 +205,7 @@ const InstructorSimulationRoomPage = () => {
             <h1>Simulation Room</h1>
             <h2>{simulation?.name}</h2>
             <h2>Room Code: {params?.code}</h2>
+            <QRCode value={`https://${WEB_DOMAIN}/room/${params.code}`}/>
             <Container>
                 <ParticipantList participants={participants} onKickClicked={handleKickParticipant} onCountryChanged={handleCountryChanged} onRoleChanged={handleRoleChanged} />
             </Container>
