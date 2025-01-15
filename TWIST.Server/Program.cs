@@ -58,7 +58,7 @@ app.UseAuthorization();
 //app.MapStaticAssets();
 app.MapControllers();
 app.MapFallbackToFile("/index.html");
-app.MapHub<RoomHub>("/roomHub");
+app.MapHub<RoomHub>("/room-hub");
 
 // Run the app
 app.Run();
