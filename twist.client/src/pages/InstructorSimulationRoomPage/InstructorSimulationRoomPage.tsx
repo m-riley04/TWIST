@@ -19,11 +19,13 @@ const WEB_DOMAIN = "localhost:5173";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
+
     const [simulation, setSimulation] = useState<SimulationModel>();
     const [participants, setParticipants] = useState<ParticipantModel[]>([]);
+    const [isStarted, setIsStarted] = useState<boolean>(false);
+
     const navigate = useNavigate();
     const params = useParams();
-
     const simCode = params.code ?? "";
     const connection: HubConnection | undefined = useRoomHub(simCode);
 
@@ -140,6 +142,7 @@ const InstructorSimulationRoomPage = () => {
 
         connection?.invoke("StartSimulation", simulation)
             .then(() => {
+                setIsStarted(true);
                 console.log("Simulation started.")
             })
             .catch((error) => console.error(`Unable to start simulation: ${error}`));
