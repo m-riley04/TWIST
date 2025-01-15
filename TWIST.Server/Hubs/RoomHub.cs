@@ -16,7 +16,9 @@ namespace TWISTServer.Hubs
         Task ParticipantLeft(ParticipantRecord record);
         Task ParticipantDisconnected(ParticipantRecord record);
         Task ParticipantUpdated(ParticipantRecord record);
+        Task SimulationStarted(SimulationRecord sim);
         Task SimulationStopped();
+        Task SimulationUpdated(SimulationRecord sim);
         Task RoundUpdated(RoundEnum round);
     }
 
@@ -225,7 +227,7 @@ namespace TWISTServer.Hubs
         {
 
             // Signal
-            await Clients.Group(sim.Code).SimulationStopped();
+            await Clients.Group(sim.Code).SimulationStarted(sim);
         }
 
         public async Task StopSimulation(SimulationRecord sim)
