@@ -1,15 +1,15 @@
 import RoundEnum from "../enums/RoundEnum";
+import SimulationStateEnum from "../enums/SimulationStateEnum";
 
 export default interface SimulationModel {
     simulation_id: number;
-    name: string;
-    participants: number[];
-    start_date: Date;
-    end_date: Date | null;
-    active: boolean;
-    responses: object[];
-    asks: object[];
-    concessions: object[];
-    round: RoundEnum;
     code: string;
+    name: string;
+    start_date: Date;
+    end_date?: Date;
+    modified_date?: Date;
+    round: RoundEnum;
+    state: SimulationStateEnum;
+    active: boolean;
+    instructor_id: number;
 };

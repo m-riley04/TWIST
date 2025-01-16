@@ -61,18 +61,6 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
             );
         }
 
-        public void UpdateParticipants(int id, IEnumerable<int> participantIds)
-        {
-            string sql = @$"UPDATE {TableName} SET participants = @participants WHERE {PrimaryKeyColumn} = @id;";
-            Database.NonQuery(
-                sql,
-                [
-                    new($"@participants", SqlDbType.NVarChar) { Value = JsonSerializer.Serialize(participantIds) },
-                    new($"@id", SqlDbType.Int) { Value = id },
-                ]
-            );
-        }
-
         public void UpdateRound(int simulationId, RoundEnum round)
         {
             string sql = @$"UPDATE {TableName} SET round = @round WHERE {PrimaryKeyColumn} = @simulationId;";
