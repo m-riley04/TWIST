@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { Button, Container } from "react-bootstrap";
+import { Button, Container, Dropdown, DropdownButton } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import SimulationModel from "../../models/SimulationModel";
@@ -11,14 +11,21 @@ import { getParticipants } from "../../server/participant_management";
 import CountryEnum from "../../enums/CountryEnum";
 import RoleEnum from "../../enums/RoleEnum";
 import { useRoomHub } from "../../signalr/useRoomHub";
+import RoundEnum from "../../enums/RoundEnum";
+import QRCode from "react-qr-code";
+
+// TODO: make this into an env variable
+const WEB_DOMAIN = "localhost:5173";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
+
     const [simulation, setSimulation] = useState<SimulationModel>();
     const [participants, setParticipants] = useState<ParticipantModel[]>([]);
+    const [isStarted, setIsStarted] = useState<boolean>(false);
+
     const navigate = useNavigate();
     const params = useParams();
-
     const simCode = params.code ?? "";
     const connection: HubConnection | undefined = useRoomHub(simCode);
 
@@ -79,6 +86,11 @@ const InstructorSimulationRoomPage = () => {
             console.log(`Participant left:`, participant.username);
         });
 
+        connection.on("ParticipantKicked", (participant: ParticipantModel) => {
+            setParticipants((prev) => prev.filter((p) => p.email !== participant.email));
+            console.log(`Kicked participant '${participant.email}'`);
+        });
+
         connection.on("ParticipantDisconnected", (participant: ParticipantModel) => {
             // Update the participant list
             setParticipants((prev) => prev.map((p) => {
@@ -89,12 +101,58 @@ const InstructorSimulationRoomPage = () => {
             }));
         });
 
+        connection.on("SimulationStarted", () => {
+            // TODO
+            setIsStarted(true);
+            console.log("Simulation started.");
+        })
+
+        connection.on("SimulationStopped", () => {
+            // TODO
+            setIsStarted(false);
+            console.log("Simulation stopped.");
+        })
+
+        connection.on("RoundUpdated", (round: RoundEnum) => {
+            setSimulation((prev) => {
+                if (!prev) return; // Null check
+
+                return ({ ...prev, round: round });
+            });
+            console.log(`Updated to round ${round}`);
+        });
+
+        connection.on("CountriesAssigned", (participants: ParticipantModel[]) => {
+            setParticipants(participants);
+            console.log("Countries have been randomly assigned.");
+        });
+
+        connection.on("RolesAssigned", (participants: ParticipantModel[]) => {
+            setParticipants(participants);
+            console.log("Roles have been randomly assigned.");
+        });
+
+        connection.on("InstructorInitialized", () => {
+            console.log("Instructor has been initialized.");
+        });
+
         // Cleanup
         return () => {
             connection.stop().catch(console.error);
         }
 
     }, [connection]);
+
+    // Initialize instructor on connection and simulation load
+    useEffect(() => {
+        if (!connection) return;
+        if (!simulation) return;
+
+        // Initialize instructor
+        connection.invoke("InstructorInitialize", simulation)
+            .catch((error) => console.error(`Unable to initialize instructor: ${error}`));
+
+    }, [connection, simulation])
 
     const handleCloseRoom = () => {
         if (params.code === undefined) {
@@ -116,12 +174,38 @@ const InstructorSimulationRoomPage = () => {
             });
     }
 
-    const handleStartSimulation = () => { 
+    const handleStartSimulation = () => {
+        // Check if simulation is loaded
+        if (!simulation) {
+            console.error("Unable to start simulation: No simulation loaded.");
+            return;
+        }
+
+        // Check current round
+        if (simulation?.round === RoundEnum.NONE) {
+            console.error("Unable to start simulation: No starting round selected.");
+            return;
+        }
+
         connection?.invoke("StartSimulation", simulation)
-            .then(() => {
-                console.log("Simulation started.")
-            })
             .catch((error) => console.error(`Unable to start simulation: ${error}`));
+    }
+
+    const handleStopSimulation = () => {
+        // Check if simulation is loaded
+        if (!simulation) {
+            console.error("Unable to start simulation: No simulation loaded.");
+            return;
+        }
+
+        // Check current round
+        if (simulation?.round === RoundEnum.NONE) {
+            console.error("Unable to start simulation: No starting round selected.");
+            return;
+        }
+
+        connection?.invoke("StopSimulation", simulation)
+            .catch((error) => console.error(`Unable to stop simulation: ${error}`));
     }
 
     const handleKickParticipant = (participant: ParticipantModel) => {
@@ -131,11 +215,6 @@ const InstructorSimulationRoomPage = () => {
         }
 
         connection.invoke("KickParticipant", simulation, participant)
-            .then(() => {
-                // Remove participant from list
-                setParticipants((prev) => prev.filter((p) => p.email !== participant.email));
-                console.log(`Kicked participant '${participant.email}'`);
-            })
             .catch((error) => console.error(`Unable to kick participant: ${error}`));
     }
 
@@ -179,6 +258,43 @@ const InstructorSimulationRoomPage = () => {
             .catch((error) => console.error(`Unable to update participant: ${error}`));
     }
 
+    const handleRandomlyAssignCountry = () => {
+        connection?.invoke("RandomlyAssignCountries", simulation, participants)
+            .catch((error) => console.error(`Unable to randomly assign countries: ${error}`));
+    }
+
+    const handleRandomlyAssignRole = () => {
+        connection?.invoke("RandomlyAssignRoles", simulation, participants)
+            .catch((error) => console.error(`Unable to randomly assign roles: ${error}`));
+    }
+
+    const handleUpdateRound = (newRound: RoundEnum) => {
+        connection?.invoke("UpdateRound", simulation, newRound)
+            .catch((error) => console.error(`Unable to update round: ${error}`));
+    }
+
+    const handleNextRound = () => {
+        if (!simulation) return;
+
+        if (simulation?.round === RoundEnum.FINAL_TALLY) {
+            console.error("Cannot go to next round: Already at final tally.");
+            return;
+        }
+
+        handleUpdateRound(simulation?.round + 1);
+    }
+
+    const handlePreviousRound = () => {
+        if (!simulation) return;
+
+        if (simulation?.round === RoundEnum.NONE) {
+            console.error("Cannot go to previous round: No round selected.");
+            return;
+        }
+
+        handleUpdateRound(simulation?.round - 1);
+    }
+
     if (error) return <div>Oops... {error.message}</div>;
 
     if (isLoading) return <div>Loading...</div>;
@@ -188,12 +304,25 @@ const InstructorSimulationRoomPage = () => {
         <>
             <h1>Simulation Room</h1>
             <h2>{simulation?.name}</h2>
+            <p>Current Round: {simulation?.round}</p>
+            <DropdownButton title={`Round ${simulation?.round}`}>
+                {(Object.values(RoundEnum).filter(n => !isNaN(Number(n))) as RoundEnum[]).map((val, i) => <Dropdown.Item key={i} eventKey={val} onClick={() => handleUpdateRound(val)}>{val}</Dropdown.Item>)}
+            </DropdownButton>
             <h2>Room Code: {params?.code}</h2>
+            <QRCode value={`https://${WEB_DOMAIN}/room/${params.code}`}/>
             <Container>
+                <Button onClick={handleRandomlyAssignCountry}>Randomly Assign Countries</Button>
+                <Button onClick={handleRandomlyAssignRole}>Randomly Assign Roles</Button>
                 <ParticipantList participants={participants} onKickClicked={handleKickParticipant} onCountryChanged={handleCountryChanged} onRoleChanged={handleRoleChanged} />
             </Container>
+            
             <Button onClick={handleStartSimulation}>Start Simulation</Button>
-            <Button onClick={handleCloseRoom}>Close Room</Button>
+            <Button onClick={handleStopSimulation} variant="warning">Stop Simulation</Button>
+            <Button onClick={handleCloseRoom} variant="danger">Close Room</Button>
+
+            <Button onClick={handlePreviousRound}>Previous Round</Button>
+            <Button onClick={handleNextRound}>Next Round</Button>
+            <br/>
             <a href="/instructor">Instructor Home</a>
         </>
     );

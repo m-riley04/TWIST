@@ -2,7 +2,7 @@
 {
     public enum ParticipantRoleEnum
     {
-        None = 0,
+        NONE = 0,
         Protectionist,
         ProTrade,
         Security

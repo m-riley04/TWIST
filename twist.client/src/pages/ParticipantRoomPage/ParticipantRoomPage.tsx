@@ -1,11 +1,12 @@
 import { Button, Container, Form } from "react-bootstrap";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { getSimulationFromCode } from "../../server/simulation_management";
 import { HubConnection } from "@microsoft/signalr";
 import { useRoomHub } from "../../signalr/useRoomHub";
 import ParticipantPageLoadingStatus from "../../components/ParticipantPageLoadingStatus/ParticipantPageLoadingStatus";
 import SimulationModel from "../../models/SimulationModel";
+import RoundEnum from "../../enums/RoundEnum";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -13,8 +14,11 @@ const ParticipantRoomPage = () => {
     const [error, setError] = useState<string>("");
     const [signedIn, setSignedIn] = useState(false);
 
+    // Simulation data
     const [simulation, setSimulation] = useState<SimulationModel>();
+    const [isStarted, setIsStarted] = useState<boolean>(false);
 
+    const navigate = useNavigate();
     const params = useParams();
     const simCode = params.code ?? "";
     const connection: HubConnection | undefined = useRoomHub(simCode);
@@ -54,7 +58,28 @@ const ParticipantRoomPage = () => {
         });
 
         connection.on("SimulationStarted", () => {
+            setIsStarted(true);
             console.log("Simulation started.");
+        })
+
+        connection.on("SimulationStopped", () => {
+            setIsStarted(false);
+            console.log("Simulation stopped.");
+        })
+
+        connection.on("RoundUpdated", (round: RoundEnum) => {
+            setSimulation((prev) => {
+                if (!prev) return; // Null check
+
+                return ({ ...prev, round: round });
+            });
+        });
+
+        connection.on("ParticipantKicked", (participant) => {
+            if (participant.connection_id === connection.connectionId) {
+                console.log("You have been kicked.");
+                navigate("/");
+            }
         })
 
         // Cleanup
@@ -90,8 +115,10 @@ const ParticipantRoomPage = () => {
             .catch((error) => console.error(`Failed to join simulation: ${error}`));
     }
 
+    // Error screen
     if (error) return <p>Error: {error}</p>;
 
+    // Loading screen
     if (!isConnected || !isSimulationLoaded) return (
         <ParticipantPageLoadingStatus
             connection={isConnected ? "connected" : "connecting"}
@@ -99,13 +126,47 @@ const ParticipantRoomPage = () => {
         />
     );
 
-    if (signedIn) return (
-        <>
-            <p>You are signed in! Please wait for the instructor to start the simulation.</p>
-            <a href="/">Back</a>
-        </>
-    );
+    // Round screens
+    if (isStarted && signedIn) {
+        switch (simulation?.round) {
+            case RoundEnum.DOMESTIC:
+                return (
+                    <>
+                        <h1>Round 1 - Domestic</h1>
+                    </>
+                );
+            case RoundEnum.INTERNATIONAL:
+                return (
+                    <>
+                        <h1>Round 2 - International</h1>
+                    </>
+                );
+            case RoundEnum.FINAL_TALLY:
+                return (
+                    <>
+                        <h1>Final Tally</h1>
+                        <h2>China</h2>
+                        <p>{ } points</p>
 
+                        <h2>USA</h2>
+                        <p>{ } points</p>
+
+                        <h2>{ } wins!</h2>
+                    </>
+                );
+            default:
+                return <>Waiting for simulation to start...</>
+        }
+    } else if (signedIn) { // Waiting room
+        return (
+            <>
+                <p>You are signed in! Please wait for the instructor to start the simulation.</p>
+                <a href="/">Back</a>
+            </>
+        );
+    }
+
+    // Default joining screen
     return (
         <>
             <p>You are now joining...</p>

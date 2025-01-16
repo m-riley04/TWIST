@@ -1,4 +1,4 @@
-import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import { HubConnection, HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import { useState, useEffect } from "react";
 import { SERVER_URL } from "../server/server_consts";
 
@@ -7,21 +7,21 @@ export function useRoomHub(simCode: string) {
 
     useEffect(() => {
         const conn = new HubConnectionBuilder()
-            .withUrl(`${SERVER_URL}/roomHub`)
+            .withUrl(`${SERVER_URL}/room-hub`)
             .withAutomaticReconnect()
             .build();
 
         setConnection(conn);
 
         return () => {
-            // We don't stop here. We'll stop in the second effect's cleanup.
+            // Don't stop here
         };
     }, [simCode]);
 
     useEffect(() => {
         if (!connection) return;
 
-        if (connection.state !== "Disconnected") {
+        if (connection.state !== HubConnectionState.Disconnected) {
             console.error("Cannot start connection when it is not in the Disconnected state.");
             return;
         }

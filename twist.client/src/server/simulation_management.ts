@@ -1,8 +1,7 @@
 import axios from 'axios';
 import SimulationModel from '../models/SimulationModel';
 import { API_URL } from './server_consts';
-
-
+import SimulationStateEnum from '../enums/SimulationStateEnum';
 
 /**
  * Creates a new simulation from the given name and code.
@@ -13,14 +12,14 @@ export async function createSimulation(name: string, code: string) {
     return await axios
         .put<SimulationModel>(`${API_URL}/simulations`, {
             name: name,
-            participants: [],
+            code: code,
             start_date: new Date().toISOString(),
-            active: true,
-            responses: JSON.stringify([]),
-            asks: JSON.stringify([]),
-            concessions: JSON.stringify([]),
+            modified_date: new Date().toISOString(),
             round: 0,
-            code: code
+            active: true,
+            state: SimulationStateEnum.OPENED,
+            instructor_id: 0 /// TODO: Actually put instructor_id when we have it
+            
         });
 }
 
@@ -47,7 +46,7 @@ export async function closeSimulation(code: string, endDate: Date = new Date()):
     }
 }
 
-export async function deleteSimulation(code: string): Promise<any | undefined> {
+export async function deleteSimulation(code: string) {
     try {
         // Check for empty string
         if (code === "") {

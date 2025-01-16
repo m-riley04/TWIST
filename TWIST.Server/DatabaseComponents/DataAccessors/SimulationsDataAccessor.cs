@@ -3,6 +3,7 @@ using TWISTServer.DatabaseComponents.Records;
 using System.Data;
 using System.Data.SqlClient;
 using System.Text.Json;
+using TWISTServer.Enums;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
@@ -60,14 +61,14 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
             );
         }
 
-        public void UpdateParticipants(int id, IEnumerable<int> participantIds)
+        public void UpdateRound(int simulationId, RoundEnum round)
         {
-            string sql = @$"UPDATE {TableName} SET participants = @participants WHERE {PrimaryKeyColumn} = @id;";
+            string sql = @$"UPDATE {TableName} SET round = @round WHERE {PrimaryKeyColumn} = @simulationId;";
             Database.NonQuery(
                 sql,
                 [
-                    new($"@participants", SqlDbType.NVarChar) { Value = JsonSerializer.Serialize(participantIds) },
-                    new($"@id", SqlDbType.Int) { Value = id },
+                    new($"@round", SqlDbType.Int) { Value = (int)round },
+                    new($"@simulationId", SqlDbType.Int) { Value = simulationId },
                 ]
             );
         }
