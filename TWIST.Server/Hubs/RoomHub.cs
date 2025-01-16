@@ -11,6 +11,7 @@ namespace TWISTServer.Hubs
 {
     public interface IRoomClient
     {
+        Task InstructorInitialized();
         Task ParticipantJoined(ParticipantRecord record);
         Task ParticipantKicked(ParticipantRecord record);
         Task ParticipantLeft(ParticipantRecord record);
@@ -26,6 +27,15 @@ namespace TWISTServer.Hubs
     {
         SimulationsDataAccessor simAccessor = new();
         ParticipantsDataAccessor partAccessor = new();
+
+        public async Task InstructorInitialize(SimulationRecord sim)
+        {
+            // Add the instructor to the main simulation group
+            await Groups.AddToGroupAsync(Context.ConnectionId, sim.Code);
+
+            // Send signal
+            await Clients.Group(sim.Code).InstructorInitialized();
+        }
         public async Task JoinRoom(SimulationRecord sim, string username, string email) // FYI: Methods like this will SILENTLY FAIL if you do not pass the correct param types
         {
             // Check if the email address does not already exist in sim

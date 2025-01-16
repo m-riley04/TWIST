@@ -107,6 +107,17 @@ const InstructorSimulationRoomPage = () => {
 
     }, [connection]);
 
+    // Initialize instructor on connection and simulation load
+    useEffect(() => {
+        if (!connection) return;
+        if (!simulation) return;
+
+        // Initialize instructor
+        connection.invoke("InstructorInitialize", simulation)
+            .catch((error) => console.error(`Unable to initialize instructor: ${error}`));
+
+    }, [connection, simulation])
+
     const handleCloseRoom = () => {
         if (params.code === undefined) {
             console.error("Unable to close room: No code provided.")
