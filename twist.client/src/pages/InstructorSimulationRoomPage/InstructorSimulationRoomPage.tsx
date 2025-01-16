@@ -86,6 +86,11 @@ const InstructorSimulationRoomPage = () => {
             console.log(`Participant left:`, participant.username);
         });
 
+        connection.on("ParticipantKicked", (participant: ParticipantModel) => {
+            setParticipants((prev) => prev.filter((p) => p.email !== participant.email));
+            console.log(`Kicked participant '${participant.email}'`);
+        });
+
         connection.on("ParticipantDisconnected", (participant: ParticipantModel) => {
             // Update the participant list
             setParticipants((prev) => prev.map((p) => {
@@ -96,9 +101,40 @@ const InstructorSimulationRoomPage = () => {
             }));
         });
 
-        connection.on("SimulationStarted", (simulation: SimulationModel ) => {
+        connection.on("SimulationStarted", () => {
             // TODO
+            setIsStarted(true);
+            console.log("Simulation started.");
         })
+
+        connection.on("SimulationStopped", () => {
+            // TODO
+            setIsStarted(false);
+            console.log("Simulation stopped.");
+        })
+
+        connection.on("RoundUpdated", (round: RoundEnum) => {
+            setSimulation((prev) => {
+                if (!prev) return; // Null check
+
+                return ({ ...prev, round: round });
+            });
+            console.log(`Updated to round ${round}`);
+        });
+
+        connection.on("CountriesAssigned", (participants: ParticipantModel[]) => {
+            setParticipants(participants);
+            console.log("Countries have been randomly assigned.");
+        });
+
+        connection.on("RolesAssigned", (participants: ParticipantModel[]) => {
+            setParticipants(participants);
+            console.log("Roles have been randomly assigned.");
+        });
+
+        connection.on("InstructorInitialized", () => {
+            console.log("Instructor has been initialized.");
+        });
 
         // Cleanup
         return () => {
@@ -152,10 +188,6 @@ const InstructorSimulationRoomPage = () => {
         }
 
         connection?.invoke("StartSimulation", simulation)
-            .then(() => {
-                setIsStarted(true);
-                console.log("Simulation started.")
-            })
             .catch((error) => console.error(`Unable to start simulation: ${error}`));
     }
 
@@ -171,6 +203,9 @@ const InstructorSimulationRoomPage = () => {
             console.error("Unable to start simulation: No starting round selected.");
             return;
         }
+
+        connection?.invoke("StopSimulation", simulation)
+            .catch((error) => console.error(`Unable to stop simulation: ${error}`));
     }
 
     const handleKickParticipant = (participant: ParticipantModel) => {
@@ -180,11 +215,6 @@ const InstructorSimulationRoomPage = () => {
         }
 
         connection.invoke("KickParticipant", simulation, participant)
-            .then(() => {
-                // Remove participant from list
-                setParticipants((prev) => prev.filter((p) => p.email !== participant.email));
-                console.log(`Kicked participant '${participant.email}'`);
-            })
             .catch((error) => console.error(`Unable to kick participant: ${error}`));
     }
 
@@ -229,25 +259,17 @@ const InstructorSimulationRoomPage = () => {
     }
 
     const handleRandomlyAssignCountry = () => {
-        connection?.invoke("RandomlyAssignCountries", simulation)
+        connection?.invoke("RandomlyAssignCountries", simulation, participants)
             .catch((error) => console.error(`Unable to randomly assign countries: ${error}`));
     }
 
     const handleRandomlyAssignRole = () => {
-        connection?.invoke("RandomlyAssignRoles", simulation)
+        connection?.invoke("RandomlyAssignRoles", simulation, participants)
             .catch((error) => console.error(`Unable to randomly assign roles: ${error}`));
     }
 
     const handleUpdateRound = (newRound: RoundEnum) => {
         connection?.invoke("UpdateRound", simulation, newRound)
-            .then(() => {
-                setSimulation((prev) => {
-                    if (!prev) return; // Null check
-
-                    return ({ ...prev, round: newRound });
-                });
-                console.log(`Updated to round ${newRound}`)
-            })
             .catch((error) => console.error(`Unable to update round: ${error}`));
     }
 
