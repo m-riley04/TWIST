@@ -3,7 +3,7 @@ import type ParticipantModel from '../../models/ParticipantModel';
 import CountryEnum, { countries, CountryStringMap, StringCountryMap } from '../../enums/CountryEnum';
 import RoleEnum, { roles, RoleStringMap, StringRoleMap } from '../../enums/RoleEnum';
 
-type ParticipantListItemProps = {
+interface ParticipantListItemProps {
     participant: ParticipantModel;
     onKickClicked: () => void;
     onCountryChanged: (country: CountryEnum) => void;
