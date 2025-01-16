@@ -7,6 +7,7 @@ import { useRoomHub } from "../../signalr/useRoomHub";
 import ParticipantPageLoadingStatus from "../../components/ParticipantPageLoadingStatus/ParticipantPageLoadingStatus";
 import SimulationModel from "../../models/SimulationModel";
 import RoundEnum from "../../enums/RoundEnum";
+import AsksDocument from "../../components/AsksDocument/AsksDocument";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -133,6 +134,7 @@ const ParticipantRoomPage = () => {
                 return (
                     <>
                         <h1>Round 1 - Domestic</h1>
+                        <AsksDocument def={""}></AsksDocument>
                     </>
                 );
             case RoundEnum.INTERNATIONAL:
