@@ -154,6 +154,8 @@ const ParticipantRoomPage = () => {
                         <h2>{ } wins!</h2>
                     </>
                 );
+            default:
+                return <>Waiting for simulation to start...</>
         }
     } else if (signedIn) { // Waiting room
         return (
