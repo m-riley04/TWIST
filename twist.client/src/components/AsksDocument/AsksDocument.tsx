@@ -1,5 +1,8 @@
 import { Table } from "react-bootstrap";
 import AsksDocumentItem from "./AsksDocumentItem";
+import update from 'immutability-helper';
+import { useCallback } from "react";
+import { useState } from "react";
 
 const DEFAULT_USA_ASKS = [
     "China to issue an improved nationwide negative list for foreign investment (especially take measures to liberalize the financial sector)."
@@ -33,13 +36,40 @@ const DEFAULT_PRC_ASKS = [
     , "The U.S. to agree not to send warships or military personnel to Taiwan."
 ]
 
+interface Ask {
+    id: number;
+    text: string;
+    points: number;
+}
+
 interface AsksDocumentProps {
     def: string
 };
 
-const AsksDocument: React.FC<AsksDocumentProps> = ({
-    def
-}) => {
+const AsksDocument: React.FC<AsksDocumentProps> = () => {
+    // Initializes the asks
+    const initialAsks: Ask[] = DEFAULT_USA_ASKS.map((str, index) => ({
+        id: index,
+        text: str,
+        points: 0
+    }));
+
+    const [asks, setAsks] = useState<Ask[]>(initialAsks);
+
+    // Reorder the asks array when an item is dragged
+    const moveItem = useCallback(
+        (dragIndex: number, hoverIndex: number) => {
+            setAsks(prevItems =>
+                update(prevItems, {
+                    $splice: [
+                        [dragIndex, 1],
+                        [hoverIndex, 0, prevItems[dragIndex]],
+                    ],
+                })
+            );
+        },
+        [setAsks]
+    );
 
     return (
         <Table className="participant-list">
@@ -51,11 +81,14 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
                 </tr>
             </thead>
             <tbody>
-                {DEFAULT_USA_ASKS.map((ask, i) => (
+                {asks.map((item, index) => (
                     <AsksDocumentItem
-                        key={i}
-                        points={0}
-                        description={ask}
+                        key={item.id}
+                        id={item.id}
+                        index={index}
+                        description={item.text}
+                        points={item.points}
+                        moveItem={moveItem}
                     />
                 ))}
             </tbody>

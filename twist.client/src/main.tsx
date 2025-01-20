@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { Auth0Provider } from '@auth0/auth0-react'
 import App from './App.tsx'
 import './index.scss'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
@@ -16,7 +18,9 @@ createRoot(document.getElementById('root')!).render(
             cacheLocation="localstorage"
             useRefreshTokens={true}
         >
-            <App />
+            <DndProvider backend={HTML5Backend}>
+                <App />
+            </DndProvider>
         </Auth0Provider>
     </StrictMode>,
 )
