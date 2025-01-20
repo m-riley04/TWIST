@@ -1,4 +1,5 @@
 import { Identifier } from "dnd-core";
+import { ChangeEvent } from "react";
 import { useRef } from "react";
 import { useDrag, useDrop, XYCoord } from "react-dnd";
 
@@ -12,6 +13,7 @@ export interface AsksDocumentItemProps {
     points: number;
     description: string;
     moveItem: (dragIndex: number, hoverIndex: number) => void;
+    onPointsChanged: (id: number, points: number) => void;
 };
 
 interface DragItem {
@@ -25,7 +27,8 @@ const AsksDocumentItem: React.FC<AsksDocumentItemProps> = ({
     index,
     points,
     description,
-    moveItem
+    moveItem,
+    onPointsChanged
 }) => {
     const ref = useRef<HTMLTableRowElement>(null);
 
@@ -90,6 +93,12 @@ const AsksDocumentItem: React.FC<AsksDocumentItemProps> = ({
     // Combine drag and drop refs
     drag(drop(ref));
 
+    // Handlers
+    const handlePointsChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const newVal = parseInt(e.target.value, 10) || 0;
+        onPointsChanged(id, newVal);
+    };
+
     const opacity = isDragging ? 0 : 1
     return (
         <tr
@@ -98,7 +107,7 @@ const AsksDocumentItem: React.FC<AsksDocumentItemProps> = ({
             ref={ref}
         >
             <td>
-                <input type="number" defaultValue={points} />
+                <input type="number" defaultValue={points} onChange={handlePointsChange} />
             </td>
             <td>{description}</td>
         </tr>

@@ -4,6 +4,7 @@ import update from 'immutability-helper';
 import { useCallback } from "react";
 import { useState } from "react";
 
+// The default USA asks. These are the default concessions for PRC.
 const DEFAULT_USA_ASKS = [
     "China to issue an improved nationwide negative list for foreign investment (especially take measures to liberalize the financial sector)."
     , "China to remove or reduce restrictions on foreign investment identified by the U.S."
@@ -23,6 +24,7 @@ const DEFAULT_USA_ASKS = [
     , "China to guarantee human rights and democracy in Hong Kong"
 ]
 
+// The default PRC asks. These are the default concessions for USA.
 const DEFAULT_PRC_ASKS = [
     "The U.S. to reduce tariffs on Chinese imports to 2017 levels."
     , "The U.S. to lift bans on high technology exports such as integrated circuits and aircraft to China."
@@ -71,6 +73,16 @@ const AsksDocument: React.FC<AsksDocumentProps> = () => {
         [setAsks]
     );
 
+    const handlePointsChange = useCallback((id: number, newPoints: number) => {
+        setAsks((prev) =>
+            prev.map((ask) =>
+                ask.id === id ? { ...ask, points: newPoints } : ask
+            )
+        );
+    }, []);
+
+    const totalPoints = asks.reduce((acc, item) => acc + item.points, 0);
+
     return (
         <Table className="participant-list">
             <thead>
@@ -89,6 +101,7 @@ const AsksDocument: React.FC<AsksDocumentProps> = () => {
                         description={item.text}
                         points={item.points}
                         moveItem={moveItem}
+                        onPointsChanged={handlePointsChange}
                     />
                 ))}
             </tbody>
