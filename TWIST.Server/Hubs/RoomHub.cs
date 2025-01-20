@@ -23,6 +23,9 @@ namespace TWISTServer.Hubs
         Task RolesAssigned(ParticipantRecord[] participants);
         Task CountriesAssigned(ParticipantRecord[] participants);
         Task RoundUpdated(RoundEnum round);
+
+        Task AskUpdated(AskRecord asks);
+        Task AsksUpdated(AskRecord[] asks);
     }
 
     public class RoomHub : Hub<IRoomClient>
@@ -251,6 +254,24 @@ namespace TWISTServer.Hubs
 
             // Signal
             await Clients.Group(sim.Code).RoundUpdated(round);
+        }
+
+        public async Task AskUpdated(SimulationRecord sim, ParticipantRecord participant, AskRecord ask)
+        {
+            // Update the ask
+
+
+            // Signal
+            await Clients.Group($"{sim.Code}-{participant.Country}").AskUpdated(ask);
+        }
+
+        public async Task AsksUpdated(SimulationRecord sim, ParticipantRecord participant, AskRecord[] asks)
+        {
+            // Update the asks
+
+
+            // Signal
+            await Clients.Group($"{sim.Code}-{participant.Country}").AsksUpdated(asks);
         }
     }
 }
