@@ -22,7 +22,6 @@ const InstructorSimulationRoomPage = () => {
 
     const [simulation, setSimulation] = useState<SimulationModel>();
     const [participants, setParticipants] = useState<ParticipantModel[]>([]);
-    const [isStarted, setIsStarted] = useState<boolean>(false);
 
     const navigate = useNavigate();
     const params = useParams();
@@ -101,15 +100,13 @@ const InstructorSimulationRoomPage = () => {
             }));
         });
 
-        connection.on("SimulationStarted", () => {
-            // TODO
-            setIsStarted(true);
+        connection.on("SimulationStarted", (sim: SimulationModel) => {
+            setSimulation(sim);
             console.log("Simulation started.");
         })
 
-        connection.on("SimulationStopped", () => {
-            // TODO
-            setIsStarted(false);
+        connection.on("SimulationStopped", (sim: SimulationModel) => {
+            setSimulation(sim);
             console.log("Simulation stopped.");
         })
 

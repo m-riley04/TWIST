@@ -8,6 +8,7 @@ import ParticipantPageLoadingStatus from "../../components/ParticipantPageLoadin
 import SimulationModel from "../../models/SimulationModel";
 import RoundEnum from "../../enums/RoundEnum";
 import AsksDocument from "../../components/AsksDocument/AsksDocument";
+import SimulationStateEnum from "../../enums/SimulationStateEnum";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -17,7 +18,6 @@ const ParticipantRoomPage = () => {
 
     // Simulation data
     const [simulation, setSimulation] = useState<SimulationModel>();
-    const [isStarted, setIsStarted] = useState<boolean>(false);
 
     const navigate = useNavigate();
     const params = useParams();
@@ -51,6 +51,7 @@ const ParticipantRoomPage = () => {
         // Check if connection is defined
         if (!connection) return;
 
+        // Set connection
         setIsConnected(true);
 
         // Connect signals
@@ -58,13 +59,13 @@ const ParticipantRoomPage = () => {
             console.log(`Participant ${participant.name} joined.`);
         });
 
-        connection.on("SimulationStarted", () => {
-            setIsStarted(true);
+        connection.on("SimulationStarted", (sim: SimulationModel) => {
+            setSimulation(sim);
             console.log("Simulation started.");
         })
 
-        connection.on("SimulationStopped", () => {
-            setIsStarted(false);
+        connection.on("SimulationStopped", (sim: SimulationModel) => {
+            setSimulation(sim);
             console.log("Simulation stopped.");
         })
 
@@ -74,6 +75,7 @@ const ParticipantRoomPage = () => {
 
                 return ({ ...prev, round: round });
             });
+            console.log(`Round updated to ${round}`);
         });
 
         connection.on("ParticipantKicked", (participant) => {
@@ -128,7 +130,7 @@ const ParticipantRoomPage = () => {
     );
 
     // Round screens
-    if (isStarted && signedIn) {
+    if (simulation?.state == SimulationStateEnum.IN_PROGRESS && signedIn) {
         switch (simulation?.round) {
             case RoundEnum.DOMESTIC:
                 return (

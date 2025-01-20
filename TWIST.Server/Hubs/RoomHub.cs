@@ -18,7 +18,7 @@ namespace TWISTServer.Hubs
         Task ParticipantDisconnected(ParticipantRecord record);
         Task ParticipantUpdated(ParticipantRecord record);
         Task SimulationStarted(SimulationRecord sim);
-        Task SimulationStopped();
+        Task SimulationStopped(SimulationRecord sim);
         Task SimulationUpdated(SimulationRecord sim);
         Task RolesAssigned(ParticipantRecord[] participants);
         Task CountriesAssigned(ParticipantRecord[] participants);
@@ -29,6 +29,33 @@ namespace TWISTServer.Hubs
     {
         SimulationsDataAccessor simAccessor = new();
         ParticipantsDataAccessor partAccessor = new();
+
+        public override Task OnDisconnectedAsync(Exception? exception)
+        {
+            if (exception != null)
+            {
+                return base.OnDisconnectedAsync(exception);
+            }
+
+            // Get the participant
+            var participant = partAccessor.GetParticipantsByConnectionId(Context.ConnectionId).SingleOrDefault();
+            if (participant == null)
+            {
+                return base.OnDisconnectedAsync(exception);
+            }
+
+            // Update the participant's connection id
+            partAccessor.UpdateParticipantConnectionId(participant.ParticipantId, null);
+
+            // Get simulation
+            var sim = simAccessor.Get(participant.SimulationId).FirstOrDefault();
+            if (sim == null)
+            {
+                return base.OnDisconnectedAsync(exception);
+            }
+
+            return Clients.Group(sim.Code).ParticipantDisconnected(participant);
+        }
 
         public async Task InstructorInitialize(SimulationRecord sim)
         {
@@ -67,33 +94,6 @@ namespace TWISTServer.Hubs
 
             // Send signal to all clients
             await Clients.All.ParticipantJoined(newParticipant);
-        }
-
-        public override Task OnDisconnectedAsync(Exception? exception)
-        {
-            if (exception != null)
-            {
-                return base.OnDisconnectedAsync(exception);
-            }
-
-            // Get the participant
-            var participant = partAccessor.GetParticipantsByConnectionId(Context.ConnectionId).SingleOrDefault();
-            if (participant == null)
-            {
-                return base.OnDisconnectedAsync(exception);
-            }
-
-            // Update the participant's connection id
-            partAccessor.UpdateParticipantConnectionId(participant.ParticipantId, null);
-
-            // Get simulation
-            var sim = simAccessor.Get(participant.SimulationId).FirstOrDefault();
-            if (sim == null)
-            {
-                return base.OnDisconnectedAsync(exception);
-            }
-
-            return Clients.Group(sim.Code).ParticipantDisconnected(participant);
         }
 
         public async Task LeaveRoom(SimulationRecord sim, ParticipantRecord participant)
@@ -227,6 +227,9 @@ namespace TWISTServer.Hubs
 
         public async Task StartSimulation(SimulationRecord sim)
         {
+            // Update the simulation record
+            simAccessor.UpdateState(sim.SimulationId, SimulationStateEnum.IN_PROGRESS);
+            sim = sim with { State = SimulationStateEnum.IN_PROGRESS };
 
             // Signal
             await Clients.Group(sim.Code).SimulationStarted(sim);
@@ -234,9 +237,11 @@ namespace TWISTServer.Hubs
 
         public async Task StopSimulation(SimulationRecord sim)
         {
+            simAccessor.UpdateState(sim.SimulationId, SimulationStateEnum.NONE);
+            sim = sim with { State = SimulationStateEnum.NONE };
 
             // Signal
-            await Clients.Group(sim.Code).SimulationStopped();
+            await Clients.Group(sim.Code).SimulationStopped(sim);
         }
 
         public async Task UpdateRound(SimulationRecord sim, RoundEnum round)

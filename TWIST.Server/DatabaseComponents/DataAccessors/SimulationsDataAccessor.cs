@@ -72,5 +72,17 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
                 ]
             );
         }
+
+        public void UpdateState(int simulationId, SimulationStateEnum state)
+        {
+            string sql = @$"UPDATE {TableName} SET state = @state WHERE {PrimaryKeyColumn} = @simulationId;";
+            Database.NonQuery(
+                sql,
+                [
+                    new($"@state", SqlDbType.Int) { Value = (int)state },
+                    new($"@simulationId", SqlDbType.Int) { Value = simulationId },
+                ]
+            );
+        }
     }
 }
