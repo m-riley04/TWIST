@@ -1,8 +1,9 @@
 import { Table } from "react-bootstrap";
 import AsksDocumentItem from "./AsksDocumentItem";
 import update from 'immutability-helper';
-import { useCallback } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import Ask from "../../models/AskModel";
+import CountryEnum from "../../enums/CountryEnum";
 
 // The default USA asks. These are the default concessions for PRC.
 const DEFAULT_USA_ASKS = [
@@ -38,22 +39,25 @@ const DEFAULT_PRC_ASKS = [
     , "The U.S. to agree not to send warships or military personnel to Taiwan."
 ]
 
-interface Ask {
-    id: number;
-    text: string;
-    points: number;
-}
-
 interface AsksDocumentProps {
-    def: string
+    simulation_id: number;
+    country: CountryEnum;
 };
 
-const AsksDocument: React.FC<AsksDocumentProps> = () => {
+const AsksDocument: React.FC<AsksDocumentProps> = ({
+    simulation_id,
+    country
+}) => {
     // Initializes the asks
     const initialAsks: Ask[] = DEFAULT_USA_ASKS.map((str, index) => ({
-        id: index,
-        text: str,
-        points: 0
+        ask_id: index,
+        simulation_id: simulation_id,
+        description: str,
+        points: 0,
+        status: 0,
+        creation_date: new Date(),
+        modified_date: new Date(),
+        country: country
     }));
 
     const [asks, setAsks] = useState<Ask[]>(initialAsks);
@@ -76,7 +80,7 @@ const AsksDocument: React.FC<AsksDocumentProps> = () => {
     const handlePointsChange = useCallback((id: number, newPoints: number) => {
         setAsks((prev) =>
             prev.map((ask) =>
-                ask.id === id ? { ...ask, points: newPoints } : ask
+                ask.ask_id === id ? { ...ask, points: newPoints } : ask
             )
         );
     }, []);
@@ -95,10 +99,10 @@ const AsksDocument: React.FC<AsksDocumentProps> = () => {
             <tbody>
                 {asks.map((item, index) => (
                     <AsksDocumentItem
-                        key={item.id}
-                        id={item.id}
+                        key={item.ask_id}
+                        id={item.ask_id}
                         index={index}
-                        description={item.text}
+                        description={item.description}
                         points={item.points}
                         moveItem={moveItem}
                         onPointsChanged={handlePointsChange}
