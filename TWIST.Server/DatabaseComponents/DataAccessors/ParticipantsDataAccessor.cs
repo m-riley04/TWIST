@@ -112,5 +112,20 @@ WHERE participant_id = @participant_id;";
                 ]
             );
         }
+
+        public IEnumerable<ParticipantRecord> GetParticipantsByEmail(string email)
+        {
+            string sql = @$"select
+{GetColumnsAsSql(ParticipantRecord.Columns.Keys)} from {TableName}
+WHERE
+email = @email;";
+            return Database.Query(
+                sql,
+                ParticipantRecord.FromRow,
+                [
+                    new("@email", SqlDbType.NVarChar) { Value = email },
+                ]
+            );
+        }
     }
 }

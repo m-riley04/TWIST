@@ -23,7 +23,6 @@ namespace TWISTServer.Hubs
         Task RolesAssigned(ParticipantRecord[] participants);
         Task CountriesAssigned(ParticipantRecord[] participants);
         Task RoundUpdated(RoundEnum round);
-
         Task AskUpdated(AskRecord asks);
         Task AsksUpdated(AskRecord[] asks);
     }
