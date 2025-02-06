@@ -15,3 +15,12 @@ export async function getParticipants(simulationId: number): Promise<Participant
         return [];
     }
 }
+
+/**
+ * Gets a participant by their email.
+ */
+export async function getParticipantByEmail(email: string): Promise<ParticipantModel[]> {
+    return await axios
+        .get(`${API_URL}/participants/email/${email}`)
+        .then<ParticipantModel[]>((response) => response.data);
+}

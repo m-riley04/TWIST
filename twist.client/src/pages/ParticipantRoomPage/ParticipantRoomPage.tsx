@@ -9,6 +9,9 @@ import SimulationModel from "../../models/SimulationModel";
 import RoundEnum from "../../enums/RoundEnum";
 import AsksDocument from "../../components/AsksDocument/AsksDocument";
 import SimulationStateEnum from "../../enums/SimulationStateEnum";
+import ParticipantModel from "../../models/ParticipantModel";
+import CountryEnum from "../../enums/CountryEnum";
+import { getParticipantByEmail } from "../../server/participant_management";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -18,6 +21,9 @@ const ParticipantRoomPage = () => {
 
     // Simulation data
     const [simulation, setSimulation] = useState<SimulationModel>();
+
+    // Instance data
+    const [currentParticipant, setCurrentParticipant] = useState<ParticipantModel>();
 
     const navigate = useNavigate();
     const params = useParams();
@@ -78,7 +84,7 @@ const ParticipantRoomPage = () => {
             console.log(`Round updated to ${round}`);
         });
 
-        connection.on("ParticipantKicked", (participant) => {
+        connection.on("ParticipantKicked", (participant: ParticipantModel) => {
             if (participant.connection_id === connection.connectionId) {
                 console.log("You have been kicked.");
                 navigate("/");
@@ -113,6 +119,11 @@ const ParticipantRoomPage = () => {
         connection?.invoke("JoinRoom", simulation, name, email)
             .then(() => {
                 setSignedIn(true);
+                getParticipantByEmail(email).
+                    then((participant) => {
+                        setCurrentParticipant(participant[0]); // TODO: Make this safer
+                    })
+                    .catch((error) => console.error(`Failed to get participant: ${error}`));
                 console.log(`Joined simulation ${simulation?.code} as ${name}`);
             })
             .catch((error) => console.error(`Failed to join simulation: ${error}`));
@@ -136,7 +147,8 @@ const ParticipantRoomPage = () => {
                 return (
                     <>
                         <h1>Round 1 - Domestic</h1>
-                        <AsksDocument def={""}></AsksDocument>
+                        <p>Participant: {currentParticipant?.email}</p>
+                        <AsksDocument simulation_id={simulation?.simulation_id} country={currentParticipant?.country ?? CountryEnum.NONE}></AsksDocument>
                     </>
                 );
             case RoundEnum.INTERNATIONAL:
