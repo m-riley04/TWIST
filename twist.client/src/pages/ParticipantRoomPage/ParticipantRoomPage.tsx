@@ -10,7 +10,6 @@ import RoundEnum from "../../enums/RoundEnum";
 import AsksDocument from "../../components/AsksDocument/AsksDocument";
 import SimulationStateEnum from "../../enums/SimulationStateEnum";
 import ParticipantModel from "../../models/ParticipantModel";
-import CountryEnum from "../../enums/CountryEnum";
 import { getParticipantByEmail } from "../../server/participant_management";
 
 const ParticipantRoomPage = () => {
@@ -148,7 +147,13 @@ const ParticipantRoomPage = () => {
                     <>
                         <h1>Round 1 - Domestic</h1>
                         <p>Participant: {currentParticipant?.email}</p>
-                        <AsksDocument simulation_id={simulation?.simulation_id} country={currentParticipant?.country ?? CountryEnum.NONE}></AsksDocument>
+                        {simulation && currentParticipant && connection && (
+                            <AsksDocument
+                                simulation={simulation}
+                                participant={currentParticipant}
+                                connection={connection}
+                            />
+                        )}
                     </>
                 );
             case RoundEnum.INTERNATIONAL:

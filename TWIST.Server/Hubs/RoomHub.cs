@@ -143,7 +143,7 @@ namespace TWISTServer.Hubs
 
             // Remove the participant from current team
             string teamName = $"{sim.Code}_{participant.Country}";
-            await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
 
             // Add the participant to new team
             teamName = $"{sim.Code}_{newCountry}";
@@ -261,7 +261,7 @@ namespace TWISTServer.Hubs
 
 
             // Signal
-            await Clients.Group($"{sim.Code}-{participant.Country}").AskUpdated(ask);
+            await Clients.Group($"{sim.Code}_{participant.Country}").AskUpdated(ask);
         }
 
         public async Task AsksUpdated(SimulationRecord sim, ParticipantRecord participant, AskRecord[] asks)
@@ -270,7 +270,7 @@ namespace TWISTServer.Hubs
 
 
             // Signal
-            await Clients.Group($"{sim.Code}-{participant.Country}").AsksUpdated(asks);
+            await Clients.Group($"{sim.Code}_{participant.Country}").AsksUpdated(asks);
         }
     }
 }

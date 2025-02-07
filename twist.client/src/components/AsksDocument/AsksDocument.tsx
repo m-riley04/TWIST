@@ -4,6 +4,10 @@ import update from 'immutability-helper';
 import { useCallback, useState } from "react";
 import Ask from "../../models/AskModel";
 import CountryEnum from "../../enums/CountryEnum";
+import SimulationModel from "../../models/SimulationModel";
+import { HubConnection } from "@microsoft/signalr";
+import ParticipantModel from "../../models/ParticipantModel";
+import { useEffect } from "react";
 
 // The default USA asks. These are the default concessions for PRC.
 const DEFAULT_USA_ASKS = [
@@ -40,41 +44,71 @@ const DEFAULT_PRC_ASKS = [
 ]
 
 interface AsksDocumentProps {
-    simulation_id: number;
-    country: CountryEnum;
+    simulation: SimulationModel;
+    participant: ParticipantModel;
+    connection: HubConnection;
 };
 
 const AsksDocument: React.FC<AsksDocumentProps> = ({
-    simulation_id,
-    country
+    simulation,
+    participant,
+    connection
 }) => {
     // Initializes the asks
-    const initialAsks: Ask[] = DEFAULT_USA_ASKS.map((str, index) => ({
+    const initialAsks: Ask[] = (
+        participant.country === CountryEnum.USA
+            ? DEFAULT_USA_ASKS
+            : DEFAULT_PRC_ASKS
+    ).map((str, index) => ({
         ask_id: index,
-        simulation_id: simulation_id,
+        simulation_id: simulation.simulation_id,
         description: str,
         points: 0,
         status: 0,
         creation_date: new Date(),
         modified_date: new Date(),
-        country: country
+        country: participant.country ?? CountryEnum.NONE,
     }));
 
     const [asks, setAsks] = useState<Ask[]>(initialAsks);
 
+    useEffect(() => {
+        if (!connection) return;
+
+        const onAsksUpdated = (updatedAsks: Ask[]) => {
+            console.log("Received updated asks from hub", updatedAsks);
+            setAsks(updatedAsks);
+        };
+
+        connection.on("AsksUpdated", onAsksUpdated);
+
+        return () => {
+            connection.off("AsksUpdated", onAsksUpdated);
+        };
+    }, [connection]);
+
+    // Function to broadcast the updated asks list to all clients in this team/group.
+    const broadcastAsks = useCallback((newAsks: Ask[]) => {
+        console.log("Broadcasting updated asks to hub");
+        connection.invoke("AsksUpdated", simulation, participant, newAsks)
+            .catch(console.error);
+    }, [simulation, participant, connection]);
+
     // Reorder the asks array when an item is dragged
     const moveItem = useCallback(
         (dragIndex: number, hoverIndex: number) => {
-            setAsks(prevItems =>
-                update(prevItems, {
+            setAsks(prevItems => {
+                const newAsks = update(prevItems, {
                     $splice: [
                         [dragIndex, 1],
                         [hoverIndex, 0, prevItems[dragIndex]],
                     ],
                 })
-            );
+                broadcastAsks(newAsks);
+                return newAsks;
+            });
         },
-        [setAsks]
+        [setAsks, broadcastAsks]
     );
 
     const handlePointsChange = useCallback((id: number, newPoints: number) => {
@@ -83,7 +117,12 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
                 ask.ask_id === id ? { ...ask, points: newPoints } : ask
             )
         );
-    }, []);
+        // Get the updated list (you could also use the functional update from above)
+        const updatedAsks = asks.map(ask =>
+            ask.ask_id === id ? { ...ask, points: newPoints } : ask
+        );
+        broadcastAsks(updatedAsks);
+    }, [asks, broadcastAsks]);
 
     const totalPoints = asks.reduce((acc, item) => acc + item.points, 0);
 

@@ -2,7 +2,7 @@
 {
     public enum StatusEnum
     {
-        Accepted,
+        Accepted = 0,
         Rejected,
         Deliberating
     }
