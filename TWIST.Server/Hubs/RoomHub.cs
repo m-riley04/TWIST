@@ -26,8 +26,8 @@ namespace TWISTServer.Hubs
         Task RoundUpdated(RoundEnum round);
         Task AskUpdated(AskRecord asks);
         Task AsksUpdated(AskRecord[] asks);
-        Task GroupsPolled(string[] groups);
-        Task GroupMembersPolled(string[] members);
+        Task ConnectionsPolled(string[] connections);
+        Task GroupsPolled(Dictionary<string, List<string>> groups);
     }
 
     public class RoomHub : Hub<IRoomClient>
@@ -62,6 +62,8 @@ namespace TWISTServer.Hubs
                 return base.OnDisconnectedAsync(exception);
             }
 
+            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
+
             return Clients.Group(sim.Code).ParticipantDisconnected(participant);
         }
 
@@ -84,7 +86,7 @@ namespace TWISTServer.Hubs
                 newParticipant = new ParticipantRecord(0, CountryEnum.NONE, ParticipantRoleEnum.NONE, sim.SimulationId, username, email, Context.ConnectionId);
                 int participantId = partAccessor.InsertAndReturnId(newParticipant);
                 newParticipant = newParticipant with { ParticipantId = participantId };
-            } 
+            }
             else
             {
                 // Otherwise, update the participant's connection id
@@ -93,14 +95,8 @@ namespace TWISTServer.Hubs
                 newParticipant = _;
             }
 
-            // Add the participant to the main simulation group
-            await Groups.AddToGroupAsync(Context.ConnectionId, sim.Code);
-            AllConnections.Add(Context.ConnectionId);
-
-            // Add the participant to default country
-            string teamName = $"{sim.Code}_{newParticipant.Country}";
-            await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
-            AllGroups.AddOrUpdate(teamName, new List<string> { Context.ConnectionId }, (key, value) => { value.Add(Context.ConnectionId); return value; });
+            // Add the connection to the room
+            _AddToRoom(Context.ConnectionId, sim.Code, newParticipant.Country ?? CountryEnum.NONE);
 
             // Send signal to all clients
             await Clients.All.ParticipantJoined(newParticipant);
@@ -108,14 +104,7 @@ namespace TWISTServer.Hubs
 
         public async Task LeaveRoom(SimulationRecord sim, ParticipantRecord participant)
         {
-            // Remove the participant from main group
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, sim.Code);
-            AllConnections.Remove(Context.ConnectionId);
-
-            // Remove the participant from team
-            string teamName = $"{sim.Code}_{participant.Country}";
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
-            AllGroups.AddOrUpdate(teamName, new List<string> { }, (key, value) => { value.Remove(Context.ConnectionId); return value; });
+            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
 
             // Send signal to all in simulation
             await Clients.Group(sim.Code).ParticipantLeft(participant);
@@ -124,14 +113,9 @@ namespace TWISTServer.Hubs
         public async Task KickParticipant(SimulationRecord sim, ParticipantRecord participant)
         {
             // Remove the participant from the participants table
-            partAccessor.Delete(participant.ParticipantId);
+            //partAccessor.Delete(participant.ParticipantId);
 
-            // Remove the participant from main group
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, sim.Code);
-
-            // Remove the participant from team
-            string teamName = $"{sim.Code}_{participant.Country}";
-            await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
+            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
 
             // Send signal to all in simulation
             await Clients.Group(sim.Code).ParticipantKicked(participant);
@@ -154,10 +138,12 @@ namespace TWISTServer.Hubs
             // Remove the participant from current team
             string teamName = $"{sim.Code}_{participant.Country}";
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
+            AllGroups.AddOrUpdate(teamName, new List<string> { }, (key, value) => { value.Remove(Context.ConnectionId); return value; });
 
             // Add the participant to new team
             teamName = $"{sim.Code}_{newCountry}";
             await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
+            AllGroups.AddOrUpdate(teamName, new List<string> { Context.ConnectionId }, (key, value) => { value.Add(Context.ConnectionId); return value; });
 
             // Send signal
             await Clients.Group(sim.Code).ParticipantUpdated(participant);
@@ -243,8 +229,6 @@ namespace TWISTServer.Hubs
             simAccessor.UpdateState(sim.SimulationId, SimulationStateEnum.IN_PROGRESS);
             sim = sim with { State = SimulationStateEnum.IN_PROGRESS };
 
-            var g = AllConnections;
-
             // Signal
             await Clients.Group(sim.Code).SimulationStarted(sim);
         }
@@ -285,12 +269,45 @@ namespace TWISTServer.Hubs
             await Clients.Group($"{sim.Code}_{participant.Country}").AsksUpdated(asks);
         }
 
+        public async Task PollConnections(SimulationRecord sim)
+        {
+            // Signal
+            await Clients.Group(sim.Code).ConnectionsPolled(AllConnections.ToArray());
+        }
+
         public async Task PollGroups(SimulationRecord sim)
         {
-            // Get all groups
-            var g = Groups.ToString();
             // Signal
-            //await Clients.Group(sim.Code).GroupsPolled(groups);
+            await Clients.Group(sim.Code).GroupsPolled(AllGroups.ToDictionary());
+        }
+
+        private async void _RemoveFromRoom(string contextId, string simulationCode, CountryEnum country)
+        {
+            string teamName = $"{simulationCode}_{country}";
+
+            // Remove from SignalR groups
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, simulationCode);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
+
+            // Remove from in-memory 
+            AllConnections.Remove(Context.ConnectionId);
+            foreach (KeyValuePair<string, List<string>> entry in AllGroups)
+            {
+                AllGroups.AddOrUpdate(teamName, new List<string> { }, (key, value) => { value.Remove(Context.ConnectionId); return value; });
+            }
+        }
+
+        private async void _AddToRoom(string connectionId, string simulationCode, CountryEnum country)
+        {
+            string teamName = $"{simulationCode}_{country}";
+
+            // Add to SignalR groups
+            await Groups.AddToGroupAsync(connectionId, simulationCode);
+            await Groups.AddToGroupAsync(connectionId, teamName);
+
+            // Add to in-memory
+            AllConnections.Add(connectionId);
+            AllGroups.AddOrUpdate(teamName, new List<string> { connectionId }, (key, value) => { value.Add(connectionId); return value; });
         }
     }
 }
