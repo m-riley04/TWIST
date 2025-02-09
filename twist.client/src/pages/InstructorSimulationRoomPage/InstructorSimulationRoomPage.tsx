@@ -133,6 +133,14 @@ const InstructorSimulationRoomPage = () => {
             console.log("Instructor has been initialized.");
         });
 
+        connection.on("ConnectionsPolled", (connections: string[]) => {
+            console.log(connections);
+        });
+
+        connection.on("GroupsPolled", (groups: object) => {
+            console.log(groups);
+        });
+
         // Cleanup
         return () => {
             connection.stop().catch(console.error);
@@ -292,6 +300,16 @@ const InstructorSimulationRoomPage = () => {
         handleUpdateRound(simulation?.round - 1);
     }
 
+    const handlePollConnections = () => {
+        connection?.invoke("PollConnections", simulation)
+            .catch((error) => console.error(`Unable to poll connections: ${error}`));
+    }
+
+    const handlePollGroups = () => {
+        connection?.invoke("PollGroups", simulation)
+            .catch((error) => console.error(`Unable to poll groups: ${error}`));
+    }
+
     if (error) return <div>Oops... {error.message}</div>;
 
     if (isLoading) return <div>Loading...</div>;
@@ -319,6 +337,8 @@ const InstructorSimulationRoomPage = () => {
 
             <Button onClick={handlePreviousRound}>Previous Round</Button>
             <Button onClick={handleNextRound}>Next Round</Button>
+            <Button onClick={handlePollConnections}>Get Connections</Button>
+            <Button onClick={handlePollGroups}>Get Groups</Button>
             <br/>
             <a href="/instructor">Instructor Home</a>
         </>

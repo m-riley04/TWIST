@@ -147,6 +147,7 @@ const ParticipantRoomPage = () => {
                     <>
                         <h1>Round 1 - Domestic</h1>
                         <p>Participant: {currentParticipant?.email}</p>
+                        <p>Connection ID: {connection?.connectionId}</p>
                         {simulation && currentParticipant && connection && (
                             <AsksDocument
                                 simulation={simulation}
