@@ -1,9 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
-using TWISTServer.Controllers;
 using TWISTServer.DatabaseComponents.DataAccessors;
 using TWISTServer.DatabaseComponents.Records;
 using TWISTServer.Enums;
@@ -199,9 +195,19 @@ namespace TWISTServer.Hubs
                 // Remove the participant's current country
                 countries.Remove(participant.Country ?? 0);
 
+                // Get countries
+                string connectionId = _FindConnectionId(participant.ParticipantId);
+                if (connectionId == null)
+                {
+                    Console.WriteLine($"Participant {participant.ParticipantId} does not have a connection id.");
+                    continue;
+                }
+                ParticipantConnection participantConnection = AllConnections.Find(x => x.ParticipantId == participant.ParticipantId);
+
                 // Remove the participant from their current team
                 string teamName = $"{sim.Code}_{participant.Country}";
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
+                AllGroups.AddOrUpdate(teamName, new List<ParticipantConnection> { }, (key, value) => { value.RemoveAll(value => value.ConnectionId == connectionId); return value; });
 
                 // Assign a random country
                 var random = new Random();
@@ -216,6 +222,7 @@ namespace TWISTServer.Hubs
                 // Add the participant to new team
                 teamName = $"{sim.Code}_{newCountry}";
                 await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
+                AllGroups.AddOrUpdate(teamName, new List<ParticipantConnection> { participantConnection }, (key, value) => { value.Add(participantConnection); return value; });
 
                 // Send signal
                 await Clients.Group(sim.Code).ParticipantUpdated(participant);
@@ -344,7 +351,7 @@ namespace TWISTServer.Hubs
             ParticipantConnection newConnection = new(participantId, connectionId);
 
             // Add to SignalR groups
-            await Groups.AddToGroupAsync(connectionId, simulationCode);
+            await Groups.AddToGroupAsync(connectionId, simulationCode); /// TODO: for some reason, any team will receive updates from any other team. This is a bug.
             await Groups.AddToGroupAsync(connectionId, teamName);
 
             // Add to in-memory
