@@ -10,6 +10,51 @@ using TWISTServer.Enums;
 
 namespace TWISTServer.Hubs
 {
+    public class ParticipantConnection(int ParticipantId, string ConnectionId)
+    {
+        public int ParticipantId { get; set; } = ParticipantId;
+        public string ConnectionId { get; set; } = ConnectionId;
+
+        public static bool operator <(ParticipantConnection a, ParticipantConnection b)
+        {
+            return a.ConnectionId.First() < b.ConnectionId.First();
+        }
+
+        public static bool operator >(ParticipantConnection a, ParticipantConnection b)
+        {
+            return a.ConnectionId.First() > b.ConnectionId.First();
+        }
+
+        public static bool operator <=(ParticipantConnection a, ParticipantConnection b)
+        {
+            return a.ConnectionId.First() <= b.ConnectionId.First();
+        }
+
+        public static bool operator >=(ParticipantConnection a, ParticipantConnection b)
+        {
+            return a.ConnectionId.First() >= b.ConnectionId.First();
+        }
+
+        public static bool operator ==(ParticipantConnection a, ParticipantConnection b)
+        {
+            return a.ConnectionId == b.ConnectionId;
+        }
+        public static bool operator !=(ParticipantConnection a, ParticipantConnection b)
+        {
+            return a.ConnectionId != b.ConnectionId;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return ReferenceEquals(this, obj);
+        }
+
+        public override int GetHashCode()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public interface IRoomClient
     {
         Task InstructorInitialized();
@@ -26,8 +71,8 @@ namespace TWISTServer.Hubs
         Task RoundUpdated(RoundEnum round);
         Task AskUpdated(AskRecord asks);
         Task AsksUpdated(AskRecord[] asks);
-        Task ConnectionsPolled(string[] connections);
-        Task GroupsPolled(Dictionary<string, List<string>> groups);
+        Task ConnectionsPolled(ParticipantConnection[] connections);
+        Task GroupsPolled(Dictionary<string, List<ParticipantConnection>> groups);
     }
 
     public class RoomHub : Hub<IRoomClient>
@@ -35,25 +80,18 @@ namespace TWISTServer.Hubs
         SimulationsDataAccessor simAccessor = new();
         ParticipantsDataAccessor partAccessor = new();
 
-        public static ConcurrentDictionary<string, List<string>> AllGroups = new();
-        public static List<string> AllConnections = [];
+        public static ConcurrentDictionary<string, List<ParticipantConnection>> AllGroups = new();
+        public static List<ParticipantConnection> AllConnections = []; // TODO: Need to make this not global for ALL simulations (dictionary with simulation code as key)
 
         public override Task OnDisconnectedAsync(Exception? exception)
         {
-            if (exception != null)
-            {
-                return base.OnDisconnectedAsync(exception);
-            }
-
             // Get the participant
-            var participant = partAccessor.GetParticipantsByConnectionId(Context.ConnectionId).SingleOrDefault();
+            var id = _FindParticipantId(Context.ConnectionId);
+            var participant = partAccessor.Get(id).SingleOrDefault();
             if (participant == null)
             {
                 return base.OnDisconnectedAsync(exception);
             }
-
-            // Update the participant's connection id
-            partAccessor.UpdateParticipantConnectionId(participant.ParticipantId, null);
 
             // Get simulation
             var sim = simAccessor.Get(participant.SimulationId).FirstOrDefault();
@@ -64,7 +102,8 @@ namespace TWISTServer.Hubs
 
             _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
 
-            return Clients.Group(sim.Code).ParticipantDisconnected(participant);
+            Clients.Group(sim.Code).ParticipantDisconnected(participant); // TODO: check if not awaiting this is fine
+            return base.OnDisconnectedAsync(exception);
         }
 
         public async Task InstructorInitialize(SimulationRecord sim)
@@ -83,20 +122,14 @@ namespace TWISTServer.Hubs
             if (_ == null)
             {
                 // Add the participant to participants table
-                newParticipant = new ParticipantRecord(0, CountryEnum.NONE, ParticipantRoleEnum.NONE, sim.SimulationId, username, email, Context.ConnectionId);
+                newParticipant = new ParticipantRecord(0, CountryEnum.NONE, ParticipantRoleEnum.NONE, sim.SimulationId, username, email);
                 int participantId = partAccessor.InsertAndReturnId(newParticipant);
                 newParticipant = newParticipant with { ParticipantId = participantId };
             }
-            else
-            {
-                // Otherwise, update the participant's connection id
-                newParticipant = _ with { ConnectionId = Context.ConnectionId };
-                partAccessor.UpdateParticipantConnectionId(_.ParticipantId, Context.ConnectionId);
-                newParticipant = _;
-            }
+            else newParticipant = _;
 
             // Add the connection to the room
-            _AddToRoom(Context.ConnectionId, sim.Code, newParticipant.Country ?? CountryEnum.NONE);
+            _AddToRoom(Context.ConnectionId, newParticipant.ParticipantId, sim.Code, newParticipant.Country ?? CountryEnum.NONE);
 
             // Send signal to all clients
             await Clients.All.ParticipantJoined(newParticipant);
@@ -135,15 +168,20 @@ namespace TWISTServer.Hubs
             // Update database
             partAccessor.UpdateParticipantCountry(participant.ParticipantId, newCountry);
 
+            // Check participant connection id
+            string connectionId = _FindConnectionId(participant.ParticipantId);
+            if (connectionId == null) throw new Exception($"Participant {participant.ParticipantId} does not have a connection id.");
+            ParticipantConnection participantConnection = AllConnections.Find(x => x.ParticipantId == participant.ParticipantId);
+
             // Remove the participant from current team
             string teamName = $"{sim.Code}_{participant.Country}";
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
-            AllGroups.AddOrUpdate(teamName, new List<string> { }, (key, value) => { value.Remove(Context.ConnectionId); return value; });
+            await Groups.RemoveFromGroupAsync(connectionId, teamName);
+            AllGroups.AddOrUpdate(teamName, new List<ParticipantConnection> { }, (key, value) => { value.RemoveAll(value => value.ConnectionId == connectionId); return value; });
 
             // Add the participant to new team
             teamName = $"{sim.Code}_{newCountry}";
-            await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
-            AllGroups.AddOrUpdate(teamName, new List<string> { Context.ConnectionId }, (key, value) => { value.Add(Context.ConnectionId); return value; });
+            await Groups.AddToGroupAsync(connectionId, teamName);
+            AllGroups.AddOrUpdate(teamName, new List<ParticipantConnection> { participantConnection }, (key, value) => { value.Add(participantConnection); return value; });
 
             // Send signal
             await Clients.Group(sim.Code).ParticipantUpdated(participant);
@@ -281,33 +319,47 @@ namespace TWISTServer.Hubs
             await Clients.Group(sim.Code).GroupsPolled(AllGroups.ToDictionary());
         }
 
-        private async void _RemoveFromRoom(string contextId, string simulationCode, CountryEnum country)
+        private async void _RemoveFromRoom(string connectionId, string simulationCode, CountryEnum country)
         {
             string teamName = $"{simulationCode}_{country}";
 
+            // Get the connection
+            ParticipantConnection connection = AllConnections.Find(x => x.ConnectionId == connectionId);
+
             // Remove from SignalR groups
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, simulationCode);
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
+            await Groups.RemoveFromGroupAsync(connectionId, simulationCode);
+            await Groups.RemoveFromGroupAsync(connectionId, teamName);
 
             // Remove from in-memory 
-            AllConnections.Remove(Context.ConnectionId);
-            foreach (KeyValuePair<string, List<string>> entry in AllGroups)
+            AllConnections.RemoveAll(value => value.ConnectionId == connectionId);
+            foreach (KeyValuePair<string, List<ParticipantConnection>> entry in AllGroups)
             {
-                AllGroups.AddOrUpdate(teamName, new List<string> { }, (key, value) => { value.Remove(Context.ConnectionId); return value; });
+                AllGroups.AddOrUpdate(teamName, new List<ParticipantConnection> { }, (key, value) => { value.RemoveAll(value => value.ConnectionId == connectionId); return value; });
             }
         }
 
-        private async void _AddToRoom(string connectionId, string simulationCode, CountryEnum country)
+        private async void _AddToRoom(string connectionId, int participantId, string simulationCode, CountryEnum country)
         {
             string teamName = $"{simulationCode}_{country}";
+            ParticipantConnection newConnection = new(participantId, connectionId);
 
             // Add to SignalR groups
             await Groups.AddToGroupAsync(connectionId, simulationCode);
             await Groups.AddToGroupAsync(connectionId, teamName);
 
             // Add to in-memory
-            AllConnections.Add(connectionId);
-            AllGroups.AddOrUpdate(teamName, new List<string> { connectionId }, (key, value) => { value.Add(connectionId); return value; });
+            AllConnections.Add(newConnection);
+            AllGroups.AddOrUpdate(teamName, new List<ParticipantConnection> { newConnection }, (key, value) => { value.Add(newConnection); return value; });
+        }
+
+        private string _FindConnectionId(int participantId)
+        {
+            return AllConnections.Find(x => x.ParticipantId == participantId)?.ConnectionId ?? "";
+        }
+
+        private int _FindParticipantId(string connectionId)
+        {
+            return AllConnections.Find(x => x.ConnectionId == connectionId)?.ParticipantId ?? 0;
         }
     }
 }
