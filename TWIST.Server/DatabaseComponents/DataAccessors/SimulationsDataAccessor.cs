@@ -1,8 +1,5 @@
-﻿using System.Data.SqlTypes;
-using TWISTServer.DatabaseComponents.Records;
+﻿using TWISTServer.DatabaseComponents.Records;
 using System.Data;
-using System.Data.SqlClient;
-using System.Text.Json;
 using TWISTServer.Enums;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
@@ -68,6 +65,18 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
                 sql,
                 [
                     new($"@round", SqlDbType.Int) { Value = (int)round },
+                    new($"@simulationId", SqlDbType.Int) { Value = simulationId },
+                ]
+            );
+        }
+
+        public void UpdateState(int simulationId, SimulationStateEnum state)
+        {
+            string sql = @$"UPDATE {TableName} SET state = @state WHERE {PrimaryKeyColumn} = @simulationId;";
+            Database.NonQuery(
+                sql,
+                [
+                    new($"@state", SqlDbType.Int) { Value = (int)state },
                     new($"@simulationId", SqlDbType.Int) { Value = simulationId },
                 ]
             );

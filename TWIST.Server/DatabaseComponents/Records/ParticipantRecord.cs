@@ -11,8 +11,7 @@ namespace TWISTServer.DatabaseComponents.Records
         ParticipantRoleEnum? Role,
         [property: JsonPropertyName("simulation_id")] int SimulationId, 
         string Username, 
-        string Email,
-        [property: JsonPropertyName("connection_id")] string? ConnectionId
+        string Email
     ) : IDatabaseRecord<ParticipantRecord>
     {
         public static Dictionary<string, SqlDbType> Columns { get; } = new Dictionary<string, SqlDbType>()
@@ -22,8 +21,7 @@ namespace TWISTServer.DatabaseComponents.Records
             { "role", SqlDbType.Int },
             { "simulation_id", SqlDbType.Int },
             { "username", SqlDbType.NVarChar },
-            { "email", SqlDbType.NVarChar },
-            { "connection_id", SqlDbType.NVarChar },
+            { "email", SqlDbType.NVarChar }
         };
         public static ParticipantRecord FromRow(DataRow row)
         {
@@ -34,7 +32,6 @@ namespace TWISTServer.DatabaseComponents.Records
                 , row.Field<int>("simulation_id")
                 , row.Field<string>("username") ?? ""
                 , row.Field<string>("email") ?? ""
-                , row.Field<string?>("connection_id") ?? ""
                 );
         }
     }

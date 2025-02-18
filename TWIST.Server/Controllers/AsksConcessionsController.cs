@@ -16,24 +16,12 @@ namespace TWISTServer.Controllers
 
         [HttpGet]
         [Route("asks")]
-        public IEnumerable<AskRecord> GetAsks([FromQuery(Name = "id")] int? id, [FromQuery(Name = "team")] int? teamId)
+        public IEnumerable<AskRecord> GetAsks([FromQuery(Name = "id")] int? id)
         {
-            // Check for both
-            if (id.HasValue && teamId.HasValue)
-            {
-                asksAccessor.GetAsksBySimulationAndTeam(id.Value, teamId.Value);
-            }
-            
             // Check for ID
             if (id.HasValue)
             {
                 return asksAccessor.Get(id.Value);
-            }
-
-            // Check for team ID
-            if (teamId.HasValue)
-            {
-                return asksAccessor.GetAsksByTeam(teamId.Value);
             }
 
             return asksAccessor.GetAll();
@@ -41,24 +29,12 @@ namespace TWISTServer.Controllers
 
         [HttpGet]
         [Route("concessions")]
-        public IEnumerable<ConcessionRecord> GetConcessions([FromQuery(Name = "id")] int? id, [FromQuery(Name = "team")] int? teamId)
+        public IEnumerable<ConcessionRecord> GetConcessions([FromQuery(Name = "id")] int? id)
         {
-            // Check for both
-            if (id.HasValue && teamId.HasValue)
-            {
-                concessionsAccessor.GetConcessionsBySimulationAndTeam(id.Value, teamId.Value);
-            }
-
             // Check for ID
             if (id.HasValue)
             {
                 return concessionsAccessor.Get(id.Value);
-            }
-
-            // Check for team ID
-            if (teamId.HasValue)
-            {
-                return concessionsAccessor.GetConcessionsByTeam(teamId.Value);
             }
 
             return concessionsAccessor.GetAll();
@@ -69,7 +45,7 @@ namespace TWISTServer.Controllers
         public JsonResult AddAsk([FromBody] AskRecord ask)
         {
             asksAccessor.Insert(ask);
-            return new JsonResult($"Successfully added ask (TeamId = {ask.TeamId})");
+            return new JsonResult($"Successfully added ask {ask.AskId}");
         }
 
         [HttpPut]
@@ -77,7 +53,7 @@ namespace TWISTServer.Controllers
         public JsonResult AddConcession([FromBody] ConcessionRecord concession)
         {
             concessionsAccessor.Insert(concession);
-            return new JsonResult($"Successfully added ask (TeamId = {concession.TeamId})");
+            return new JsonResult($"Successfully added concession {concession.ConcessionId}");
         }
     }
 }

@@ -7,6 +7,10 @@ import { useRoomHub } from "../../signalr/useRoomHub";
 import ParticipantPageLoadingStatus from "../../components/ParticipantPageLoadingStatus/ParticipantPageLoadingStatus";
 import SimulationModel from "../../models/SimulationModel";
 import RoundEnum from "../../enums/RoundEnum";
+import AsksDocument from "../../components/AsksDocument/AsksDocument";
+import SimulationStateEnum from "../../enums/SimulationStateEnum";
+import ParticipantModel from "../../models/ParticipantModel";
+import { getParticipantByEmail } from "../../server/participant_management";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -16,7 +20,9 @@ const ParticipantRoomPage = () => {
 
     // Simulation data
     const [simulation, setSimulation] = useState<SimulationModel>();
-    const [isStarted, setIsStarted] = useState<boolean>(false);
+
+    // Instance data
+    const [currentParticipant, setCurrentParticipant] = useState<ParticipantModel>();
 
     const navigate = useNavigate();
     const params = useParams();
@@ -50,6 +56,7 @@ const ParticipantRoomPage = () => {
         // Check if connection is defined
         if (!connection) return;
 
+        // Set connection
         setIsConnected(true);
 
         // Connect signals
@@ -57,13 +64,13 @@ const ParticipantRoomPage = () => {
             console.log(`Participant ${participant.name} joined.`);
         });
 
-        connection.on("SimulationStarted", () => {
-            setIsStarted(true);
+        connection.on("SimulationStarted", (sim: SimulationModel) => {
+            setSimulation(sim);
             console.log("Simulation started.");
         })
 
-        connection.on("SimulationStopped", () => {
-            setIsStarted(false);
+        connection.on("SimulationStopped", (sim: SimulationModel) => {
+            setSimulation(sim);
             console.log("Simulation stopped.");
         })
 
@@ -73,9 +80,10 @@ const ParticipantRoomPage = () => {
 
                 return ({ ...prev, round: round });
             });
+            console.log(`Round updated to ${round}`);
         });
 
-        connection.on("ParticipantKicked", (participant) => {
+        connection.on("ParticipantKicked", (participant: ParticipantModel) => {
             if (participant.connection_id === connection.connectionId) {
                 console.log("You have been kicked.");
                 navigate("/");
@@ -110,6 +118,11 @@ const ParticipantRoomPage = () => {
         connection?.invoke("JoinRoom", simulation, name, email)
             .then(() => {
                 setSignedIn(true);
+                getParticipantByEmail(email).
+                    then((participant) => {
+                        setCurrentParticipant(participant[0]); // TODO: Make this safer
+                    })
+                    .catch((error) => console.error(`Failed to get participant: ${error}`));
                 console.log(`Joined simulation ${simulation?.code} as ${name}`);
             })
             .catch((error) => console.error(`Failed to join simulation: ${error}`));
@@ -127,12 +140,22 @@ const ParticipantRoomPage = () => {
     );
 
     // Round screens
-    if (isStarted && signedIn) {
+    if (simulation?.state == SimulationStateEnum.IN_PROGRESS && signedIn) {
         switch (simulation?.round) {
             case RoundEnum.DOMESTIC:
                 return (
                     <>
                         <h1>Round 1 - Domestic</h1>
+                        <p>Participant: {currentParticipant?.email}</p>
+                        <p>Connection ID: {connection?.connectionId}</p>
+                        <p>Country: {currentParticipant?.country}</p>
+                        {simulation && currentParticipant && connection && (
+                            <AsksDocument
+                                simulation={simulation}
+                                participant={currentParticipant}
+                                connection={connection}
+                            />
+                        )}
                     </>
                 );
             case RoundEnum.INTERNATIONAL:

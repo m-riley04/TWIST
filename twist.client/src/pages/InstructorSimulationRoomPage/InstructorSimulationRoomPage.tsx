@@ -22,7 +22,6 @@ const InstructorSimulationRoomPage = () => {
 
     const [simulation, setSimulation] = useState<SimulationModel>();
     const [participants, setParticipants] = useState<ParticipantModel[]>([]);
-    const [isStarted, setIsStarted] = useState<boolean>(false);
 
     const navigate = useNavigate();
     const params = useParams();
@@ -43,20 +42,7 @@ const InstructorSimulationRoomPage = () => {
             .catch(error => console.error(`Unable to load simulation: ${error}`));
 
         // TODO: Be able to change room settings
-
-        // TODO: Add QR code for participants to join
     }, [simCode]);
-
-    // Initialize participants
-    useEffect(() => {
-        if (!simulation) return;
-
-        // Get the participants
-        getParticipants(simulation.simulation_id)
-            .then(data => setParticipants(data))
-            .catch(error => console.error(`Unable to load participants: ${error}`));
-
-    }, [simulation])
 
     // Initialize connection
     useEffect(() => {
@@ -66,6 +52,78 @@ const InstructorSimulationRoomPage = () => {
         if (connection.state === "Connected") {
             console.log("Connected to SignalR hub.");
         }
+
+        connection.on("SimulationStarted", (sim: SimulationModel) => {
+            setSimulation(sim);
+            console.log("Simulation started.");
+        })
+
+        connection.on("SimulationStopped", (sim: SimulationModel) => {
+            setSimulation(sim);
+            console.log("Simulation stopped.");
+        })
+
+        connection.on("CountriesAssigned", (participants: ParticipantModel[]) => {
+            setParticipants(participants);
+            console.log("Countries have been randomly assigned.");
+        });
+
+        connection.on("RolesAssigned", (participants: ParticipantModel[]) => {
+            setParticipants(participants);
+            console.log("Roles have been randomly assigned.");
+        });
+
+        connection.on("InstructorInitialized", () => {
+            console.log("Instructor has been initialized.");
+        });
+
+        connection.on("ConnectionsPolled", (connections: string[]) => {
+            console.log(connections);
+        });
+
+        connection.on("GroupsPolled", (groups: object) => {
+            console.log(groups);
+        });
+
+        // Cleanup
+        return () => {
+            connection.stop().catch(console.error);
+        }
+
+    }, [connection]);
+
+    /// INSTRUCTOR AND SIMULATION-DEPENDENT SIGNALS
+    useEffect(() => {
+        if (!connection || !simulation) return;
+
+        // Initialize instructor
+        connection.invoke("InstructorInitialize", simulation)
+            .catch((error) => console.error(`Unable to initialize instructor: ${error}`));
+
+        connection.on("RoundUpdated", (round: RoundEnum) => {
+            setSimulation((prev) => {
+                if (!prev) return; // Null check
+
+                return ({ ...prev, round: round });
+            });
+            console.log(`Updated to round ${round}`);
+        });
+
+    }, [connection, simulation])
+
+    //// Initialize participants
+    //useEffect(() => {
+    //    if (!simulation) return;
+
+    //    // Get the participants
+    //    getParticipants(simulation.simulation_id)
+    //        .then(data => setParticipants(data))
+    //        .catch(error => console.error(`Unable to load participants: ${error}`));
+
+    //}, [simulation])
+
+    useEffect(() => {
+        if (!connection) return;
 
         // Connection signals/slots
         connection.on("ParticipantJoined", (participant: ParticipantModel) => {
@@ -94,65 +152,14 @@ const InstructorSimulationRoomPage = () => {
         connection.on("ParticipantDisconnected", (participant: ParticipantModel) => {
             // Update the participant list
             setParticipants((prev) => prev.map((p) => {
-                if (p.participant_id === participant.participant_id) {
-                    p.connection_id = participant.connection_id;
-                }
+                /// TODO: more here
+                //if (p.participant_id === participant.participant_id) {
+                //    p.connected = false;
+                //}
                 return p;
             }));
         });
-
-        connection.on("SimulationStarted", () => {
-            // TODO
-            setIsStarted(true);
-            console.log("Simulation started.");
-        })
-
-        connection.on("SimulationStopped", () => {
-            // TODO
-            setIsStarted(false);
-            console.log("Simulation stopped.");
-        })
-
-        connection.on("RoundUpdated", (round: RoundEnum) => {
-            setSimulation((prev) => {
-                if (!prev) return; // Null check
-
-                return ({ ...prev, round: round });
-            });
-            console.log(`Updated to round ${round}`);
-        });
-
-        connection.on("CountriesAssigned", (participants: ParticipantModel[]) => {
-            setParticipants(participants);
-            console.log("Countries have been randomly assigned.");
-        });
-
-        connection.on("RolesAssigned", (participants: ParticipantModel[]) => {
-            setParticipants(participants);
-            console.log("Roles have been randomly assigned.");
-        });
-
-        connection.on("InstructorInitialized", () => {
-            console.log("Instructor has been initialized.");
-        });
-
-        // Cleanup
-        return () => {
-            connection.stop().catch(console.error);
-        }
-
-    }, [connection]);
-
-    // Initialize instructor on connection and simulation load
-    useEffect(() => {
-        if (!connection) return;
-        if (!simulation) return;
-
-        // Initialize instructor
-        connection.invoke("InstructorInitialize", simulation)
-            .catch((error) => console.error(`Unable to initialize instructor: ${error}`));
-
-    }, [connection, simulation])
+    }, [connection, participants])
 
     const handleCloseRoom = () => {
         if (params.code === undefined) {
@@ -295,9 +302,21 @@ const InstructorSimulationRoomPage = () => {
         handleUpdateRound(simulation?.round - 1);
     }
 
+    const handlePollConnections = () => {
+        connection?.invoke("PollConnections", simulation)
+            .catch((error) => console.error(`Unable to poll connections: ${error}`));
+    }
+
+    const handlePollGroups = () => {
+        connection?.invoke("PollGroups", simulation)
+            .catch((error) => console.error(`Unable to poll groups: ${error}`));
+    }
+
     if (error) return <div>Oops... {error.message}</div>;
 
     if (isLoading) return <div>Loading...</div>;
+
+    if (!simulation) return <div>Loading simulation...</div>;
 
     // Authenticated view
     if (isAuthenticated) return ( 
@@ -322,6 +341,8 @@ const InstructorSimulationRoomPage = () => {
 
             <Button onClick={handlePreviousRound}>Previous Round</Button>
             <Button onClick={handleNextRound}>Next Round</Button>
+            <Button onClick={handlePollConnections}>Get Connections</Button>
+            <Button onClick={handlePollGroups}>Get Groups</Button>
             <br/>
             <a href="/instructor">Instructor Home</a>
         </>
