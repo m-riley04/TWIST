@@ -107,7 +107,7 @@ const AsksDocumentItem: React.FC<AsksDocumentItemProps> = ({
             ref={ref}
         >
             <td>
-                <input type="number" defaultValue={points} onChange={handlePointsChange} />
+                <input type="number" value={points} onChange={handlePointsChange} />
             </td>
             <td>{description}</td>
         </tr>

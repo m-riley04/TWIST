@@ -1,19 +1,20 @@
 ﻿using System.Data;
+using System.Text.Json.Serialization;
 using TWISTServer.Enums;
 using TWISTServer.Interfaces;
 
 namespace TWISTServer.DatabaseComponents.Records
 {
     public record AskRecord(
-        int AskId, 
-        int SimulationId, 
+        [property: JsonPropertyName("ask_id")] int AskId,
+        [property: JsonPropertyName("simulation_id")] int SimulationId, 
         string Description, 
         int Points, 
         StatusEnum Status,
-        DateTime CreationDate,
-        DateTime ModifiedDate,
+        [property: JsonPropertyName("creation_date")] DateTime CreationDate,
+        [property: JsonPropertyName("modified_date")] DateTime ModifiedDate,
         CountryEnum Country,
-        int? LastEditor
+        [property: JsonPropertyName("last_editor")] int? LastEditor
     ) : IDatabaseRecord<AskRecord>
     {
         public static Dictionary<string, SqlDbType> Columns { get; } = new Dictionary<string, SqlDbType>()
