@@ -42,20 +42,7 @@ const InstructorSimulationRoomPage = () => {
             .catch(error => console.error(`Unable to load simulation: ${error}`));
 
         // TODO: Be able to change room settings
-
-        // TODO: Add QR code for participants to join
     }, [simCode]);
-
-    // Initialize participants
-    useEffect(() => {
-        if (!simulation) return;
-
-        // Get the participants
-        getParticipants(simulation.simulation_id)
-            .then(data => setParticipants(data))
-            .catch(error => console.error(`Unable to load participants: ${error}`));
-
-    }, [simulation])
 
     // Initialize connection
     useEffect(() => {
@@ -66,40 +53,6 @@ const InstructorSimulationRoomPage = () => {
             console.log("Connected to SignalR hub.");
         }
 
-        // Connection signals/slots
-        connection.on("ParticipantJoined", (participant: ParticipantModel) => {
-            // Check if participant is already in list
-            if (participants.find((p) => p.participant_id === participant.participant_id)) {
-                console.error(`Participant '${participant.username}' already in list`);
-                return;
-            }
-
-            // Add to participants list
-            setParticipants((prev) => [...prev, participant]);
-            console.log(`New participant joined:`, participant.username);
-        });
-
-        connection.on("ParticipantLeft", (participant: ParticipantModel) => {
-            // Remove from participants list
-            setParticipants((prev) => prev.filter((p) => p.participant_id !== participant.participant_id));
-            console.log(`Participant left:`, participant.username);
-        });
-
-        connection.on("ParticipantKicked", (participant: ParticipantModel) => {
-            setParticipants((prev) => prev.filter((p) => p.email !== participant.email));
-            console.log(`Kicked participant '${participant.email}'`);
-        });
-
-        connection.on("ParticipantDisconnected", (participant: ParticipantModel) => {
-            // Update the participant list
-            setParticipants((prev) => prev.map((p) => {
-                if (p.participant_id === participant.participant_id) {
-                    p.connection_id = participant.connection_id;
-                }
-                return p;
-            }));
-        });
-
         connection.on("SimulationStarted", (sim: SimulationModel) => {
             setSimulation(sim);
             console.log("Simulation started.");
@@ -109,15 +62,6 @@ const InstructorSimulationRoomPage = () => {
             setSimulation(sim);
             console.log("Simulation stopped.");
         })
-
-        connection.on("RoundUpdated", (round: RoundEnum) => {
-            setSimulation((prev) => {
-                if (!prev) return; // Null check
-
-                return ({ ...prev, round: round });
-            });
-            console.log(`Updated to round ${round}`);
-        });
 
         connection.on("CountriesAssigned", (participants: ParticipantModel[]) => {
             setParticipants(participants);
@@ -148,16 +92,74 @@ const InstructorSimulationRoomPage = () => {
 
     }, [connection]);
 
-    // Initialize instructor on connection and simulation load
+    /// INSTRUCTOR AND SIMULATION-DEPENDENT SIGNALS
     useEffect(() => {
-        if (!connection) return;
-        if (!simulation) return;
+        if (!connection || !simulation) return;
 
         // Initialize instructor
         connection.invoke("InstructorInitialize", simulation)
             .catch((error) => console.error(`Unable to initialize instructor: ${error}`));
 
+        connection.on("RoundUpdated", (round: RoundEnum) => {
+            setSimulation((prev) => {
+                if (!prev) return; // Null check
+
+                return ({ ...prev, round: round });
+            });
+            console.log(`Updated to round ${round}`);
+        });
+
     }, [connection, simulation])
+
+    //// Initialize participants
+    //useEffect(() => {
+    //    if (!simulation) return;
+
+    //    // Get the participants
+    //    getParticipants(simulation.simulation_id)
+    //        .then(data => setParticipants(data))
+    //        .catch(error => console.error(`Unable to load participants: ${error}`));
+
+    //}, [simulation])
+
+    useEffect(() => {
+        if (!connection) return;
+
+        // Connection signals/slots
+        connection.on("ParticipantJoined", (participant: ParticipantModel) => {
+            // Check if participant is already in list
+            if (participants.find((p) => p.participant_id === participant.participant_id)) {
+                console.error(`Participant '${participant.username}' already in list`);
+                return;
+            }
+
+            // Add to participants list
+            setParticipants((prev) => [...prev, participant]);
+            console.log(`New participant joined:`, participant.username);
+        });
+
+        connection.on("ParticipantLeft", (participant: ParticipantModel) => {
+            // Remove from participants list
+            setParticipants((prev) => prev.filter((p) => p.participant_id !== participant.participant_id));
+            console.log(`Participant left:`, participant.username);
+        });
+
+        connection.on("ParticipantKicked", (participant: ParticipantModel) => {
+            setParticipants((prev) => prev.filter((p) => p.email !== participant.email));
+            console.log(`Kicked participant '${participant.email}'`);
+        });
+
+        connection.on("ParticipantDisconnected", (participant: ParticipantModel) => {
+            // Update the participant list
+            setParticipants((prev) => prev.map((p) => {
+                /// TODO: more here
+                //if (p.participant_id === participant.participant_id) {
+                //    p.connected = false;
+                //}
+                return p;
+            }));
+        });
+    }, [connection, participants])
 
     const handleCloseRoom = () => {
         if (params.code === undefined) {
@@ -313,6 +315,8 @@ const InstructorSimulationRoomPage = () => {
     if (error) return <div>Oops... {error.message}</div>;
 
     if (isLoading) return <div>Loading...</div>;
+
+    if (!simulation) return <div>Loading simulation...</div>;
 
     // Authenticated view
     if (isAuthenticated) return ( 
