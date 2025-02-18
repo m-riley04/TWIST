@@ -18,7 +18,7 @@ const ParticipantRoomPage = () => {
     const [error, setError] = useState<string>("");
     const [signedIn, setSignedIn] = useState(false);
 
-    // Simulation data
+    // Simulation data 
     const [simulation, setSimulation] = useState<SimulationModel>();
 
     // Instance data
