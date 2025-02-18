@@ -161,13 +161,15 @@ namespace TWISTServer.Hubs
 
         public async Task UpdateParticipantCountry(SimulationRecord sim, ParticipantRecord participant, CountryEnum newCountry)
         {
+            if (newCountry == participant.Country) return; // No change
+
             // Update database
             partAccessor.UpdateParticipantCountry(participant.ParticipantId, newCountry);
 
             // Check participant connection id
             string connectionId = _FindConnectionId(participant.ParticipantId);
             if (connectionId == null) throw new Exception($"Participant {participant.ParticipantId} does not have a connection id.");
-            ParticipantConnection participantConnection = AllConnections.Find(x => x.ParticipantId == participant.ParticipantId);
+            ParticipantConnection participantConnection = AllConnections.Find(x => x.ParticipantId == participant.ParticipantId) ?? throw new Exception($"Participant {participant.ParticipantId} does not have a connection id.");
 
             // Remove the participant from current team
             string teamName = $"{sim.Code}_{participant.Country}";
