@@ -5,6 +5,7 @@ using TWISTServer.Interfaces;
 using System.Text;
 using Microsoft.Data.SqlClient;
 using TWISTServer.Enums;
+using System.Security.Cryptography;
 
 namespace TWISTServer.DatabaseComponents.DataAccessors
 {
@@ -86,14 +87,13 @@ simulation_id = @simulation_id AND country = @country;";
         {
             string sql = @"UPDATE asks
 SET
-description = @description,
 points = @points,
 status = @status,
 creation_date = @creation_date,
 modified_date = @modified_date,
 last_editor = @last_editor
 WHERE
-simulation_id = @simulation_id AND country = @country;";
+simulation_id = @simulation_id AND country = @country AND description = @description";
             Database.NonQuery(
                 sql,
                 [
@@ -102,8 +102,9 @@ simulation_id = @simulation_id AND country = @country;";
                     new("@description", SqlDbType.NVarChar) { Value = newAsk.Description },
                     new("@points", SqlDbType.Int) { Value = newAsk.Points },
                     new("@status", SqlDbType.Int) { Value = newAsk.Status },
-                    new("@modified_date", SqlDbType.DateTime) { Value = new DateTime() },
-                    new("@last_editor", SqlDbType.Int) { Value = newAsk.LastEditor },
+                    new("@creation_date", SqlDbType.DateTime) { Value = newAsk.CreationDate },
+                    new("@modified_date", SqlDbType.DateTime) { Value = newAsk.ModifiedDate },
+                    new("@last_editor", SqlDbType.Int) { Value = newAsk.LastEditor == null ? DBNull.Value : newAsk.LastEditor } // If LastEditor is null, use DBNull.Value.
                 ]
             );
         }

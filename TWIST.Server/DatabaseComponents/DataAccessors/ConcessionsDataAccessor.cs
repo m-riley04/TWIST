@@ -86,12 +86,11 @@ simulation_id = @simulation_id AND country = @country;";
         internal void UpdateConcessionFromSimAndCountry(int simulationId, CountryEnum countryEnum, ConcessionRecord concession)
         {
             string sql = @$"UPDATE {TableName} SET
-description = @description,
 points = @points,
 status = @status,
 modified_date = @modified_date,
 last_editor = @last_editor
-WHERE simulation_id = @simulation_id AND country = @country;";
+WHERE simulation_id = @simulation_id AND country = @country AND description = @description;";
             Database.NonQuery(
                 sql,
                 new SqlParameter[]
@@ -99,10 +98,10 @@ WHERE simulation_id = @simulation_id AND country = @country;";
                     new("@description", SqlDbType.NVarChar) { Value = concession.Description },
                     new("@points", SqlDbType.Int) { Value = concession.Points },
                     new("@status", SqlDbType.Int) { Value = concession.Status },
-                    new("@modified_date", SqlDbType.DateTime) { Value = new DateTime() },
-                    new("@last_editor", SqlDbType.Int) { Value = concession.LastEditor },
+                    new("@modified_date", SqlDbType.DateTime) { Value = concession.ModifiedDate },
                     new("@simulation_id", SqlDbType.Int) { Value = simulationId },
                     new("@country", SqlDbType.Int) { Value = countryEnum },
+                    new ("@last_editor", SqlDbType.Int) { Value = concession.LastEditor == null ? DBNull.Value : concession.LastEditor } // If LastEditor is null, use DBNull.Value.
                 }
             );
         }

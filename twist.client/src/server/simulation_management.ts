@@ -158,6 +158,14 @@ export async function getConcessionsBySimAndCountry(simulationId: number, countr
         .then(response => response.data)
 }
 
+export async function deleteAllAsksBySimulation(simulationId: number) {
+
+}
+
+export async function deleteAllConcessionsBySimulation(simulationId: number) {
+
+}
+
 /**
  * Closes a simulation (non-deleting) by updating the active status and the end date.
  * @param code The code of the simulation to close.

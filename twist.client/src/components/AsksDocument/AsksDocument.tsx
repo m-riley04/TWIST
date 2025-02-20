@@ -59,6 +59,10 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
         connection.invoke("AsksUpdated", simulation, participant, newAsks)
             .catch(console.error);
     }, [simulation, participant, connection]);
+    const broadcastAskChanged = useCallback((newAsk: Ask) => {
+        connection.invoke("AskUpdated", simulation, participant, newAsk)
+            .catch(console.error);
+    }, [simulation, participant, connection]);
 
     // Reorder the asks array when an item is dragged
     const moveItem = useCallback(
@@ -84,11 +88,16 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
             )
         );
         // Get the updated list (you could also use the functional update from above)
-        const updatedAsks = asks.map(ask =>
-            ask.ask_id === id ? { ...ask, points: newPoints } : ask
+        const updatedAsks = asks.map(ask => {
+            if (ask.ask_id === id) {
+                const newAsk: Ask = { ...ask, points: newPoints, modified_date: new Date() }
+                broadcastAskChanged(ask);
+                return newAsk
+            } else return ask;
+            }
         );
         broadcastAsks(updatedAsks);
-    }, [asks, setAsks, broadcastAsks]);
+    }, [asks, setAsks, broadcastAsks, broadcastAskChanged]);
 
     const totalPoints = asks.reduce((acc, item) => acc + item.points, 0);
 
