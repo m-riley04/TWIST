@@ -23,6 +23,10 @@ jobs:
         with:
           dotnet-version: '3.1'
 
+      - name: Create .env.production File
+        run: |
+            echo "VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}\nVITE_AUTH0_DOMAIN={{ secrets.VITE_AUTH0_DOMAIN }}" > ./portfoliowebsiteupgraded.client/.env.production
+
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
