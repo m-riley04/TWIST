@@ -8,40 +8,7 @@ import SimulationModel from "../../models/SimulationModel";
 import { HubConnection } from "@microsoft/signalr";
 import ParticipantModel from "../../models/ParticipantModel";
 import { useEffect } from "react";
-
-// The default USA asks. These are the default concessions for PRC.
-const DEFAULT_USA_ASKS = [
-    "China to issue an improved nationwide negative list for foreign investment (especially take measures to liberalize the financial sector)."
-    , "China to remove or reduce restrictions on foreign investment identified by the U.S."
-    , "China to eliminate laws and regulations, such as licensing or procurement, that treat foreign entities less favorably than domestic Chinese firms."
-    , "China to remove specified non-tariff barriers on US imports (ex. Onerous permitting, excessive inspections etc)"
-    , "China to recognize that the U.S. may impose import quotas and tariffs on products in critical sectors."
-    , "China to eliminate specific policies and practices linked to forced technology transfer."
-    , "China to strengthen intellectual property protection."
-    , "China to increase import of American agricultural products by $30-40 billion."
-    , "China to increase import of American energy products by $20-30 billion."
-    , "China to commit to the reduction of the trade deficit between China and the U.S.by $100-200 billion by 2020."
-    , "China to cease government-sponsored or tolerated cyber espionage and intrusions into U.S. commercial networks."
-    , "China to cease subsidies and other forms of assistance that support industries targeted in the MiC 2025 plan and other emerging and strategic industries."
-    , "China to establish a high-level dialogue with U.S. to discuss dual-use technologies."
-    , "China to refrain from military development of man-made islands in the South China Sea."
-    , "China to help identify and discourage Chinese firms that evade U.S. sanctions against Iran and North Korea."
-    , "China to guarantee human rights and democracy in Hong Kong"
-]
-
-// The default PRC asks. These are the default concessions for USA.
-const DEFAULT_PRC_ASKS = [
-    "The U.S. to reduce tariffs on Chinese imports to 2017 levels."
-    , "The U.S. to lift bans on high technology exports such as integrated circuits and aircraft to China."
-    , "The U.S. to agree to a more limited approach in defining its export control regime."
-    , "The U.S. to  remove Chinese companies like Huawei from the entities list."
-    , "The U.S. to give equal treatment to Chinese companies in national security review (CFIUS)."
-    , "The U.S. to open government procurement to Chinese technology products and services."
-    , "The U.S. to refrain from restricting visas for Chinese students and professionals."
-    , "The U.S. to recognize core Chinese national interests: keeping national unity of mainland China and Tibet, Xinjiang, Hong Kong, and Taiwan."
-    , "The U.S. to recognize core Chinese national interests: sovereignty over South China Sea."
-    , "The U.S. to agree not to send warships or military personnel to Taiwan."
-]
+import { getAsksBySimAndCountry } from "../../server/simulation_management";
 
 interface AsksDocumentProps {
     simulation: SimulationModel;
@@ -54,23 +21,22 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
     participant,
     connection
 }) => {
-    // Initializes the asks
-    const initialAsks: Ask[] = (
-        participant.country === CountryEnum.USA
-            ? DEFAULT_USA_ASKS
-            : DEFAULT_PRC_ASKS
-    ).map((str, index) => ({
-        ask_id: index,
-        simulation_id: simulation.simulation_id,
-        description: str,
-        points: 0,
-        status: 0,
-        creation_date: new Date(),
-        modified_date: new Date(),
-        country: participant.country ?? CountryEnum.NONE,
-    }));
+    const [asks, setAsks] = useState<Ask[]>([]);
 
-    const [asks, setAsks] = useState<Ask[]>(initialAsks);
+    // Load asks from the database
+    useEffect(() => {
+        if (participant.country === CountryEnum.USA) {
+            getAsksBySimAndCountry(simulation.simulation_id, CountryEnum.USA)
+                .then((data) => setAsks(data ?? []))
+        } else if (participant.country === CountryEnum.PRC) {
+            getAsksBySimAndCountry(simulation.simulation_id, CountryEnum.PRC)
+                .then((data) => setAsks(data ?? []))
+        } else {
+            console.error("Error: Participant has no country, so there probably won't be any asks/concessions")
+            getAsksBySimAndCountry(simulation.simulation_id, CountryEnum.NONE)
+                .then((data) => setAsks(data ?? []))
+        }
+    }, [simulation, participant]);
 
     useEffect(() => {
         if (!connection) return;
@@ -91,6 +57,10 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
     const broadcastAsks = useCallback((newAsks: Ask[]) => {
         console.log("Broadcasting updated asks to hub");
         connection.invoke("AsksUpdated", simulation, participant, newAsks)
+            .catch(console.error);
+    }, [simulation, participant, connection]);
+    const broadcastAskChanged = useCallback((newAsk: Ask) => {
+        connection.invoke("AskUpdated", simulation, participant, newAsk)
             .catch(console.error);
     }, [simulation, participant, connection]);
 
@@ -118,11 +88,16 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
             )
         );
         // Get the updated list (you could also use the functional update from above)
-        const updatedAsks = asks.map(ask =>
-            ask.ask_id === id ? { ...ask, points: newPoints } : ask
+        const updatedAsks = asks.map(ask => {
+            if (ask.ask_id === id) {
+                const newAsk: Ask = { ...ask, points: newPoints, modified_date: new Date() }
+                broadcastAskChanged(ask);
+                return newAsk
+            } else return ask;
+            }
         );
         broadcastAsks(updatedAsks);
-    }, [asks, broadcastAsks]);
+    }, [asks, setAsks, broadcastAsks, broadcastAskChanged]);
 
     const totalPoints = asks.reduce((acc, item) => acc + item.points, 0);
 
@@ -132,7 +107,6 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
                 <tr>
                     <th>Points</th>
                     <th>Description</th>
-                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>

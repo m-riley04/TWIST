@@ -50,6 +50,13 @@ namespace TWISTServer.Controllers
             return dataAccessor.GetParticipantsByEmail(email);
         }
 
+        [HttpGet]
+        [Route("email-sim/{email}-{simulationId}")]
+        public IEnumerable<ParticipantRecord> GetParticipantsFromEmail([FromRoute] string email, [FromRoute] int simulationId)
+        {
+            return dataAccessor.GetParticipantFromSimulationAndEmail(simulationId, email);
+        }
+
         [HttpPut]
         [Route("")]
         public JsonResult AddParticipant([FromBody] ParticipantRecord participant)

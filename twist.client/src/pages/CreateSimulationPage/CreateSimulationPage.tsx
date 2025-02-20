@@ -1,5 +1,5 @@
 import { Button, Form } from "react-bootstrap";
-import { createSimulation, generateCode } from "../../server/simulation_management";
+import { createSimulation, createSimulationAsksPRC, createSimulationAsksUSA, createSimulationConcessionsPRC, createSimulationConcessionsUSA, generateCode, getSimulationFromCode } from "../../server/simulation_management";
 import { FormEvent } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router";
@@ -22,6 +22,13 @@ const CreateSimulationPage = () => {
 
             // Create simulation
             await createSimulation(name, code);
+            const simId: number = (await getSimulationFromCode(code))?.simulation_id ?? 0;
+
+            // Initialize asks and concessions
+            await createSimulationAsksUSA(simId);
+            await createSimulationAsksPRC(simId)
+            await createSimulationConcessionsUSA(simId);
+            await createSimulationConcessionsPRC(simId);
 
             // Navigate AFTER
             navigate(`/instructor/room/${code}`);

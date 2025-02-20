@@ -32,66 +32,67 @@ const AsksDocumentItem: React.FC<AsksDocumentItemProps> = ({
 }) => {
     const ref = useRef<HTMLTableRowElement>(null);
 
-    // Drop hook
-    const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
-        accept: ItemTypes.ROW,
-        collect(monitor) {
-            return {
-                handlerId: monitor.getHandlerId(),
-            };
-        },
-        hover(item, monitor) {
-            if (!ref.current) {
-                return;
-            }
-            const dragIndex = item.index;
-            const hoverIndex = index;
+    /// Temporarily disable dragging and dropping
+    //// Drop hook
+    //const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
+    //    accept: ItemTypes.ROW,
+    //    collect(monitor) {
+    //        return {
+    //            handlerId: monitor.getHandlerId(),
+    //        };
+    //    },
+    //    hover(item, monitor) {
+    //        if (!ref.current) {
+    //            return;
+    //        }
+    //        const dragIndex = item.index;
+    //        const hoverIndex = index;
 
-            // Don’t do anything if it’s the same row
-            if (dragIndex === hoverIndex) {
-                return;
-            }
+    //        // Don’t do anything if it’s the same row
+    //        if (dragIndex === hoverIndex) {
+    //            return;
+    //        }
 
-            // Figure out rectangle on screen
-            const hoverBoundingRect = ref.current.getBoundingClientRect();
-            // Get vertical middle
-            const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-            // Determine mouse position
-            const clientOffset = monitor.getClientOffset();
-            if (!clientOffset) return;
+    //        // Figure out rectangle on screen
+    //        const hoverBoundingRect = ref.current.getBoundingClientRect();
+    //        // Get vertical middle
+    //        const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+    //        // Determine mouse position
+    //        const clientOffset = monitor.getClientOffset();
+    //        if (!clientOffset) return;
 
-            // Get pixels to the top
-            const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
+    //        // Get pixels to the top
+    //        const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
 
-            // Only perform the move when the user has crossed half of the item's height
-            if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-                return;
-            }
-            if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-                return;
-            }
+    //        // Only perform the move when the user has crossed half of the item's height
+    //        if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+    //            return;
+    //        }
+    //        if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+    //            return;
+    //        }
 
-            // Perform the actual move
-            moveItem(dragIndex, hoverIndex);
+    //        // Perform the actual move
+    //        moveItem(dragIndex, hoverIndex);
 
-            // Mutate the item to update its current index for performance
-            item.index = hoverIndex;
-        },
-    });
+    //        // Mutate the item to update its current index for performance
+    //        item.index = hoverIndex;
+    //    },
+    //});
 
-    // Drag hook
-    const [{ isDragging }, drag] = useDrag({
-        type: ItemTypes.ROW,
-        item: () => {
-            return { id, index };
-        },
-        collect: monitor => ({
-            isDragging: monitor.isDragging(),
-        }),
-    });
+    //// Drag hook
+    //const [{ isDragging }, drag] = useDrag({
+    //    type: ItemTypes.ROW,
+    //    item: () => {
+    //        return { id, index };
+    //    },
+    //    collect: monitor => ({
+    //        isDragging: monitor.isDragging(),
+    //    }),
+    //});
 
-    // Combine drag and drop refs
-    drag(drop(ref));
+    //// Combine drag and drop refs
+    //drag(drop(ref));
 
     // Handlers
     const handlePointsChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -99,10 +100,10 @@ const AsksDocumentItem: React.FC<AsksDocumentItemProps> = ({
         onPointsChanged(id, newVal);
     };
 
-    const opacity = isDragging ? 0 : 1
+    //const opacity = isDragging ? 0 : 1
     return (
         <tr
-            style={{ opacity }}
+            //style={{ opacity }}
             className="participant-list-item"
             ref={ref}
         >

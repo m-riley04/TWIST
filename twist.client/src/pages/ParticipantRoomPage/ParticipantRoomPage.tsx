@@ -10,7 +10,7 @@ import RoundEnum from "../../enums/RoundEnum";
 import AsksDocument from "../../components/AsksDocument/AsksDocument";
 import SimulationStateEnum from "../../enums/SimulationStateEnum";
 import ParticipantModel from "../../models/ParticipantModel";
-import { getParticipantByEmail } from "../../server/participant_management";
+import { getParticipantByEmail, getParticipantByEmailAndSimulation } from "../../server/participant_management";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -18,7 +18,7 @@ const ParticipantRoomPage = () => {
     const [error, setError] = useState<string>("");
     const [signedIn, setSignedIn] = useState(false);
 
-    // Simulation data
+    // Simulation data 
     const [simulation, setSimulation] = useState<SimulationModel>();
 
     // Instance data
@@ -83,12 +83,12 @@ const ParticipantRoomPage = () => {
             console.log(`Round updated to ${round}`);
         });
 
-        connection.on("ParticipantKicked", (participant: ParticipantModel) => {
-            if (participant.connection_id === connection.connectionId) {
-                console.log("You have been kicked.");
-                navigate("/");
-            }
-        })
+        //connection.on("ParticipantKicked", (participant: ParticipantModel) => {
+        //    if (participant.connection_id === connection.connectionId) {
+        //        console.log("You have been kicked.");
+        //        navigate("/");
+        //    }
+        //})
 
         // Cleanup
         return () => {
@@ -118,7 +118,7 @@ const ParticipantRoomPage = () => {
         connection?.invoke("JoinRoom", simulation, name, email)
             .then(() => {
                 setSignedIn(true);
-                getParticipantByEmail(email).
+                getParticipantByEmailAndSimulation(email, simulation?.simulation_id ?? 0).
                     then((participant) => {
                         setCurrentParticipant(participant[0]); // TODO: Make this safer
                     })
@@ -146,9 +146,11 @@ const ParticipantRoomPage = () => {
                 return (
                     <>
                         <h1>Round 1 - Domestic</h1>
-                        <p>Participant: {currentParticipant?.email}</p>
+                        <p>Id: {currentParticipant?.participant_id}</p>
+                        <p>Email: {currentParticipant?.email}</p>
                         <p>Connection ID: {connection?.connectionId}</p>
                         <p>Country: {currentParticipant?.country}</p>
+                        
                         {simulation && currentParticipant && connection && (
                             <AsksDocument
                                 simulation={simulation}

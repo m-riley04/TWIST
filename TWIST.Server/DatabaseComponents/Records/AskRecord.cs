@@ -41,7 +41,7 @@ namespace TWISTServer.DatabaseComponents.Records
                 , row.Field<DateTime>("creation_date")
                 , row.Field<DateTime>("modified_date")
                 , row.Field<CountryEnum>("country")
-                , row.Field<int>("last_editor")
+                , row.Field<int?>("last_editor")
                 );
         }
     }
