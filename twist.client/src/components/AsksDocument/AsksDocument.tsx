@@ -102,27 +102,30 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
     const totalPoints = asks.reduce((acc, item) => acc + item.points, 0);
 
     return (
-        <Table className="participant-list">
-            <thead>
-                <tr>
-                    <th>Points</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                {asks.map((item, index) => (
-                    <AsksDocumentItem
-                        key={item.ask_id}
-                        id={item.ask_id}
-                        index={index}
-                        description={item.description}
-                        points={item.points}
-                        moveItem={moveItem}
-                        onPointsChanged={handlePointsChange}
-                    />
-                ))}
-            </tbody>
-        </Table>
+        <>
+            <p>Total Points: {totalPoints}</p>
+            <Table className="participant-list">
+                <thead>
+                    <tr>
+                        <th>Points</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {asks.map((item, index) => (
+                        <AsksDocumentItem
+                            key={item.ask_id}
+                            id={item.ask_id}
+                            index={index}
+                            description={item.description}
+                            points={item.points}
+                            moveItem={moveItem}
+                            onPointsChanged={handlePointsChange}
+                        />
+                    ))}
+                </tbody>
+            </Table>
+        </>
     );
 };
 

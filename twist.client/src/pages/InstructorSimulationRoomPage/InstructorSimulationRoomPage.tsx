@@ -111,16 +111,16 @@ const InstructorSimulationRoomPage = () => {
 
     }, [connection, simulation])
 
-    //// Initialize participants
-    //useEffect(() => {
-    //    if (!simulation) return;
+    // Initialize participants
+    useEffect(() => {
+        if (!simulation) return;
 
-    //    // Get the participants
-    //    getParticipants(simulation.simulation_id)
-    //        .then(data => setParticipants(data))
-    //        .catch(error => console.error(`Unable to load participants: ${error}`));
+        // Get the participants
+        getParticipants(simulation.simulation_id)
+            .then(data => setParticipants(data))
+            .catch(error => console.error(`Unable to load participants: ${error}`));
 
-    //}, [simulation])
+    }, [simulation])
 
     useEffect(() => {
         if (!connection) return;
@@ -151,7 +151,7 @@ const InstructorSimulationRoomPage = () => {
             console.log(`Kicked participant '${participant.email}'`);
         });
 
-        connection.on("ParticipantDisconnected", (participant: ParticipantModel) => {
+        connection.on("ParticipantDisconnected", () => { //participant: ParticipantModel) => {
             // Update the participant list
             setParticipants((prev) => prev.map((p) => {
                 /// TODO: more here

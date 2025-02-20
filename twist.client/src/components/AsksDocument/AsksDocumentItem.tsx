@@ -1,11 +1,11 @@
-import { Identifier } from "dnd-core";
+//import { Identifier } from "dnd-core";
 import { ChangeEvent } from "react";
 import { useRef } from "react";
-import { useDrag, useDrop, XYCoord } from "react-dnd";
+//import { useDrag, useDrop, XYCoord } from "react-dnd";
 
-const ItemTypes = {
-    ROW: 'ROW',
-};
+//const ItemTypes = {
+//    ROW: 'ROW',
+//};
 
 export interface AsksDocumentItemProps {
     id: number;
@@ -16,18 +16,18 @@ export interface AsksDocumentItemProps {
     onPointsChanged: (id: number, points: number) => void;
 };
 
-interface DragItem {
-    index: number;
-    id: string;
-    type: string;
-}
+//interface DragItem {
+//    index: number;
+//    id: string;
+//    type: string;
+//}
 
 const AsksDocumentItem: React.FC<AsksDocumentItemProps> = ({
     id,
-    index,
+    //index,
     points,
     description,
-    moveItem,
+    //moveItem,
     onPointsChanged
 }) => {
     const ref = useRef<HTMLTableRowElement>(null);

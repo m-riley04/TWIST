@@ -158,13 +158,13 @@ export async function getConcessionsBySimAndCountry(simulationId: number, countr
         .then(response => response.data)
 }
 
-export async function deleteAllAsksBySimulation(simulationId: number) {
+//export async function deleteAllAsksBySimulation(simulationId: number) {
 
-}
+//}
 
-export async function deleteAllConcessionsBySimulation(simulationId: number) {
+//export async function deleteAllConcessionsBySimulation(simulationId: number) {
 
-}
+//}
 
 /**
  * Closes a simulation (non-deleting) by updating the active status and the end date.
@@ -172,7 +172,7 @@ export async function deleteAllConcessionsBySimulation(simulationId: number) {
  * @param endDate The date that the simulation was closed/ended. 
  * @returns
  */
-export async function closeSimulation(code: string, endDate: Date = new Date()): Promise<any | undefined> {
+export async function closeSimulation(code: string, endDate: Date = new Date()) {
     try {
         // Check for empty string
         if (code === "") {

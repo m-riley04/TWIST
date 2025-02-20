@@ -1,6 +1,6 @@
 import { Button, Container, Form } from "react-bootstrap";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import { getSimulationFromCode } from "../../server/simulation_management";
 import { HubConnection } from "@microsoft/signalr";
 import { useRoomHub } from "../../signalr/useRoomHub";
@@ -10,7 +10,7 @@ import RoundEnum from "../../enums/RoundEnum";
 import AsksDocument from "../../components/AsksDocument/AsksDocument";
 import SimulationStateEnum from "../../enums/SimulationStateEnum";
 import ParticipantModel from "../../models/ParticipantModel";
-import { getParticipantByEmail, getParticipantByEmailAndSimulation } from "../../server/participant_management";
+import { getParticipantByEmailAndSimulation } from "../../server/participant_management";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -24,7 +24,6 @@ const ParticipantRoomPage = () => {
     // Instance data
     const [currentParticipant, setCurrentParticipant] = useState<ParticipantModel>();
 
-    const navigate = useNavigate();
     const params = useParams();
     const simCode = params.code ?? "";
     const connection: HubConnection | undefined = useRoomHub(simCode);
