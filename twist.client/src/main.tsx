@@ -12,7 +12,7 @@ createRoot(document.getElementById('root')!).render(
             domain={"juqbox.us.auth0.com"}
             clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
             authorizationParams={{
-                redirect_uri: window.location.origin + "/instructor",
+                redirect_uri: "https://twist-server.azurewebsites.net" + "/instructor",
 
             }}
             cacheLocation="localstorage"
