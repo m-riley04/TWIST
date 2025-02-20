@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.VisualBasic;
 using System.Collections.Concurrent;
 using TWISTServer.DatabaseComponents.DataAccessors;
 using TWISTServer.DatabaseComponents.Records;
@@ -67,6 +68,8 @@ namespace TWISTServer.Hubs
         Task RoundUpdated(RoundEnum round);
         Task AskUpdated(AskRecord asks);
         Task AsksUpdated(AskRecord[] asks);
+        Task ConcessionUpdated(ConcessionRecord asks);
+        Task ConcessionsUpdated(ConcessionRecord[] asks);
         Task ConnectionsPolled(ParticipantConnection[] connections);
         Task GroupsPolled(Dictionary<string, List<ParticipantConnection>> groups);
     }
@@ -75,6 +78,8 @@ namespace TWISTServer.Hubs
     {
         SimulationsDataAccessor simAccessor = new();
         ParticipantsDataAccessor partAccessor = new();
+        AsksDataAccessor askAccessor = new();
+        ConcessionsDataAccessor concessionAccessor = new();
 
         public static ConcurrentDictionary<string, List<ParticipantConnection>> AllGroups = new();
         public static List<ParticipantConnection> AllConnections = []; // TODO: Need to make this not global for ALL simulations (dictionary with simulation code as key)
@@ -300,8 +305,8 @@ namespace TWISTServer.Hubs
 
         public async Task AskUpdated(SimulationRecord sim, ParticipantRecord participant, AskRecord ask)
         {
-            // Update the ask
-
+            // Either update or create the ask in the db
+            askAccessor.UpdateAskFromSimAndCountry(sim.SimulationId, participant.Country ?? CountryEnum.NONE, ask);
 
             // Signal
             await Clients.Group($"{sim.Code}_{participant.Country}").AskUpdated(ask);
@@ -311,9 +316,25 @@ namespace TWISTServer.Hubs
         {
             // Update the asks
 
-
             // Signal
             await Clients.Group($"{sim.Code}_{participant.Country}").AsksUpdated(asks);
+        }
+
+        public async Task ConcessionUpdated(SimulationRecord sim, ParticipantRecord participant, ConcessionRecord concession)
+        {
+            // Either update or create the ask in the db
+            concessionAccessor.UpdateConcessionFromSimAndCountry(sim.SimulationId, participant.Country ?? CountryEnum.NONE, concession);
+
+            // Signal
+            await Clients.Group($"{sim.Code}_{participant.Country}").ConcessionUpdated(concession);
+        }
+
+        public async Task ConcessionsUpdated(SimulationRecord sim, ParticipantRecord participant, ConcessionRecord[] concessions)
+        {
+            // Update the asks
+
+            // Signal
+            await Clients.Group($"{sim.Code}_{participant.Country}").ConcessionsUpdated(concessions);
         }
 
         public async Task PollConnections(SimulationRecord sim)

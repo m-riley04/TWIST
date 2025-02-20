@@ -125,18 +125,20 @@ const InstructorSimulationRoomPage = () => {
     useEffect(() => {
         if (!connection) return;
 
-        // Connection signals/slots
-        connection.on("ParticipantJoined", (participant: ParticipantModel) => {
-            // Check if participant is already in list
-            if (participants.find((p) => p.participant_id === participant.participant_id)) {
-                console.error(`Participant '${participant.username}' already in list`);
-                return;
-            }
+        const handleParticipantJoined = (participant: ParticipantModel) => {
+            setParticipants((prev) => {
+                // Only add if not already present
+                if (prev.find((p) => p.participant_id === participant.participant_id)) {
+                    console.error(`Participant '${participant.username}' already in list`);
+                    return prev;
+                }
+                console.log(`New participant joined:`, participant.username);
+                return [...prev, participant];
+            });
+        };
 
-            // Add to participants list
-            setParticipants((prev) => [...prev, participant]);
-            console.log(`New participant joined:`, participant.username);
-        });
+        // Connection signals/slots
+        connection.on("ParticipantJoined", handleParticipantJoined);
 
         connection.on("ParticipantLeft", (participant: ParticipantModel) => {
             // Remove from participants list
@@ -159,7 +161,12 @@ const InstructorSimulationRoomPage = () => {
                 return p;
             }));
         });
-    }, [connection, participants])
+
+        // Cleanup to remove the event listener
+        return () => {
+            connection.off("ParticipantJoined", handleParticipantJoined);
+        };
+    }, [connection])
 
     const handleCloseRoom = () => {
         if (params.code === undefined) {

@@ -83,12 +83,12 @@ const ParticipantRoomPage = () => {
             console.log(`Round updated to ${round}`);
         });
 
-        connection.on("ParticipantKicked", (participant: ParticipantModel) => {
-            if (participant.connection_id === connection.connectionId) {
-                console.log("You have been kicked.");
-                navigate("/");
-            }
-        })
+        //connection.on("ParticipantKicked", (participant: ParticipantModel) => {
+        //    if (participant.connection_id === connection.connectionId) {
+        //        console.log("You have been kicked.");
+        //        navigate("/");
+        //    }
+        //})
 
         // Cleanup
         return () => {
