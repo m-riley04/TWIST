@@ -43,7 +43,7 @@ namespace TWISTServer.DatabaseComponents
         {
             get
             {
-                return Environment.GetEnvironmentVariable(databaseUserIdKey) ?? config[databaseUserIdKey] ?? "";
+                return "rmeyerkorth"; //Environment.GetEnvironmentVariable(databaseUserIdKey) ?? config[databaseUserIdKey] ?? ""; /// TODO: REMOVE THIS VERY UNSAFE
             }
         }
 
@@ -54,7 +54,7 @@ namespace TWISTServer.DatabaseComponents
         {
             get
             {
-                return Environment.GetEnvironmentVariable(databasePasswordKey) ?? config[databasePasswordKey] ?? "";
+                return "#ThereOnceWasAMan!04"; //Environment.GetEnvironmentVariable(databasePasswordKey) ?? config[databasePasswordKey] ?? ""; /// TODO: REMOVE THIS VERY UNSAFE
             }
         }
 
