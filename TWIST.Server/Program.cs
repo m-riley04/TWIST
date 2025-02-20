@@ -22,7 +22,9 @@ builder.Services.AddCors(options =>
                 "http://localhost:7026",
                 "https://localhost:7026",
                 "http://localhost:5173",
-                "https://localhost:5173"
+                "https://localhost:5173",
+                "https://twist-server.azurewebsites.net",
+                "http://twist-server.azurewebsites.net"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
