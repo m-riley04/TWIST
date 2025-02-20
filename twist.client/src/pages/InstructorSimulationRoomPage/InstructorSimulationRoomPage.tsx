@@ -15,7 +15,7 @@ import RoundEnum from "../../enums/RoundEnum";
 import QRCode from "react-qr-code";
 
 // TODO: make this into an env variable
-const WEB_DOMAIN = "localhost:5173";
+const WEB_DOMAIN = "twist-server.azurewebsites.net";
 
 const InstructorSimulationRoomPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
