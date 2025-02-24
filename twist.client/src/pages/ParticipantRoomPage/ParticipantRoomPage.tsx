@@ -11,6 +11,7 @@ import AsksDocument from "../../components/AsksDocument/AsksDocument";
 import SimulationStateEnum from "../../enums/SimulationStateEnum";
 import ParticipantModel from "../../models/ParticipantModel";
 import { getParticipantByEmailAndSimulation } from "../../server/participant_management";
+import ConcessionsDocument from "../../components/ConcessionsDocument/ConcessionsDocument";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -152,6 +153,14 @@ const ParticipantRoomPage = () => {
                         
                         {simulation && currentParticipant && connection && (
                             <AsksDocument
+                                simulation={simulation}
+                                participant={currentParticipant}
+                                connection={connection}
+                            />
+                        )}
+
+                        {simulation && currentParticipant && connection && (
+                            <ConcessionsDocument
                                 simulation={simulation}
                                 participant={currentParticipant}
                                 connection={connection}

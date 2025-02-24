@@ -152,9 +152,9 @@ export async function getAsksBySimAndCountry(simulationId: number, country: Coun
         .then(response => response.data)
 }
 
-export async function getConcessionsBySimAndCountry(simulationId: number, country: CountryEnum): Promise<AskModel[] | undefined> {
+export async function getConcessionsBySimAndCountry(simulationId: number, country: CountryEnum): Promise<ConcessionModel[] | undefined> {
     return await axios
-        .get<AskModel[]>(`${API_URL}/asks-concessions/asks/${simulationId}-${country}`)
+        .get<ConcessionModel[]>(`${API_URL}/asks-concessions/concessions/${simulationId}-${country}`)
         .then(response => response.data)
 }
 
