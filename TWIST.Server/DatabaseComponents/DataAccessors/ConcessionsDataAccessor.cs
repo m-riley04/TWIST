@@ -14,21 +14,6 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
 
         public override string TableName => "concessions";
 
-        public IEnumerable<ConcessionRecord> GetConcessionsBySimulation(int simulationId)
-        {
-            string sql = @"select 
-concession_id, team_id, simulation_id, description, points, status from concessions 
-WHERE 
-simulation_id = @simulation_id;";
-            return Database.Query(
-                sql,
-                ConcessionRecord.FromRow,
-                [
-                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
-                ]
-            );
-        }
-
         public void InsertConcessions(IEnumerable<ConcessionRecord> asks)
         {
             var concessionList = asks.ToList();
@@ -67,19 +52,30 @@ simulation_id = @simulation_id;";
             Database.NonQuery(sql, parameters.ToArray());
         }
 
-        public IEnumerable<ConcessionRecord> GetConcessionsBySimulationAndCountry(int simulationId, CountryEnum country)
+        public IEnumerable<ConcessionRecord> GetConcessionsBySimulation(int simulationId)
         {
-            string sql = @"select
-concession_id, team_id, simulation_id, description, points, status from concessions
-WHERE
-simulation_id = @simulation_id AND country = @country;";
-            return Database.Query(
+            string sql = @$"SELECT {GetColumnsAsSql(ConcessionRecord.Columns.Keys)} FROM {TableName} WHERE simulation_id = @simulation_id";
+            return Database.Query<ConcessionRecord>(
                 sql,
                 ConcessionRecord.FromRow,
-                [
+                new SqlParameter[]
+                {
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId }
+                }
+            );
+        }
+
+        public IEnumerable<ConcessionRecord> GetConcessionsBySimulationAndCountry(int simulationId, CountryEnum country)
+        {
+            string sql = @$"SELECT {GetColumnsAsSql(ConcessionRecord.Columns.Keys)} FROM {TableName} WHERE simulation_id = @simulation_id AND country = @country;";
+            return Database.Query<ConcessionRecord>(
+                sql,
+                ConcessionRecord.FromRow,
+                new SqlParameter[]
+                {
                     new("@simulation_id", SqlDbType.Int) { Value = simulationId },
-                    new("@country", SqlDbType.Int) { Value = country },
-                ]
+                    new("@country", SqlDbType.Int) { Value = country }
+                }
             );
         }
 
