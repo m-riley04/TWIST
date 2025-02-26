@@ -23,26 +23,21 @@ const ConcessionsDocument: React.FC<ConcessionsDocumentProps> = ({
 }) => {
     const [concessions, setConcessions] = useState<ConcessionModel[]>([]);
 
-    // Load asks from the database
+    // Load concessions from the database
     useEffect(() => {
-        if (participant.country === CountryEnum.USA) {
-            getConcessionsBySimAndCountry(simulation.simulation_id, CountryEnum.USA)
-                .then((data) => setConcessions(data ?? []))
-        } else if (participant.country === CountryEnum.PRC) {
-            getConcessionsBySimAndCountry(simulation.simulation_id, CountryEnum.PRC)
-                .then((data) => setConcessions(data ?? []))
-        } else {
-            console.error("Error: Participant has no country, so there probably won't be any asks/concessions")
-            getConcessionsBySimAndCountry(simulation.simulation_id, CountryEnum.NONE)
-                .then((data) => setConcessions(data ?? []))
-        }
+        // Check for nulls
+        if (!participant) return;
+        if (!simulation) return;
+
+        getConcessionsBySimAndCountry(simulation.simulation_id, participant.country)
+            .then((data) => setConcessions(data ?? []))
     }, [simulation, participant]);
 
     useEffect(() => {
         if (!connection) return;
 
         const onConcessionsUpdated = (updatedConcessions: ConcessionModel[]) => {
-            console.log("Received updated asks from hub", updatedConcessions);
+            console.log("Received updated concessions from hub", updatedConcessions);
             setConcessions(updatedConcessions);
         };
 
@@ -55,8 +50,8 @@ const ConcessionsDocument: React.FC<ConcessionsDocumentProps> = ({
 
     // Function to broadcast the updated concessions list to all clients in this team/group.
     const broadcastConcessions = useCallback((newConcessions: ConcessionModel[]) => {
-        console.log("Broadcasting updated asks to hub");
-        connection.invoke("AsksUpdated", simulation, participant, newConcessions)
+        console.log("Broadcasting updated concessions to hub");
+        connection.invoke("ConcessionsUpdated", simulation, participant, newConcessions)
             .catch(console.error);
     }, [simulation, participant, connection]);
     const broadcastConcessionChanged = useCallback((newConcession: ConcessionModel) => {
@@ -64,7 +59,7 @@ const ConcessionsDocument: React.FC<ConcessionsDocumentProps> = ({
             .catch(console.error);
     }, [simulation, participant, connection]);
 
-    // Reorder the asks array when an item is dragged
+    // Reorder the concessions array when an item is dragged
     const moveItem = useCallback(
         (dragIndex: number, hoverIndex: number) => {
             setConcessions(prevItems => {
@@ -103,7 +98,10 @@ const ConcessionsDocument: React.FC<ConcessionsDocumentProps> = ({
 
     return (
         <>
-            <p>Total Points: {totalPoints}</p>
+            <h2>Concessions</h2>
+            <p
+                style={totalPoints != 100 ? { color: "red" } : {}}
+            >Total Points: {totalPoints}</p>
             <Table className="participant-list">
                 <thead>
                     <tr>
