@@ -12,6 +12,7 @@ import SimulationStateEnum from "../../enums/SimulationStateEnum";
 import ParticipantModel from "../../models/ParticipantModel";
 import { getParticipantByEmailAndSimulation } from "../../server/participant_management";
 import ConcessionsDocument from "../../components/ConcessionsDocument/ConcessionsDocument";
+import JointDocument from "../../components/JointDocument/JointDocument";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -147,9 +148,10 @@ const ParticipantRoomPage = () => {
                     <>
                         <h1>Round 1 - Domestic</h1>
                         <p>Id: {currentParticipant?.participant_id}</p>
+                        <p>Name: {currentParticipant?.username}</p>
                         <p>Email: {currentParticipant?.email}</p>
                         <p>Connection ID: {connection?.connectionId}</p>
-                        <p>Country: {currentParticipant?.country}</p>
+                        <p>Country: {currentParticipant?.country !== 0 ? (currentParticipant?.country === 1 ? "USA" : "PRC") : "NONE" }</p>
                         
                         {simulation && currentParticipant && connection && (
                             <AsksDocument
@@ -172,6 +174,13 @@ const ParticipantRoomPage = () => {
                 return (
                     <>
                         <h1>Round 2 - International</h1>
+                        {simulation && currentParticipant && connection && (
+                            <JointDocument
+                                simulation={simulation}
+                                participant={currentParticipant}
+                                connection={connection}
+                            />
+                        )}
                     </>
                 );
             case RoundEnum.FINAL_TALLY:
