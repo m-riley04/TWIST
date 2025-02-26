@@ -84,6 +84,7 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
             string sql = @$"UPDATE {TableName} SET
 points = @points,
 status = @status,
+creation_date = @creation_date,
 modified_date = @modified_date,
 last_editor = @last_editor
 WHERE simulation_id = @simulation_id AND country = @country AND description = @description;";
@@ -94,6 +95,7 @@ WHERE simulation_id = @simulation_id AND country = @country AND description = @d
                     new("@description", SqlDbType.NVarChar) { Value = concession.Description },
                     new("@points", SqlDbType.Int) { Value = concession.Points },
                     new("@status", SqlDbType.Int) { Value = concession.Status },
+                    new("@creation_date", SqlDbType.DateTime) { Value = concession.CreationDate },
                     new("@modified_date", SqlDbType.DateTime) { Value = concession.ModifiedDate },
                     new("@simulation_id", SqlDbType.Int) { Value = simulationId },
                     new("@country", SqlDbType.Int) { Value = countryEnum },

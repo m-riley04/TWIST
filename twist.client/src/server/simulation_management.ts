@@ -102,7 +102,8 @@ export async function createSimulation(name: string, code: string) {
  */
 export async function getDefaultAsksByCountry(country: CountryEnum) {
     return await axios
-        .get<DefaultAskModel[]>(`${API_URL}/defaults/asks/${country}`)
+        .get(`${API_URL}/defaults/asks/${country}`)
+        .then<DefaultAskModel[]>(result => result.data)
 }
 
 /**
@@ -112,20 +113,21 @@ export async function getDefaultAsksByCountry(country: CountryEnum) {
  */
 export async function getDefaultConcessionsByCountry(country: CountryEnum) {
     return await axios
-        .get<DefaultConcessionModel[]>(`${API_URL}/defaults/concessions/${country}`)
+        .get(`${API_URL}/defaults/concessions/${country}`)
+        .then<DefaultConcessionModel[]>(result => result.data)
 }
 
 export async function createSimulationAsksByCountry(simulationId: number, country: CountryEnum) {
     // Get the default asks
     const defaultAsks = await getDefaultAsksByCountry(country)
-        .then(response => response.data);
+        //.catch(reason => console.error(`Unable to create simulation asks: ${reason}`));
 
     // Create the asks
     return await axios
-        .put<AskModel[]>(`${API_URL}/asks-concessions/asks/batch`, defaultAsks.map((desc, i) => ({
+        .put<AskModel[]>(`${API_URL}/asks-concessions/asks/batch`, defaultAsks.map((ask, i) => ({
             ask_id: i, // Doesn't actually set the id; done automatically by db
             simulation_id: simulationId,
-            description: desc,
+            description: ask.description,
             points: 0,
             status: 0,
             creation_date: new Date(),
@@ -138,14 +140,13 @@ export async function createSimulationConcessionsByCountry(simulationId: number,
 
     // Get default concessions
     const defaultConcessions = await getDefaultConcessionsByCountry(country)
-        .then(response => response.data);
 
     // Create the concessions
     return await axios
-        .put<ConcessionModel[]>(`${API_URL}/asks-concessions/concessions/batch`, defaultConcessions.map((desc, i) => ({
+        .put<ConcessionModel[]>(`${API_URL}/asks-concessions/concessions/batch`, defaultConcessions.map((concession, i) => ({
             concession_id: i,
             simulation_id: simulationId,
-            description: desc,
+            description: concession.description,
             points: 0,
             status: 0,
             creation_date: new Date(),
@@ -189,13 +190,32 @@ export async function closeSimulation(code: string, endDate: Date = new Date()) 
     }
 }
 
-export async function deleteSimulation(code: string) {
+export async function deleteSimulationAsks(simulationId: number) {
+    return await axios
+        .delete(`${API_URL}/asks-concessions/asks/${simulationId}`)
+}
+
+export async function deleteSimulationConcessions(simulationId: number) {
+    return await axios
+        .delete(`${API_URL}/asks-concessions/concessions/${simulationId}`)
+}
+
+export async function deleteSimulation(code: string, simulationId: number) {
     try {
         // Check for empty string
         if (code === "") {
             throw new Error("No code provided.");
         }
 
+        // Delete the simulation's asks
+        deleteSimulationAsks(simulationId)
+
+        // Delete the simulation's concessions
+        deleteSimulationConcessions(simulationId)
+
+        /// TODO: Delete the simulation's joint agreements
+
+        // Delete the simulation
         return await axios
             .delete(`${API_URL}/simulations/${code}`);
     } catch (error) {
@@ -203,6 +223,8 @@ export async function deleteSimulation(code: string) {
         return undefined;
     }
 }
+
+
 
 /**
  * Checks if a simulation exists.

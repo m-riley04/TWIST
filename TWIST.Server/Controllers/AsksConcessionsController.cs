@@ -92,6 +92,14 @@ namespace TWISTServer.Controllers
         }
 
         [HttpPut]
+        [Route("concessions")]
+        public JsonResult AddConcession([FromBody] ConcessionRecord concession)
+        {
+            concessionsAccessor.Insert(concession);
+            return new JsonResult($"Successfully added concession {concession.ConcessionId}");
+        }
+
+        [HttpPut]
         [Route("concessions/batch")]
         public JsonResult AddConcessions([FromBody] ConcessionRecord[] concessions)
         {
@@ -99,12 +107,20 @@ namespace TWISTServer.Controllers
             return new JsonResult($"Successfully added asks.");
         }
 
-        [HttpPut]
-        [Route("concessions")]
-        public JsonResult AddConcession([FromBody] ConcessionRecord concession)
+        [HttpDelete]
+        [Route("asks/{simulationId}")]
+        public JsonResult DeleteAsks([FromRoute] int simulationId)
         {
-            concessionsAccessor.Insert(concession);
-            return new JsonResult($"Successfully added concession {concession.ConcessionId}");
+            asksAccessor.DeleteAsksFromSimulation(simulationId);
+            return new JsonResult($"Successfully deleted asks from {simulationId}");
+        }
+
+        [HttpDelete]
+        [Route("concessions/{simulationId}")]
+        public JsonResult DeleteConcessions([FromRoute] int simulationId)
+        {
+            concessionsAccessor.DeleteConcessionsFromSimulation(simulationId);
+            return new JsonResult($"Successfully deleted concessions from {simulationId}");
         }
     }
 }

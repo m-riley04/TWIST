@@ -359,13 +359,13 @@ namespace TWISTServer.Hubs
             askAccessor.DeleteAsksFromSimulationAndCountry(simulationId, country);
 
             // Get default/template asks
-            var defaultAsks = _GetDefaultAsks(country);
+            IEnumerable<AskRecord> defaultAsks = _GetDefaultAsks(country, simulationId);
 
             // Re-create and re-insert all asks for a given country from the default table
             askAccessor.InsertAsks(defaultAsks);
 
             // Query for newly inserted records
-            var asks = askAccessor.GetAsksBySimulationAndCountry(simulationId, country);
+            IEnumerable<AskRecord> asks = askAccessor.GetAsksBySimulationAndCountry(simulationId, country);
 
             // Send signal to all participants in simulation
             await Clients.Group($"{simulationCode}_{country}").AsksUpdated(asks.ToArray());
@@ -377,13 +377,13 @@ namespace TWISTServer.Hubs
             concessionAccessor.DeleteConcessionsFromSimulationAndCountry(simulationId, country);
 
             // Get default/template concessions
-            var defaultConcessions = _GetDefaultConcessions(country);
+            IEnumerable<ConcessionRecord> defaultConcessions = _GetDefaultConcessions(country, simulationId);
 
             // Re-create and re-insert all concessions for a given country from the default table
             concessionAccessor.InsertConcessions(defaultConcessions);
 
             // Query for newly inserted records
-            var concessions = concessionAccessor.GetConcessionsBySimulationAndCountry(simulationId, country);
+            IEnumerable<ConcessionRecord> concessions = concessionAccessor.GetConcessionsBySimulationAndCountry(simulationId, country);
 
             // Send signal to all participants in simulation
             await Clients.Group($"{simulationCode}_{country}").ConcessionsUpdated(concessions.ToArray());
@@ -441,22 +441,28 @@ namespace TWISTServer.Hubs
             return AllConnections.Find(x => x.ConnectionId == connectionId)?.ParticipantId ?? 0;
         }
 
-        private IEnumerable<AskRecord> _GetDefaultAsks(CountryEnum country)
+        private IEnumerable<AskRecord> _GetDefaultAsks(CountryEnum country, int simulationId)
         {
+            var ret = new List<AskRecord>() { };
             IEnumerable<DefaultAskRecord> defaultAsks = defaultAskAccessor.GetByCountry(country);
             foreach (DefaultAskRecord ask in defaultAsks)
             {
-                yield return new AskRecord(0, 0, ask.Description, 0, 0, DateTime.Now, DateTime.Now, country, null);
+                ret.Add(new AskRecord(0, simulationId, ask.Description, 0, 0, DateTime.Now, DateTime.Now, country, null));
             }
+
+            return ret;
         }
 
-        private IEnumerable<ConcessionRecord> _GetDefaultConcessions(CountryEnum country)
+        private IEnumerable<ConcessionRecord> _GetDefaultConcessions(CountryEnum country, int simulationId)
         {
+            var ret = new List<ConcessionRecord>() { };
             IEnumerable<DefaultConcessionRecord> defaultConcessions = defaultConcessionAccessor.GetByCountry(country);
             foreach (DefaultConcessionRecord concession in defaultConcessions)
             {
-                yield return new ConcessionRecord(0, 0, concession.Description, 0, 0, DateTime.Now, DateTime.Now, country, null);
+                ret.Add(new ConcessionRecord(0, simulationId, concession.Description, 0, 0, DateTime.Now, DateTime.Now, country, null));
             }
+
+            return ret;
         }
     }
 }
