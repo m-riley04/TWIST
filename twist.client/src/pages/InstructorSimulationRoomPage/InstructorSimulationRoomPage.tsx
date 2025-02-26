@@ -309,6 +309,35 @@ const InstructorSimulationRoomPage = () => {
         handleUpdateRound(simulation?.round - 1);
     }
 
+    
+
+    /// RESETTING HANDLERS
+    const handleResetUSAAsks = () => {
+        connection?.invoke("ResetCountryAsks", simulation?.simulation_id, CountryEnum.USA, simulation?.code)
+            .catch((error) => console.error(`Unable to reset USA asks: ${error}`));
+    }
+
+    const handleResetUSAConcessions = () => {
+        connection?.invoke("ResetCountryConcessions", simulation?.simulation_id, CountryEnum.USA, simulation?.code)
+            .catch((error) => console.error(`Unable to reset USA concessions: ${error}`));
+    }
+
+    const handleResetPRCAsks = () => {
+        connection?.invoke("ResetCountryAsks", simulation?.simulation_id, CountryEnum.PRC, simulation?.code)
+            .catch((error) => console.error(`Unable to reset PRC asks: ${error}`));
+    }
+
+    const handleResetPRCConcessions = () => {
+        connection?.invoke("ResetCountryConcessions", simulation?.simulation_id, CountryEnum.PRC, simulation?.code)
+            .catch((error) => console.error(`Unable to reset PRC concessions: ${error}`));
+    }
+
+    const handleResetJointAgreements = () => {
+        connection?.invoke("ResetJointAgreements", simulation?.simulation_id, CountryEnum.PRC, simulation?.code)
+            .catch((error) => console.error(`Unable to reset PRC concessions: ${error}`));
+    }
+
+    /// DEBUGGING HANDLERS
     const handlePollConnections = () => {
         connection?.invoke("PollConnections", simulation)
             .catch((error) => console.error(`Unable to poll connections: ${error}`));
@@ -341,15 +370,31 @@ const InstructorSimulationRoomPage = () => {
                 <Button onClick={handleRandomlyAssignRole}>Randomly Assign Roles</Button>
                 <ParticipantList participants={participants} onKickClicked={handleKickParticipant} onCountryChanged={handleCountryChanged} onRoleChanged={handleRoleChanged} />
             </Container>
-            
-            <Button onClick={handleStartSimulation}>Start Simulation</Button>
-            <Button onClick={handleStopSimulation} variant="warning">Stop Simulation</Button>
-            <Button onClick={handleCloseRoom} variant="danger">Close Room</Button>
 
-            <Button onClick={handlePreviousRound}>Previous Round</Button>
-            <Button onClick={handleNextRound}>Next Round</Button>
-            <Button onClick={handlePollConnections}>Get Connections</Button>
-            <Button onClick={handlePollGroups}>Get Groups</Button>
+            <h3>Basic Simulation Controls</h3>
+            <Container>
+                <Button onClick={handleStartSimulation}>Start Simulation</Button>
+                <Button onClick={handleStopSimulation} variant="warning">Stop Simulation</Button>
+                <Button onClick={handleCloseRoom} variant="danger">Close Room</Button>
+                <Button onClick={handlePreviousRound}>Previous Round</Button>
+                <Button onClick={handleNextRound}>Next Round</Button>
+            </Container>
+
+            <h3>Resetting</h3>
+            <Container>
+                <Button onClick={handleResetUSAAsks}>Reset USA Asks</Button>
+                <Button onClick={handleResetUSAConcessions}>Reset USA Concessions</Button>
+                <Button onClick={handleResetPRCAsks}>Reset PRC Asks</Button>
+                <Button onClick={handleResetPRCConcessions}>Reset PRC Concessions</Button>
+                <Button onClick={handleResetJointAgreements}>Reset Joint Agreements</Button>
+            </Container>
+
+            <h3>Debugging</h3>
+            <Container>
+                <Button onClick={handlePollConnections}>Get Connections</Button>
+                <Button onClick={handlePollGroups}>Get Groups</Button>
+            </Container>
+
             <br/>
             <a href="/instructor">Instructor Home</a>
         </>

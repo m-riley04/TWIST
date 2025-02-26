@@ -70,6 +70,7 @@ namespace TWISTServer.Hubs
         Task AsksUpdated(AskRecord[] asks);
         Task ConcessionUpdated(ConcessionRecord asks);
         Task ConcessionsUpdated(ConcessionRecord[] asks);
+        Task JointAgreementsUpdated(AgreementRecord[] agreements);
         Task ConnectionsPolled(ParticipantConnection[] connections);
         Task GroupsPolled(Dictionary<string, List<ParticipantConnection>> groups);
     }
@@ -352,7 +353,7 @@ namespace TWISTServer.Hubs
             await Clients.Group(sim.Code).GroupsPolled(AllGroups.ToDictionary());
         }
 
-        public async Task ResetCountryAsks(int simulationId, CountryEnum country)
+        public async Task ResetCountryAsks(int simulationId, CountryEnum country, string simulationCode)
         {
             // Delete all asks for a given country from a given simulation
             askAccessor.DeleteAsksFromSimulationAndCountry(simulationId, country);
@@ -363,10 +364,14 @@ namespace TWISTServer.Hubs
             // Re-create and re-insert all asks for a given country from the default table
             askAccessor.InsertAsks(defaultAsks);
 
+            // Query for newly inserted records
+            var asks = askAccessor.GetAsksBySimulationAndCountry(simulationId, country);
+
             // Send signal to all participants in simulation
+            await Clients.Group($"{simulationCode}_{country}").AsksUpdated(asks.ToArray());
         }
 
-        public async Task ResetCountryConcessions(int simulationId, CountryEnum country)
+        public async Task ResetCountryConcessions(int simulationId, CountryEnum country, string simulationCode)
         {
             // Delete all concessions for a given country from a given simulation
             concessionAccessor.DeleteConcessionsFromSimulationAndCountry(simulationId, country);
@@ -377,15 +382,20 @@ namespace TWISTServer.Hubs
             // Re-create and re-insert all concessions for a given country from the default table
             concessionAccessor.InsertConcessions(defaultConcessions);
 
+            // Query for newly inserted records
+            var concessions = concessionAccessor.GetConcessionsBySimulationAndCountry(simulationId, country);
+
             // Send signal to all participants in simulation
+            await Clients.Group($"{simulationCode}_{country}").ConcessionsUpdated(concessions.ToArray());
         }
 
-        public async Task ResetJointAgreements(int simulationId)
+        public async Task ResetJointAgreements(int simulationId, string simulationCode)
         {
             // Delete all asks for a given country from a given simulation
             agreementAccessor.DeleteBySimulation(simulationId);
 
             // Send signal to all participants in simulation
+            await Clients.Group(simulationCode).JointAgreementsUpdated(new AgreementRecord[] { });
         }
 
         private async void _RemoveFromRoom(string connectionId, string simulationCode, CountryEnum country)
