@@ -98,5 +98,16 @@ simulation_id = @simulation_id AND country = @country AND description = @descrip
                 ]
             );
         }
+
+        public void DeleteBySimulation(int simulationId)
+        {
+            string sql = @$"DELETE FROM {TableName} WHERE simulation_id = @simulation_id";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                ]
+            );
+        }
     }
 }

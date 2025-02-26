@@ -80,6 +80,9 @@ namespace TWISTServer.Hubs
         ParticipantsDataAccessor partAccessor = new();
         AsksDataAccessor askAccessor = new();
         ConcessionsDataAccessor concessionAccessor = new();
+        AgreementsDataAccessor agreementAccessor = new();
+        DefaultAsksDataAccessor defaultAskAccessor = new();
+        DefaultConcessionsDataAccessor defaultConcessionAccessor = new();
 
         public static ConcurrentDictionary<string, List<ParticipantConnection>> AllGroups = new();
         public static List<ParticipantConnection> AllConnections = []; // TODO: Need to make this not global for ALL simulations (dictionary with simulation code as key)
@@ -101,7 +104,7 @@ namespace TWISTServer.Hubs
                 return base.OnDisconnectedAsync(exception);
             }
 
-            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
+            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country);
 
             Clients.Group(sim.Code).ParticipantDisconnected(participant); // TODO: check if not awaiting this is fine
             return base.OnDisconnectedAsync(exception);
@@ -130,7 +133,7 @@ namespace TWISTServer.Hubs
             else newParticipant = _;
 
             // Add the connection to the room
-            _AddToRoom(Context.ConnectionId, newParticipant.ParticipantId, sim.Code, newParticipant.Country ?? CountryEnum.NONE);
+            _AddToRoom(Context.ConnectionId, newParticipant.ParticipantId, sim.Code, newParticipant.Country);
 
             // Send signal to all clients
             await Clients.All.ParticipantJoined(newParticipant);
@@ -138,7 +141,7 @@ namespace TWISTServer.Hubs
 
         public async Task LeaveRoom(SimulationRecord sim, ParticipantRecord participant)
         {
-            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
+            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country);
 
             // Send signal to all in simulation
             await Clients.Group(sim.Code).ParticipantLeft(participant);
@@ -149,7 +152,7 @@ namespace TWISTServer.Hubs
             // Remove the participant from the participants table
             //partAccessor.Delete(participant.ParticipantId);
 
-            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
+            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country);
 
             // Send signal to all in simulation
             await Clients.Group(sim.Code).ParticipantKicked(participant);
@@ -200,7 +203,7 @@ namespace TWISTServer.Hubs
                 var countries = Enum.GetValues<CountryEnum>().ToList();
 
                 // Remove the participant's current country
-                countries.Remove(participant.Country ?? 0);
+                countries.Remove(participant.Country);
 
                 // Get countries
                 string connectionId = _FindConnectionId(participant.ParticipantId);
@@ -252,7 +255,7 @@ namespace TWISTServer.Hubs
                 var roles = Enum.GetValues<ParticipantRoleEnum>().ToList();
 
                 // Remove the participant's current role
-                roles.Remove(participant.Role ?? 0);
+                roles.Remove(participant.Role);
 
                 // Assign a random role
                 var random = new Random();
@@ -306,7 +309,7 @@ namespace TWISTServer.Hubs
         public async Task AskUpdated(SimulationRecord sim, ParticipantRecord participant, AskRecord ask)
         {
             // Either update or create the ask in the db
-            askAccessor.UpdateAskFromSimAndCountry(sim.SimulationId, participant.Country ?? CountryEnum.NONE, ask);
+            askAccessor.UpdateAskFromSimAndCountry(sim.SimulationId, participant.Country, ask);
 
             // Signal
             await Clients.Group($"{sim.Code}_{participant.Country}").AskUpdated(ask);
@@ -323,7 +326,7 @@ namespace TWISTServer.Hubs
         public async Task ConcessionUpdated(SimulationRecord sim, ParticipantRecord participant, ConcessionRecord concession)
         {
             // Either update or create the ask in the db
-            concessionAccessor.UpdateConcessionFromSimAndCountry(sim.SimulationId, participant.Country ?? CountryEnum.NONE, concession);
+            concessionAccessor.UpdateConcessionFromSimAndCountry(sim.SimulationId, participant.Country, concession);
 
             // Signal
             await Clients.Group($"{sim.Code}_{participant.Country}").ConcessionUpdated(concession);
@@ -347,6 +350,42 @@ namespace TWISTServer.Hubs
         {
             // Signal
             await Clients.Group(sim.Code).GroupsPolled(AllGroups.ToDictionary());
+        }
+
+        public async Task ResetCountryAsks(int simulationId, CountryEnum country)
+        {
+            // Delete all asks for a given country from a given simulation
+            askAccessor.DeleteAsksFromSimulationAndCountry(simulationId, country);
+
+            // Get default/template asks
+            var defaultAsks = _GetDefaultAsks(country);
+
+            // Re-create and re-insert all asks for a given country from the default table
+            askAccessor.InsertAsks(defaultAsks);
+
+            // Send signal to all participants in simulation
+        }
+
+        public async Task ResetCountryConcessions(int simulationId, CountryEnum country)
+        {
+            // Delete all concessions for a given country from a given simulation
+            concessionAccessor.DeleteConcessionsFromSimulationAndCountry(simulationId, country);
+
+            // Get default/template concessions
+            var defaultConcessions = _GetDefaultConcessions(country);
+
+            // Re-create and re-insert all concessions for a given country from the default table
+            concessionAccessor.InsertConcessions(defaultConcessions);
+
+            // Send signal to all participants in simulation
+        }
+
+        public async Task ResetJointAgreements(int simulationId)
+        {
+            // Delete all asks for a given country from a given simulation
+            agreementAccessor.DeleteBySimulation(simulationId);
+
+            // Send signal to all participants in simulation
         }
 
         private async void _RemoveFromRoom(string connectionId, string simulationCode, CountryEnum country)
@@ -390,6 +429,24 @@ namespace TWISTServer.Hubs
         private int _FindParticipantId(string connectionId)
         {
             return AllConnections.Find(x => x.ConnectionId == connectionId)?.ParticipantId ?? 0;
+        }
+
+        private IEnumerable<AskRecord> _GetDefaultAsks(CountryEnum country)
+        {
+            IEnumerable<DefaultAskRecord> defaultAsks = defaultAskAccessor.GetByCountry(country);
+            foreach (DefaultAskRecord ask in defaultAsks)
+            {
+                yield return new AskRecord(0, 0, ask.Description, 0, 0, DateTime.Now, DateTime.Now, country, null);
+            }
+        }
+
+        private IEnumerable<ConcessionRecord> _GetDefaultConcessions(CountryEnum country)
+        {
+            IEnumerable<DefaultConcessionRecord> defaultConcessions = defaultConcessionAccessor.GetByCountry(country);
+            foreach (DefaultConcessionRecord concession in defaultConcessions)
+            {
+                yield return new ConcessionRecord(0, 0, concession.Description, 0, 0, DateTime.Now, DateTime.Now, country, null);
+            }
         }
     }
 }

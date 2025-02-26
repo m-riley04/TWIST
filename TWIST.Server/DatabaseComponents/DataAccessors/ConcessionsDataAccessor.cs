@@ -79,7 +79,7 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
             );
         }
 
-        internal void UpdateConcessionFromSimAndCountry(int simulationId, CountryEnum countryEnum, ConcessionRecord concession)
+        public void UpdateConcessionFromSimAndCountry(int simulationId, CountryEnum countryEnum, ConcessionRecord concession)
         {
             string sql = @$"UPDATE {TableName} SET
 points = @points,
@@ -99,6 +99,29 @@ WHERE simulation_id = @simulation_id AND country = @country AND description = @d
                     new("@country", SqlDbType.Int) { Value = countryEnum },
                     new ("@last_editor", SqlDbType.Int) { Value = concession.LastEditor == null ? DBNull.Value : concession.LastEditor } // If LastEditor is null, use DBNull.Value.
                 }
+            );
+        }
+
+        public void DeleteConcessionsFromSimulation(int simulationId)
+        {
+            string sql = @$"DELETE FROM {TableName} WHERE simulation_id = @simulation_id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                ]
+            );
+        }
+
+        public void DeleteConcessionsFromSimulationAndCountry(int simulationId, CountryEnum country)
+        {
+            string sql = @$"DELETE FROM {TableName} WHERE simulation_id = @simulation_id AND country = @country;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                    new("@country", SqlDbType.Int) { Value = country },
+                ]
             );
         }
     }

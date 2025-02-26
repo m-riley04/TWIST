@@ -1,8 +1,9 @@
 import { Button, Form } from "react-bootstrap";
-import { createSimulation, createSimulationAsksPRC, createSimulationAsksUSA, createSimulationConcessionsPRC, createSimulationConcessionsUSA, generateCode, getSimulationFromCode } from "../../server/simulation_management";
+import { createSimulation, createSimulationAsksByCountry, createSimulationConcessionsByCountry, generateCode, getSimulationFromCode } from "../../server/simulation_management";
 import { FormEvent } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router";
+import CountryEnum from "../../enums/CountryEnum";
 
 const CreateSimulationPage = () => {
     const { isAuthenticated, error, isLoading, loginWithRedirect } = useAuth0();
@@ -25,10 +26,10 @@ const CreateSimulationPage = () => {
             const simId: number = (await getSimulationFromCode(code))?.simulation_id ?? 0;
 
             // Initialize asks and concessions
-            await createSimulationAsksUSA(simId);
-            await createSimulationAsksPRC(simId)
-            await createSimulationConcessionsUSA(simId);
-            await createSimulationConcessionsPRC(simId);
+            await createSimulationAsksByCountry(simId, CountryEnum.USA);
+            await createSimulationAsksByCountry(simId, CountryEnum.PRC);
+            await createSimulationConcessionsByCountry(simId, CountryEnum.USA);
+            await createSimulationConcessionsByCountry(simId, CountryEnum.PRC);
 
             // Navigate AFTER
             navigate(`/instructor/room/${code}`);
