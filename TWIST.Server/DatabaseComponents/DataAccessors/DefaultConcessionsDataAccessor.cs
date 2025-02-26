@@ -12,7 +12,7 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
     public class DefaultConcessionsDataAccessor : DataAccessor<DefaultConcessionRecord>
     {
         public override string PrimaryKeyColumn { get; } = "default_concession_id";
-        public override string TableName { get; } = "default-concessions";
+        public override string TableName { get; } = "default_concessions";
 
         public IEnumerable<DefaultConcessionRecord> GetByCountry(CountryEnum country)
         {

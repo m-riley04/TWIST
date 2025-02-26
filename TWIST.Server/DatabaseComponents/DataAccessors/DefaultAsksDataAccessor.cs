@@ -12,7 +12,7 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
     public class DefaultAsksDataAccessor : DataAccessor<DefaultAskRecord>
     {
         public override string PrimaryKeyColumn { get; } = "default_ask_id";
-        public override string TableName { get; } = "default-asks";
+        public override string TableName { get; } = "default_asks";
 
         public IEnumerable<DefaultAskRecord> GetByCountry(CountryEnum country)
         {
