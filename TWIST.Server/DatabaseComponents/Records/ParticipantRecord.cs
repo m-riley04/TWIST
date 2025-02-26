@@ -7,8 +7,8 @@ namespace TWISTServer.DatabaseComponents.Records
 {
     public record ParticipantRecord(
         [property: JsonPropertyName("participant_id")] int ParticipantId, 
-        CountryEnum? Country, 
-        ParticipantRoleEnum? Role,
+        CountryEnum Country, 
+        ParticipantRoleEnum Role,
         [property: JsonPropertyName("simulation_id")] int SimulationId, 
         string Username, 
         string Email
@@ -27,8 +27,8 @@ namespace TWISTServer.DatabaseComponents.Records
         {
             return new ParticipantRecord(
                 row.Field<int>("participant_id")
-                , row.Field<CountryEnum?>("country") ?? CountryEnum.NONE
-                , row.Field<ParticipantRoleEnum?>("role") ?? ParticipantRoleEnum.NONE
+                , row.Field<CountryEnum>("country")
+                , row.Field<ParticipantRoleEnum>("role")
                 , row.Field<int>("simulation_id")
                 , row.Field<string>("username") ?? ""
                 , row.Field<string>("email") ?? ""
