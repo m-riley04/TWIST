@@ -82,22 +82,19 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
     );
 
     const handlePointsChange = useCallback((id: number, newPoints: number) => {
-        setAsks((prev) =>
-            prev.map((ask) =>
-                ask.ask_id === id ? { ...ask, points: newPoints } : ask
-            )
-        );
-        // Get the updated list (you could also use the functional update from above)
-        const updatedAsks = asks.map(ask => {
-            if (ask.ask_id === id) {
-                const newAsk: AskModel = { ...ask, points: newPoints, modified_date: new Date() }
-                broadcastAskChanged(ask);
-                return newAsk
-            } else return ask;
-            }
-        );
-        broadcastAsks(updatedAsks);
-    }, [asks, setAsks, broadcastAsks, broadcastAskChanged]);
+        setAsks(prevAsks => {
+            const updatedAsks = prevAsks.map(ask => {
+                if (ask.ask_id === id) {
+                    const newAsk = { ...ask, points: newPoints, modified_date: new Date() };
+                    broadcastAskChanged(newAsk);
+                    return newAsk;
+                }
+                return ask;
+            });
+            broadcastAsks(updatedAsks);
+            return updatedAsks;
+        });
+    }, [broadcastAsks, broadcastAskChanged]);
 
     const totalPoints = asks.reduce((acc, item) => acc + item.points, 0);
 
@@ -105,7 +102,7 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
         <>
             <h2>Asks</h2>
             <p
-                style={totalPoints != 100 ? { color: "red" } : {}}
+                style={totalPoints != 100 ? { color: "red" } : { color: "green" }}
             >Total Points: {totalPoints}</p>
             <Table className="participant-list">
                 <thead>

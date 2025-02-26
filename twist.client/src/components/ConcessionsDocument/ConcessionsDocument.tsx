@@ -55,7 +55,7 @@ const ConcessionsDocument: React.FC<ConcessionsDocumentProps> = ({
             .catch(console.error);
     }, [simulation, participant, connection]);
     const broadcastConcessionChanged = useCallback((newConcession: ConcessionModel) => {
-        connection.invoke("ConcessionsUpdated", simulation, participant, newConcession)
+        connection.invoke("ConcessionUpdated", simulation, participant, newConcession)
             .catch(console.error);
     }, [simulation, participant, connection]);
 
@@ -77,22 +77,19 @@ const ConcessionsDocument: React.FC<ConcessionsDocumentProps> = ({
     );
 
     const handlePointsChange = useCallback((id: number, newPoints: number) => {
-        setConcessions((prev) =>
-            prev.map((concession) =>
-                concession.concession_id === id ? { ...concession, points: newPoints } : concession
-            )
-        );
-        // Get the updated list (you could also use the functional update from above)
-        const updatedConcessions = concessions.map(concession => {
-            if (concession.concession_id === id) {
-                const newConcession: ConcessionModel = { ...concession, points: newPoints, modified_date: new Date() }
-                broadcastConcessionChanged(concession);
-                return newConcession
-            } else return concession;
-            }
-        );
-        broadcastConcessions(updatedConcessions);
-    }, [concessions, setConcessions, broadcastConcessions, broadcastConcessionChanged]);
+        setConcessions(prevConcessions => {
+            const updatedConcessions = prevConcessions.map(concession => {
+                if (concession.concession_id === id) {
+                    const newConcession = { ...concession, points: newPoints, modified_date: new Date() };
+                    broadcastConcessionChanged(newConcession);
+                    return newConcession;
+                }
+                return concession;
+            });
+            broadcastConcessions(updatedConcessions);
+            return updatedConcessions;
+        });
+    }, [broadcastConcessions, broadcastConcessionChanged]);
 
     const totalPoints = concessions.reduce((acc, item) => acc + item.points, 0);
 
@@ -100,7 +97,7 @@ const ConcessionsDocument: React.FC<ConcessionsDocumentProps> = ({
         <>
             <h2>Concessions</h2>
             <p
-                style={totalPoints != 100 ? { color: "red" } : {}}
+                style={totalPoints != 100 ? { color: "red" } : { color: "green" }}
             >Total Points: {totalPoints}</p>
             <Table className="participant-list">
                 <thead>
