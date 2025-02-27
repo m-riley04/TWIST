@@ -11,7 +11,7 @@ export interface TeamPickerItemProps {
 
 const TeamPickerItem: React.FC<TeamPickerItemProps> = ({
     id,
-    index,
+    //index,
     points,
     description,
     onAddClicked
