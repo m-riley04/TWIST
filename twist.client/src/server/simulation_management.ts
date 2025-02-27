@@ -7,6 +7,7 @@ import CountryEnum from '../enums/CountryEnum';
 import ConcessionModel from '../models/ConcessionModel';
 import DefaultAskModel from '../models/DefaultAskModel';
 import DefaultConcessionModel from '../models/DefaultConcessionModel';
+import AgreementModel from '../models/AgreementModel';
 
 /// Backup list of default asks for the USA
 const DEFAULT_USA_ASKS = [
@@ -164,6 +165,12 @@ export async function getAsksBySimAndCountry(simulationId: number, country: Coun
 export async function getConcessionsBySimAndCountry(simulationId: number, country: CountryEnum): Promise<ConcessionModel[] | undefined> {
     return await axios
         .get<ConcessionModel[]>(`${API_URL}/asks-concessions/concessions/${simulationId}-${country}`)
+        .then(response => response.data)
+}
+
+export async function getAgreementsBySim(simulationId: number): Promise<AgreementModel[] | undefined> {
+    return await axios
+        .get<AgreementModel[]>(`${API_URL}/agreements/${simulationId}`)
         .then(response => response.data)
 }
 

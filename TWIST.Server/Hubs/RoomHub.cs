@@ -68,8 +68,9 @@ namespace TWISTServer.Hubs
         Task RoundUpdated(RoundEnum round);
         Task AskUpdated(AskRecord asks);
         Task AsksUpdated(AskRecord[] asks);
-        Task ConcessionUpdated(ConcessionRecord asks);
-        Task ConcessionsUpdated(ConcessionRecord[] asks);
+        Task ConcessionUpdated(ConcessionRecord concessions);
+        Task ConcessionsUpdated(ConcessionRecord[] concession);
+        Task JointAgreementUpdated(AgreementRecord agreement);
         Task JointAgreementsUpdated(AgreementRecord[] agreements);
         Task ConnectionsPolled(ParticipantConnection[] connections);
         Task GroupsPolled(Dictionary<string, List<ParticipantConnection>> groups);
@@ -341,6 +342,47 @@ namespace TWISTServer.Hubs
             await Clients.Group($"{sim.Code}_{participant.Country}").ConcessionsUpdated(concessions);
         }
 
+        public async Task JointAgreementUpdated(SimulationRecord sim, AgreementRecord agreement)
+        {
+            // Update the agreements
+            agreementAccessor.UpdateFromSimAndDescription(sim.SimulationId, agreement);
+
+            // Signal
+            await Clients.Group(sim.Code).JointAgreementUpdated(agreement);
+        }
+
+        public async Task JointAgreementsUpdated(SimulationRecord sim, AgreementRecord[] agreements)
+        {
+            // Update the agreements
+
+            // Signal
+            await Clients.Group(sim.Code).JointAgreementsUpdated(agreements);
+        }
+
+        public async Task AddJointAgreement(SimulationRecord sim, AgreementRecord agreement)
+        {
+            // Insert the agreement
+            agreementAccessor.Insert(agreement);
+
+            // Query for newly inserted records
+            IEnumerable<AgreementRecord> agreements = agreementAccessor.GetBySimulation(sim.SimulationId);
+
+            // Send signal to all participants in simulation
+            await Clients.Group(sim.Code).JointAgreementsUpdated(agreements.ToArray());
+        }
+
+        public async Task RemoveJointAgreement(SimulationRecord sim, AgreementRecord agreement)
+        {
+            // Insert the agreement
+            agreementAccessor.Delete(agreement.AgreementId);
+
+            // Query for newly inserted records
+            IEnumerable<AgreementRecord> agreements = agreementAccessor.GetBySimulation(sim.SimulationId);
+
+            // Send signal to all participants in simulation
+            await Clients.Group(sim.Code).JointAgreementsUpdated(agreements.ToArray());
+        }
+
         public async Task PollConnections(SimulationRecord sim)
         {
             // Signal
@@ -395,7 +437,7 @@ namespace TWISTServer.Hubs
             agreementAccessor.DeleteBySimulation(simulationId);
 
             // Send signal to all participants in simulation
-            await Clients.Group(simulationCode).JointAgreementsUpdated(new AgreementRecord[] { });
+            await Clients.Group(simulationCode).JointAgreementsUpdated([]);
         }
 
         private async void _RemoveFromRoom(string connectionId, string simulationCode, CountryEnum country)
