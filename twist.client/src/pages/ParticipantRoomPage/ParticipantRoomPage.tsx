@@ -13,6 +13,7 @@ import ParticipantModel from "../../models/ParticipantModel";
 import { getParticipantByEmailAndSimulation } from "../../server/participant_management";
 import ConcessionsDocument from "../../components/ConcessionsDocument/ConcessionsDocument";
 import JointDocument from "../../components/JointDocument/JointDocument";
+import "./styles.scss";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -151,23 +152,36 @@ const ParticipantRoomPage = () => {
                         <p>Name: {currentParticipant?.username}</p>
                         <p>Email: {currentParticipant?.email}</p>
                         <p>Connection ID: {connection?.connectionId}</p>
-                        <p>Country: {currentParticipant?.country !== 0 ? (currentParticipant?.country === 1 ? "USA" : "PRC") : "NONE" }</p>
-                        
-                        {simulation && currentParticipant && connection && (
-                            <AsksDocument
-                                simulation={simulation}
-                                participant={currentParticipant}
-                                connection={connection}
-                            />
-                        )}
+                        <p>
+                            Country:{" "}
+                            {currentParticipant?.country !== 0
+                                ? currentParticipant?.country === 1
+                                    ? "USA"
+                                    : "PRC"
+                                : "NONE"}
+                        </p>
 
-                        {simulation && currentParticipant && connection && (
-                            <ConcessionsDocument
-                                simulation={simulation}
-                                participant={currentParticipant}
-                                connection={connection}
-                            />
-                        )}
+                        <div className="documents-container">
+                            {simulation && currentParticipant && connection && (
+                                <div className="document-container">
+                                    <AsksDocument
+                                        simulation={simulation}
+                                        participant={currentParticipant}
+                                        connection={connection}
+                                    />
+                                </div>
+                            )}
+
+                            {simulation && currentParticipant && connection && (
+                                <div className="document-container">
+                                    <ConcessionsDocument
+                                        simulation={simulation}
+                                        participant={currentParticipant}
+                                        connection={connection}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </>
                 );
             case RoundEnum.INTERNATIONAL:

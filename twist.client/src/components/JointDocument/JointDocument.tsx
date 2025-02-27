@@ -170,12 +170,10 @@ const JointDocument: React.FC<JointDocumentProps> = ({
     const totalPoints = agreements.reduce((acc, item) => acc + item.points, 0);
 
     return (
-        <>
+        <div className="joint-document">
             <div className="joint-agreements-container">
                 <h2>Joint Agreements</h2>
-                <p
-                    style={totalPoints != 100 ? { color: "red" } : { color: "green" }}
-                >Total Points: {totalPoints}</p>
+                <p style={totalPoints != 100 ? { color: "red" } : { color: "green" }}>Total Points: {totalPoints}</p>
                 <Table className="joint-agreements-list">
                     <thead>
                         <tr>
@@ -200,21 +198,15 @@ const JointDocument: React.FC<JointDocumentProps> = ({
                 </Table>
             </div>
 
-            <div className="picker-container">
+            <div className="pickers-container">
                 <div className="picker-container">
-                    <TeamAsksPicker
-                        asks={teamAsks}
-                        onAddClicked={handleAddAsk}
-                    />
+                    <TeamAsksPicker asks={teamAsks} onAddClicked={handleAddAsk} />
                 </div>
                 <div className="picker-container">
-                    <TeamConcessionsPicker
-                        concessions={teamConcessions}
-                        onAddClicked={handleAddConcession}
-                    />
+                    <TeamConcessionsPicker concessions={teamConcessions} onAddClicked={handleAddConcession} />
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
