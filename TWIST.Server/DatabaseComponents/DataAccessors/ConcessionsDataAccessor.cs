@@ -14,21 +14,6 @@ namespace TWISTServer.DatabaseComponents.DataAccessors
 
         public override string TableName => "concessions";
 
-        public IEnumerable<ConcessionRecord> GetConcessionsBySimulation(int simulationId)
-        {
-            string sql = @"select 
-concession_id, team_id, simulation_id, description, points, status from concessions 
-WHERE 
-simulation_id = @simulation_id;";
-            return Database.Query(
-                sql,
-                ConcessionRecord.FromRow,
-                [
-                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
-                ]
-            );
-        }
-
         public void InsertConcessions(IEnumerable<ConcessionRecord> asks)
         {
             var concessionList = asks.ToList();
@@ -67,27 +52,39 @@ simulation_id = @simulation_id;";
             Database.NonQuery(sql, parameters.ToArray());
         }
 
-        public IEnumerable<ConcessionRecord> GetConcessionsBySimulationAndCountry(int simulationId, CountryEnum country)
+        public IEnumerable<ConcessionRecord> GetConcessionsBySimulation(int simulationId)
         {
-            string sql = @"select
-concession_id, team_id, simulation_id, description, points, status from concessions
-WHERE
-simulation_id = @simulation_id AND country = @country;";
-            return Database.Query(
+            string sql = @$"SELECT {GetColumnsAsSql(ConcessionRecord.Columns.Keys)} FROM {TableName} WHERE simulation_id = @simulation_id";
+            return Database.Query<ConcessionRecord>(
                 sql,
                 ConcessionRecord.FromRow,
-                [
-                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
-                    new("@country", SqlDbType.Int) { Value = country },
-                ]
+                new SqlParameter[]
+                {
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId }
+                }
             );
         }
 
-        internal void UpdateConcessionFromSimAndCountry(int simulationId, CountryEnum countryEnum, ConcessionRecord concession)
+        public IEnumerable<ConcessionRecord> GetConcessionsBySimulationAndCountry(int simulationId, CountryEnum country)
+        {
+            string sql = @$"SELECT {GetColumnsAsSql(ConcessionRecord.Columns.Keys)} FROM {TableName} WHERE simulation_id = @simulation_id AND country = @country;";
+            return Database.Query<ConcessionRecord>(
+                sql,
+                ConcessionRecord.FromRow,
+                new SqlParameter[]
+                {
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                    new("@country", SqlDbType.Int) { Value = country }
+                }
+            );
+        }
+
+        public void UpdateConcessionFromSimAndCountry(int simulationId, CountryEnum countryEnum, ConcessionRecord concession)
         {
             string sql = @$"UPDATE {TableName} SET
 points = @points,
 status = @status,
+creation_date = @creation_date,
 modified_date = @modified_date,
 last_editor = @last_editor
 WHERE simulation_id = @simulation_id AND country = @country AND description = @description;";
@@ -98,11 +95,35 @@ WHERE simulation_id = @simulation_id AND country = @country AND description = @d
                     new("@description", SqlDbType.NVarChar) { Value = concession.Description },
                     new("@points", SqlDbType.Int) { Value = concession.Points },
                     new("@status", SqlDbType.Int) { Value = concession.Status },
+                    new("@creation_date", SqlDbType.DateTime) { Value = concession.CreationDate },
                     new("@modified_date", SqlDbType.DateTime) { Value = concession.ModifiedDate },
                     new("@simulation_id", SqlDbType.Int) { Value = simulationId },
                     new("@country", SqlDbType.Int) { Value = countryEnum },
                     new ("@last_editor", SqlDbType.Int) { Value = concession.LastEditor == null ? DBNull.Value : concession.LastEditor } // If LastEditor is null, use DBNull.Value.
                 }
+            );
+        }
+
+        public void DeleteConcessionsFromSimulation(int simulationId)
+        {
+            string sql = @$"DELETE FROM {TableName} WHERE simulation_id = @simulation_id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                ]
+            );
+        }
+
+        public void DeleteConcessionsFromSimulationAndCountry(int simulationId, CountryEnum country)
+        {
+            string sql = @$"DELETE FROM {TableName} WHERE simulation_id = @simulation_id AND country = @country;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                    new("@country", SqlDbType.Int) { Value = country },
+                ]
             );
         }
     }

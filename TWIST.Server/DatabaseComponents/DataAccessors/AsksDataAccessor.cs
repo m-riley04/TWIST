@@ -69,10 +69,7 @@ simulation_id = @simulation_id;";
 
         public IEnumerable<AskRecord> GetAsksBySimulationAndCountry(int simulationId, CountryEnum country)
         {
-            string sql = @"select
-ask_id, simulation_id, description, points, status, creation_date, modified_date, country, last_editor from asks
-WHERE
-simulation_id = @simulation_id AND country = @country;";
+            string sql = @$"SELECT {GetColumnsAsSql(AskRecord.Columns.Keys)} FROM {TableName} WHERE simulation_id = @simulation_id AND country = @country;";
             return Database.Query(
                 sql,
                 AskRecord.FromRow,
@@ -85,8 +82,7 @@ simulation_id = @simulation_id AND country = @country;";
 
         public void UpdateAskFromSimAndCountry(int simulationId, CountryEnum country, AskRecord newAsk)
         {
-            string sql = @"UPDATE asks
-SET
+            string sql = @$"UPDATE {TableName} SET
 points = @points,
 status = @status,
 creation_date = @creation_date,
@@ -105,6 +101,29 @@ simulation_id = @simulation_id AND country = @country AND description = @descrip
                     new("@creation_date", SqlDbType.DateTime) { Value = newAsk.CreationDate },
                     new("@modified_date", SqlDbType.DateTime) { Value = newAsk.ModifiedDate },
                     new("@last_editor", SqlDbType.Int) { Value = newAsk.LastEditor == null ? DBNull.Value : newAsk.LastEditor } // If LastEditor is null, use DBNull.Value.
+                ]
+            );
+        }
+
+        public void DeleteAsksFromSimulation(int simulationId)
+        {
+            string sql = @$"DELETE FROM {TableName} WHERE simulation_id = @simulation_id;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                ]
+            );
+        }
+
+        public void DeleteAsksFromSimulationAndCountry(int simulationId, CountryEnum country)
+        {
+            string sql = @$"DELETE FROM {TableName} WHERE simulation_id = @simulation_id AND country = @country;";
+            Database.NonQuery(
+                sql,
+                [
+                    new("@simulation_id", SqlDbType.Int) { Value = simulationId },
+                    new("@country", SqlDbType.Int) { Value = country },
                 ]
             );
         }

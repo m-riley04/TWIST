@@ -5,6 +5,77 @@ import SimulationStateEnum from '../enums/SimulationStateEnum';
 import AskModel from '../models/AskModel';
 import CountryEnum from '../enums/CountryEnum';
 import ConcessionModel from '../models/ConcessionModel';
+import DefaultAskModel from '../models/DefaultAskModel';
+import DefaultConcessionModel from '../models/DefaultConcessionModel';
+import AgreementModel from '../models/AgreementModel';
+
+/// Backup list of default asks for the USA
+const DEFAULT_USA_ASKS = [
+    "China to issue an improved nationwide negative list for foreign investment (especially take measures to liberalize the financial sector)."
+    , "China to remove or reduce restrictions on foreign investment identified by the U.S."
+    , "China to eliminate laws and regulations, such as licensing or procurement, that treat foreign entities less favorably than domestic Chinese firms."
+    , "China to remove specified non-tariff barriers on US imports (ex. Onerous permitting, excessive inspections etc)"
+    , "China to recognize that the U.S. may impose import quotas and tariffs on products in critical sectors."
+    , "China to eliminate specific policies and practices linked to forced technology transfer."
+    , "China to strengthen intellectual property protection."
+    , "China to increase import of American agricultural products by $30-40 billion."
+    , "China to increase import of American energy products by $20-30 billion."
+    , "China to commit to the reduction of the trade deficit between China and the U.S.by $100-200 billion by 2020."
+    , "China to cease government-sponsored or tolerated cyber espionage and intrusions into U.S. commercial networks."
+    , "China to cease subsidies and other forms of assistance that support industries targeted in the MiC 2025 plan and other emerging and strategic industries."
+    , "China to establish a high-level dialogue with U.S. to discuss dual-use technologies."
+    , "China to refrain from military development of man-made islands in the South China Sea."
+    , "China to help identify and discourage Chinese firms that evade U.S. sanctions against Iran and North Korea."
+    , "China to guarantee human rights and democracy in Hong Kong"
+]
+
+/// Backup list of default asks for the PRC
+const DEFAULT_PRC_ASKS = [
+    "The U.S. to reduce tariffs on Chinese imports to 2017 levels."
+    , "The U.S. to lift bans on high technology exports such as integrated circuits and aircraft to China."
+    , "The U.S. to agree to a more limited approach in defining its export control regime."
+    , "The U.S. to  remove Chinese companies like Huawei from the entities list."
+    , "The U.S. to give equal treatment to Chinese companies in national security review (CFIUS)."
+    , "The U.S. to open government procurement to Chinese technology products and services."
+    , "The U.S. to refrain from restricting visas for Chinese students and professionals."
+    , "The U.S. to recognize core Chinese national interests: keeping national unity of mainland China and Tibet, Xinjiang, Hong Kong, and Taiwan."
+    , "The U.S. to recognize core Chinese national interests: sovereignty over South China Sea."
+    , "The U.S. to agree not to send warships or military personnel to Taiwan."
+]
+
+/// Backup list of default concessions for the USA
+const DEFAULT_USA_CONCESSIONS = [
+    "The U.S. to reduce tariffs on Chinese imports to 2017 levels."
+    , "The U.S. to lift bans on high technology exports such as integrated circuits and aircraft to China."
+    , "The U.S. to agree to a more limited approach in defining its export control regime."
+    , "The U.S. to  remove Chinese companies like Huawei from the entities list."
+    , "The U.S. to give equal treatment to Chinese companies in national security review (CFIUS)."
+    , "The U.S. to open government procurement to Chinese technology products and services."
+    , "The U.S. to refrain from restricting visas for Chinese students and professionals."
+    , "The U.S. to recognize core Chinese national interests: keeping national unity of mainland China and Tibet, Xinjiang, Hong Kong, and Taiwan."
+    , "The U.S. to recognize core Chinese national interests: sovereignty over South China Sea."
+    , "The U.S. to agree not to send warships or military personnel to Taiwan."
+]
+
+/// Backup list of default concessions for the PRC
+const DEFAULT_PRC_CONCESSIONS = [
+    "China to issue an improved nationwide negative list for foreign investment (especially take measures to liberalize the financial sector)."
+    , "China to remove or reduce restrictions on foreign investment identified by the U.S."
+    , "China to eliminate laws and regulations, such as licensing or procurement, that treat foreign entities less favorably than domestic Chinese firms."
+    , "China to remove specified non-tariff barriers on US imports (ex. Onerous permitting, excessive inspections etc)"
+    , "China to recognize that the U.S. may impose import quotas and tariffs on products in critical sectors."
+    , "China to eliminate specific policies and practices linked to forced technology transfer."
+    , "China to strengthen intellectual property protection."
+    , "China to increase import of American agricultural products by $30-40 billion."
+    , "China to increase import of American energy products by $20-30 billion."
+    , "China to commit to the reduction of the trade deficit between China and the U.S.by $100-200 billion by 2020."
+    , "China to cease government-sponsored or tolerated cyber espionage and intrusions into U.S. commercial networks."
+    , "China to cease subsidies and other forms of assistance that support industries targeted in the MiC 2025 plan and other emerging and strategic industries."
+    , "China to establish a high-level dialogue with U.S. to discuss dual-use technologies."
+    , "China to refrain from military development of man-made islands in the South China Sea."
+    , "China to help identify and discourage Chinese firms that evade U.S. sanctions against Iran and North Korea."
+    , "China to guarantee human rights and democracy in Hong Kong"
+]
 
 /**
  * Creates a new simulation from the given name and code.
@@ -25,124 +96,63 @@ export async function createSimulation(name: string, code: string) {
         });
 }
 
-export async function createSimulationAsksUSA(simulationId: number) {
-    const DEFAULT_USA_ASKS = [
-        "China to issue an improved nationwide negative list for foreign investment (especially take measures to liberalize the financial sector)."
-        , "China to remove or reduce restrictions on foreign investment identified by the U.S."
-        , "China to eliminate laws and regulations, such as licensing or procurement, that treat foreign entities less favorably than domestic Chinese firms."
-        , "China to remove specified non-tariff barriers on US imports (ex. Onerous permitting, excessive inspections etc)"
-        , "China to recognize that the U.S. may impose import quotas and tariffs on products in critical sectors."
-        , "China to eliminate specific policies and practices linked to forced technology transfer."
-        , "China to strengthen intellectual property protection."
-        , "China to increase import of American agricultural products by $30-40 billion."
-        , "China to increase import of American energy products by $20-30 billion."
-        , "China to commit to the reduction of the trade deficit between China and the U.S.by $100-200 billion by 2020."
-        , "China to cease government-sponsored or tolerated cyber espionage and intrusions into U.S. commercial networks."
-        , "China to cease subsidies and other forms of assistance that support industries targeted in the MiC 2025 plan and other emerging and strategic industries."
-        , "China to establish a high-level dialogue with U.S. to discuss dual-use technologies."
-        , "China to refrain from military development of man-made islands in the South China Sea."
-        , "China to help identify and discourage Chinese firms that evade U.S. sanctions against Iran and North Korea."
-        , "China to guarantee human rights and democracy in Hong Kong"
-    ]
-
+/**
+ * Retrieves the default/template asks for a given country.
+ * @param country
+ * @returns
+ */
+export async function getDefaultAsksByCountry(country: CountryEnum) {
     return await axios
-        .put<AskModel[]>(`${API_URL}/asks-concessions/asks/batch`, DEFAULT_USA_ASKS.map((desc, i) => ({
-            ask_id: i,
+        .get(`${API_URL}/defaults/asks/${country}`)
+        .then<DefaultAskModel[]>(result => result.data)
+}
+
+/**
+ * Retrieves the default/template concessions for a given country.
+ * @param country
+ * @returns
+ */
+export async function getDefaultConcessionsByCountry(country: CountryEnum) {
+    return await axios
+        .get(`${API_URL}/defaults/concessions/${country}`)
+        .then<DefaultConcessionModel[]>(result => result.data)
+}
+
+export async function createSimulationAsksByCountry(simulationId: number, country: CountryEnum) {
+    // Get the default asks
+    const defaultAsks = await getDefaultAsksByCountry(country)
+        //.catch(reason => console.error(`Unable to create simulation asks: ${reason}`));
+
+    // Create the asks
+    return await axios
+        .put<AskModel[]>(`${API_URL}/asks-concessions/asks/batch`, defaultAsks.map((ask, i) => ({
+            ask_id: i, // Doesn't actually set the id; done automatically by db
             simulation_id: simulationId,
-            description: desc,
+            description: ask.description,
             points: 0,
             status: 0,
             creation_date: new Date(),
             modified_date: new Date(),
-            country: CountryEnum.USA,
-
+            country: country,
         })));
 }
 
-export async function createSimulationAsksPRC(simulationId: number) {
-    const DEFAULT_PRC_ASKS = [
-        "The U.S. to reduce tariffs on Chinese imports to 2017 levels."
-        , "The U.S. to lift bans on high technology exports such as integrated circuits and aircraft to China."
-        , "The U.S. to agree to a more limited approach in defining its export control regime."
-        , "The U.S. to  remove Chinese companies like Huawei from the entities list."
-        , "The U.S. to give equal treatment to Chinese companies in national security review (CFIUS)."
-        , "The U.S. to open government procurement to Chinese technology products and services."
-        , "The U.S. to refrain from restricting visas for Chinese students and professionals."
-        , "The U.S. to recognize core Chinese national interests: keeping national unity of mainland China and Tibet, Xinjiang, Hong Kong, and Taiwan."
-        , "The U.S. to recognize core Chinese national interests: sovereignty over South China Sea."
-        , "The U.S. to agree not to send warships or military personnel to Taiwan."
-    ]
+export async function createSimulationConcessionsByCountry(simulationId: number, country: CountryEnum) {
 
+    // Get default concessions
+    const defaultConcessions = await getDefaultConcessionsByCountry(country)
+
+    // Create the concessions
     return await axios
-        .put<AskModel[]>(`${API_URL}/asks-concessions/asks/batch`, DEFAULT_PRC_ASKS.map((desc, i) => ({
-            ask_id: i,
-            simulation_id: simulationId,
-            description: desc,
-            points: 0,
-            status: 0,
-            creation_date: new Date(),
-            modified_date: new Date(),
-            country: CountryEnum.PRC,
-        })));
-}
-
-export async function createSimulationConcessionsUSA(simulationId: number) {
-    const DEFAULT_USA_CONCESSIONS = [
-        "The U.S. to reduce tariffs on Chinese imports to 2017 levels."
-        , "The U.S. to lift bans on high technology exports such as integrated circuits and aircraft to China."
-        , "The U.S. to agree to a more limited approach in defining its export control regime."
-        , "The U.S. to  remove Chinese companies like Huawei from the entities list."
-        , "The U.S. to give equal treatment to Chinese companies in national security review (CFIUS)."
-        , "The U.S. to open government procurement to Chinese technology products and services."
-        , "The U.S. to refrain from restricting visas for Chinese students and professionals."
-        , "The U.S. to recognize core Chinese national interests: keeping national unity of mainland China and Tibet, Xinjiang, Hong Kong, and Taiwan."
-        , "The U.S. to recognize core Chinese national interests: sovereignty over South China Sea."
-        , "The U.S. to agree not to send warships or military personnel to Taiwan."
-    ]
-
-    return await axios
-        .put<ConcessionModel[]>(`${API_URL}/asks-concessions/concessions/batch`, DEFAULT_USA_CONCESSIONS.map((desc, i) => ({
+        .put<ConcessionModel[]>(`${API_URL}/asks-concessions/concessions/batch`, defaultConcessions.map((concession, i) => ({
             concession_id: i,
             simulation_id: simulationId,
-            description: desc,
+            description: concession.description,
             points: 0,
             status: 0,
             creation_date: new Date(),
             modified_date: new Date(),
-            country: CountryEnum.USA,
-        })));
-}
-
-export async function createSimulationConcessionsPRC(simulationId: number) {
-    const DEFAULT_PRC_CONCESSIONS = [
-        "China to issue an improved nationwide negative list for foreign investment (especially take measures to liberalize the financial sector)."
-        , "China to remove or reduce restrictions on foreign investment identified by the U.S."
-        , "China to eliminate laws and regulations, such as licensing or procurement, that treat foreign entities less favorably than domestic Chinese firms."
-        , "China to remove specified non-tariff barriers on US imports (ex. Onerous permitting, excessive inspections etc)"
-        , "China to recognize that the U.S. may impose import quotas and tariffs on products in critical sectors."
-        , "China to eliminate specific policies and practices linked to forced technology transfer."
-        , "China to strengthen intellectual property protection."
-        , "China to increase import of American agricultural products by $30-40 billion."
-        , "China to increase import of American energy products by $20-30 billion."
-        , "China to commit to the reduction of the trade deficit between China and the U.S.by $100-200 billion by 2020."
-        , "China to cease government-sponsored or tolerated cyber espionage and intrusions into U.S. commercial networks."
-        , "China to cease subsidies and other forms of assistance that support industries targeted in the MiC 2025 plan and other emerging and strategic industries."
-        , "China to establish a high-level dialogue with U.S. to discuss dual-use technologies."
-        , "China to refrain from military development of man-made islands in the South China Sea."
-        , "China to help identify and discourage Chinese firms that evade U.S. sanctions against Iran and North Korea."
-        , "China to guarantee human rights and democracy in Hong Kong"
-    ]
-
-    return await axios
-        .put<ConcessionModel[]>(`${API_URL}/asks-concessions/concessions/batch`, DEFAULT_PRC_CONCESSIONS.map((desc, i) => ({
-            concession_id: i,
-            simulation_id: simulationId,
-            description: desc,
-            points: 0,
-            status: 0,
-            creation_date: new Date(),
-            modified_date: new Date(),
-            country: CountryEnum.PRC,
+            country: country,
         })));
 }
 
@@ -152,19 +162,17 @@ export async function getAsksBySimAndCountry(simulationId: number, country: Coun
         .then(response => response.data)
 }
 
-export async function getConcessionsBySimAndCountry(simulationId: number, country: CountryEnum): Promise<AskModel[] | undefined> {
+export async function getConcessionsBySimAndCountry(simulationId: number, country: CountryEnum): Promise<ConcessionModel[] | undefined> {
     return await axios
-        .get<AskModel[]>(`${API_URL}/asks-concessions/asks/${simulationId}-${country}`)
+        .get<ConcessionModel[]>(`${API_URL}/asks-concessions/concessions/${simulationId}-${country}`)
         .then(response => response.data)
 }
 
-//export async function deleteAllAsksBySimulation(simulationId: number) {
-
-//}
-
-//export async function deleteAllConcessionsBySimulation(simulationId: number) {
-
-//}
+export async function getAgreementsBySim(simulationId: number): Promise<AgreementModel[] | undefined> {
+    return await axios
+        .get<AgreementModel[]>(`${API_URL}/agreements/${simulationId}`)
+        .then(response => response.data)
+}
 
 /**
  * Closes a simulation (non-deleting) by updating the active status and the end date.
@@ -189,13 +197,32 @@ export async function closeSimulation(code: string, endDate: Date = new Date()) 
     }
 }
 
-export async function deleteSimulation(code: string) {
+export async function deleteSimulationAsks(simulationId: number) {
+    return await axios
+        .delete(`${API_URL}/asks-concessions/asks/${simulationId}`)
+}
+
+export async function deleteSimulationConcessions(simulationId: number) {
+    return await axios
+        .delete(`${API_URL}/asks-concessions/concessions/${simulationId}`)
+}
+
+export async function deleteSimulation(code: string, simulationId: number) {
     try {
         // Check for empty string
         if (code === "") {
             throw new Error("No code provided.");
         }
 
+        // Delete the simulation's asks
+        deleteSimulationAsks(simulationId)
+
+        // Delete the simulation's concessions
+        deleteSimulationConcessions(simulationId)
+
+        /// TODO: Delete the simulation's joint agreements
+
+        // Delete the simulation
         return await axios
             .delete(`${API_URL}/simulations/${code}`);
     } catch (error) {
@@ -203,6 +230,8 @@ export async function deleteSimulation(code: string) {
         return undefined;
     }
 }
+
+
 
 /**
  * Checks if a simulation exists.

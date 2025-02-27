@@ -1,6 +1,6 @@
 import CountryEnum from "../enums/CountryEnum";
 
-export default interface Ask {
+export default interface AskModel {
     ask_id: number;
     simulation_id: number;
     description: string;

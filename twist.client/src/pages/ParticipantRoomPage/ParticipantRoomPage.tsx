@@ -1,4 +1,4 @@
-import { Button, Container, Form } from "react-bootstrap";
+import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { getSimulationFromCode } from "../../server/simulation_management";
@@ -11,6 +11,10 @@ import AsksDocument from "../../components/AsksDocument/AsksDocument";
 import SimulationStateEnum from "../../enums/SimulationStateEnum";
 import ParticipantModel from "../../models/ParticipantModel";
 import { getParticipantByEmailAndSimulation } from "../../server/participant_management";
+import ConcessionsDocument from "../../components/ConcessionsDocument/ConcessionsDocument";
+import JointDocument from "../../components/JointDocument/JointDocument";
+import "./styles.scss";
+import CountryEnum from "../../enums/CountryEnum";
 
 const ParticipantRoomPage = () => {
     const [isSimulationLoaded, setIsSimulationLoaded] = useState(false);
@@ -23,6 +27,12 @@ const ParticipantRoomPage = () => {
 
     // Instance data
     const [currentParticipant, setCurrentParticipant] = useState<ParticipantModel>();
+
+    // Score calculation
+    const [finalTallyVisible, setFinalTallyVisible] = useState(false);
+    const [finalUsaScore, setFinalUsaScore] = useState(0);
+    const [finalPrcScore, setFinalPrcScore] = useState(0);
+    const [winner, setWinner] = useState(CountryEnum.NONE);
 
     const params = useParams();
     const simCode = params.code ?? "";
@@ -89,6 +99,15 @@ const ParticipantRoomPage = () => {
         //    }
         //})
 
+        connection.on("FinalTallyRevealed", (usaScore: number, prcScore: number) => {
+
+            console.log(`USA: ${usaScore}\nPRC: ${prcScore}`)
+            setFinalUsaScore(usaScore);
+            setFinalPrcScore(prcScore);
+            setWinner(usaScore > prcScore ? CountryEnum.USA : CountryEnum.PRC);
+            setFinalTallyVisible(true);
+        });
+
         // Cleanup
         return () => {
             connection.stop().catch(console.error);
@@ -127,8 +146,35 @@ const ParticipantRoomPage = () => {
             .catch((error) => console.error(`Failed to join simulation: ${error}`));
     }
 
+    const handleReveal = () => {
+        connection?.invoke("RevealFinalTally")
+            .then(() => {
+                setFinalTallyVisible(true);
+                console.log("Revealed final tally")
+            })
+            .catch((error) => console.error(`Failed to reveal final tally: ${error}`));
+    }
+
+    // Persistent participant info header (shown if signed in)
+    const ParticipantInfoHeader = () => (
+        <div className="participant-info" style={{ textAlign: "left" }}>
+            <p>
+                <strong>ID:</strong> {currentParticipant?.participant_id} <br />
+                <strong>Name:</strong> {currentParticipant?.username} <br />
+                <strong>Email:</strong> {currentParticipant?.email} <br />
+                <strong>Country:</strong>{" "} 
+                {currentParticipant?.country !== 0
+                    ? currentParticipant?.country === 1
+                        ? "USA"
+                        : "PRC"
+                    : "NONE"} <br />
+                <strong>Connection ID:</strong> {connection?.connectionId}
+            </p>
+        </div>
+    );
+
     // Error screen
-    if (error) return <p>Error: {error}</p>;
+    if (error) return <Container><p>Error: {error}</p></Container>;
 
     // Loading screen
     if (!isConnected || !isSimulationLoaded) return (
@@ -138,80 +184,118 @@ const ParticipantRoomPage = () => {
         />
     );
 
-    // Round screens
-    if (simulation?.state == SimulationStateEnum.IN_PROGRESS && signedIn) {
-        switch (simulation?.round) {
-            case RoundEnum.DOMESTIC:
-                return (
+    // If signed in, render the persistent participant header and main content
+    if (signedIn) {
+        return (
+            <Container className="participant-room">
+                <Row className="header">
+                    <Col>
+                        <h1>{simulation?.name}</h1>
+                        <p>
+                            <strong>Current Round:</strong> {simulation?.round}
+                        </p>
+                    </Col>
+                    <Col md={4}>
+                        {currentParticipant && <ParticipantInfoHeader />}
+                    </Col>
+                </Row>
+                <hr />
+
+                {/* Main content based on simulation state/round */}
+                {simulation?.state === SimulationStateEnum.IN_PROGRESS ? (
                     <>
-                        <h1>Round 1 - Domestic</h1>
-                        <p>Id: {currentParticipant?.participant_id}</p>
-                        <p>Email: {currentParticipant?.email}</p>
-                        <p>Connection ID: {connection?.connectionId}</p>
-                        <p>Country: {currentParticipant?.country}</p>
-                        
-                        {simulation && currentParticipant && connection && (
-                            <AsksDocument
-                                simulation={simulation}
-                                participant={currentParticipant}
-                                connection={connection}
-                            />
+                        {simulation.round === RoundEnum.DOMESTIC && (
+                            <>
+                                <h2>Round 1 - Domestic</h2>
+                                <div className="documents-container">
+                                    <div className="document-container">
+                                        <AsksDocument
+                                            simulation={simulation}
+                                            participant={currentParticipant!}
+                                            connection={connection!}
+                                        />
+                                    </div>
+                                    <div className="document-container">
+                                        <ConcessionsDocument
+                                            simulation={simulation}
+                                            participant={currentParticipant!}
+                                            connection={connection!}
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                        {simulation.round === RoundEnum.INTERNATIONAL && (
+                            <>
+                                <h2>Round 2 - International</h2>
+                                <JointDocument
+                                    simulation={simulation}
+                                    participant={currentParticipant!}
+                                    connection={connection!}
+                                />
+                            </>
+                        )}
+                        {simulation.round === RoundEnum.FINAL_TALLY && (
+                            <>
+                                <h2>Final Tally</h2>
+                                {!finalTallyVisible ? <p>Waiting for final tally reveal...</p> : (
+                                    <>
+                                        <Row>
+                                            <Col>
+                                                <h3>PRC</h3>
+                                                <p>{finalPrcScore} points</p>
+                                            </Col>
+                                            <Col>
+                                                <h3>USA</h3>
+                                                <p>{finalUsaScore} points</p>
+                                            </Col>
+                                        </Row>
+                                        <h3>{CountryEnum[winner]} wins!</h3>
+                                    </>)
+                                }
+                            </>
                         )}
                     </>
-                );
-            case RoundEnum.INTERNATIONAL:
-                return (
-                    <>
-                        <h1>Round 2 - International</h1>
-                    </>
-                );
-            case RoundEnum.FINAL_TALLY:
-                return (
-                    <>
-                        <h1>Final Tally</h1>
-                        <h2>China</h2>
-                        <p>{ } points</p>
+                ) : (
+                    // Waiting room content (simulation not yet started)
+                    <div className="waiting-room">
+                        <h2>Waiting for simulation to start...</h2>
+                        <p>
+                            Please wait for the instructor to start the simulation. Your info
+                            remains visible.
+                        </p>
+                    </div>
+                )}
 
-                        <h2>USA</h2>
-                        <p>{ } points</p>
-
-                        <h2>{ } wins!</h2>
-                    </>
-                );
-            default:
-                return <>Waiting for simulation to start...</>
-        }
-    } else if (signedIn) { // Waiting room
-        return (
-            <>
-                <p>You are signed in! Please wait for the instructor to start the simulation.</p>
-                <a href="/">Back</a>
-            </>
+                <Row>
+                    <Col>
+                        <a href="/">Back</a>
+                    </Col>
+                </Row>
+            </Container>
         );
     }
 
-    // Default joining screen
+    // Default joining screen (if not signed in yet)
     return (
-        <>
-            <p>You are now joining...</p>
+        <Container className="join-room">
             <h1>{simulation?.name}</h1>
-            <p>Enter your details to be logged in.</p>
-            <Container>
-                <Form onSubmit={handleSubmit}>
-                    <Form.Group>
-                        <Form.Label htmlFor="email">Email:</Form.Label>
-                        <Form.Control id="email" title="Email" type="email" placeholder="Enter your email here..." />
-
-                        <Form.Label htmlFor="name">Name:</Form.Label>
-                        <Form.Control id="name" title="Name" type="text" placeholder="Enter your name here..." />
-
-                        <Button type="submit">Join</Button>
-                    </Form.Group>
-                </Form>
-            </Container>
-
+            <p>Enter your details to join the simulation.</p>
+            <Form onSubmit={handleSubmit}>
+                <Form.Group controlId="email">
+                    <Form.Label>Email:</Form.Label>
+                    <Form.Control type="email" placeholder="Enter your email here..." />
+                </Form.Group>
+                <Form.Group controlId="name">
+                    <Form.Label>Name:</Form.Label>
+                    <Form.Control type="text" placeholder="Enter your name here..." />
+                </Form.Group>
+                <Button type="submit" className="mt-3">
+                    Join
+                </Button>
+            </Form>
             <a href="/">Back</a>
-        </>
+        </Container>
     );
 }
 

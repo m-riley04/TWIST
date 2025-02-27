@@ -68,10 +68,13 @@ namespace TWISTServer.Hubs
         Task RoundUpdated(RoundEnum round);
         Task AskUpdated(AskRecord asks);
         Task AsksUpdated(AskRecord[] asks);
-        Task ConcessionUpdated(ConcessionRecord asks);
-        Task ConcessionsUpdated(ConcessionRecord[] asks);
+        Task ConcessionUpdated(ConcessionRecord concessions);
+        Task ConcessionsUpdated(ConcessionRecord[] concession);
+        Task JointAgreementUpdated(AgreementRecord agreement);
+        Task JointAgreementsUpdated(AgreementRecord[] agreements);
         Task ConnectionsPolled(ParticipantConnection[] connections);
         Task GroupsPolled(Dictionary<string, List<ParticipantConnection>> groups);
+        Task FinalTallyRevealed(int usaScore, int prcScore);
     }
 
     public class RoomHub : Hub<IRoomClient>
@@ -80,6 +83,9 @@ namespace TWISTServer.Hubs
         ParticipantsDataAccessor partAccessor = new();
         AsksDataAccessor askAccessor = new();
         ConcessionsDataAccessor concessionAccessor = new();
+        AgreementsDataAccessor agreementAccessor = new();
+        DefaultAsksDataAccessor defaultAskAccessor = new();
+        DefaultConcessionsDataAccessor defaultConcessionAccessor = new();
 
         public static ConcurrentDictionary<string, List<ParticipantConnection>> AllGroups = new();
         public static List<ParticipantConnection> AllConnections = []; // TODO: Need to make this not global for ALL simulations (dictionary with simulation code as key)
@@ -101,7 +107,7 @@ namespace TWISTServer.Hubs
                 return base.OnDisconnectedAsync(exception);
             }
 
-            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
+            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country);
 
             Clients.Group(sim.Code).ParticipantDisconnected(participant); // TODO: check if not awaiting this is fine
             return base.OnDisconnectedAsync(exception);
@@ -130,7 +136,7 @@ namespace TWISTServer.Hubs
             else newParticipant = _;
 
             // Add the connection to the room
-            _AddToRoom(Context.ConnectionId, newParticipant.ParticipantId, sim.Code, newParticipant.Country ?? CountryEnum.NONE);
+            _AddToRoom(Context.ConnectionId, newParticipant.ParticipantId, sim.Code, newParticipant.Country);
 
             // Send signal to all clients
             await Clients.All.ParticipantJoined(newParticipant);
@@ -138,7 +144,7 @@ namespace TWISTServer.Hubs
 
         public async Task LeaveRoom(SimulationRecord sim, ParticipantRecord participant)
         {
-            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
+            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country);
 
             // Send signal to all in simulation
             await Clients.Group(sim.Code).ParticipantLeft(participant);
@@ -149,7 +155,7 @@ namespace TWISTServer.Hubs
             // Remove the participant from the participants table
             //partAccessor.Delete(participant.ParticipantId);
 
-            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country ?? CountryEnum.NONE);
+            _RemoveFromRoom(Context.ConnectionId, sim.Code, participant.Country);
 
             // Send signal to all in simulation
             await Clients.Group(sim.Code).ParticipantKicked(participant);
@@ -200,7 +206,7 @@ namespace TWISTServer.Hubs
                 var countries = Enum.GetValues<CountryEnum>().ToList();
 
                 // Remove the participant's current country
-                countries.Remove(participant.Country ?? 0);
+                countries.Remove(participant.Country);
 
                 // Get countries
                 string connectionId = _FindConnectionId(participant.ParticipantId);
@@ -252,7 +258,7 @@ namespace TWISTServer.Hubs
                 var roles = Enum.GetValues<ParticipantRoleEnum>().ToList();
 
                 // Remove the participant's current role
-                roles.Remove(participant.Role ?? 0);
+                roles.Remove(participant.Role);
 
                 // Assign a random role
                 var random = new Random();
@@ -306,7 +312,7 @@ namespace TWISTServer.Hubs
         public async Task AskUpdated(SimulationRecord sim, ParticipantRecord participant, AskRecord ask)
         {
             // Either update or create the ask in the db
-            askAccessor.UpdateAskFromSimAndCountry(sim.SimulationId, participant.Country ?? CountryEnum.NONE, ask);
+            askAccessor.UpdateAskFromSimAndCountry(sim.SimulationId, participant.Country, ask);
 
             // Signal
             await Clients.Group($"{sim.Code}_{participant.Country}").AskUpdated(ask);
@@ -323,7 +329,7 @@ namespace TWISTServer.Hubs
         public async Task ConcessionUpdated(SimulationRecord sim, ParticipantRecord participant, ConcessionRecord concession)
         {
             // Either update or create the ask in the db
-            concessionAccessor.UpdateConcessionFromSimAndCountry(sim.SimulationId, participant.Country ?? CountryEnum.NONE, concession);
+            concessionAccessor.UpdateConcessionFromSimAndCountry(sim.SimulationId, participant.Country, concession);
 
             // Signal
             await Clients.Group($"{sim.Code}_{participant.Country}").ConcessionUpdated(concession);
@@ -337,6 +343,47 @@ namespace TWISTServer.Hubs
             await Clients.Group($"{sim.Code}_{participant.Country}").ConcessionsUpdated(concessions);
         }
 
+        public async Task JointAgreementUpdated(SimulationRecord sim, AgreementRecord agreement)
+        {
+            // Update the agreements
+            agreementAccessor.UpdateFromSimAndDescription(sim.SimulationId, agreement);
+
+            // Signal
+            await Clients.Group(sim.Code).JointAgreementUpdated(agreement);
+        }
+
+        public async Task JointAgreementsUpdated(SimulationRecord sim, AgreementRecord[] agreements)
+        {
+            // Update the agreements
+
+            // Signal
+            await Clients.Group(sim.Code).JointAgreementsUpdated(agreements);
+        }
+
+        public async Task AddJointAgreement(SimulationRecord sim, AgreementRecord agreement)
+        {
+            // Insert the agreement
+            agreementAccessor.Insert(agreement);
+
+            // Query for newly inserted records
+            IEnumerable<AgreementRecord> agreements = agreementAccessor.GetBySimulation(sim.SimulationId);
+
+            // Send signal to all participants in simulation
+            await Clients.Group(sim.Code).JointAgreementsUpdated(agreements.ToArray());
+        }
+
+        public async Task RemoveJointAgreement(SimulationRecord sim, AgreementRecord agreement)
+        {
+            // Insert the agreement
+            agreementAccessor.Delete(agreement.AgreementId);
+
+            // Query for newly inserted records
+            IEnumerable<AgreementRecord> agreements = agreementAccessor.GetBySimulation(sim.SimulationId);
+
+            // Send signal to all participants in simulation
+            await Clients.Group(sim.Code).JointAgreementsUpdated(agreements.ToArray());
+        }
+
         public async Task PollConnections(SimulationRecord sim)
         {
             // Signal
@@ -347,6 +394,79 @@ namespace TWISTServer.Hubs
         {
             // Signal
             await Clients.Group(sim.Code).GroupsPolled(AllGroups.ToDictionary());
+        }
+
+        public async Task RevealFinalTally(SimulationRecord sim)
+        {
+            // Calculate the score for each country
+            IEnumerable<AgreementRecord> usaAgreements = agreementAccessor.GetBySimulationAndCountry(sim.SimulationId, CountryEnum.USA);
+            IEnumerable<AgreementRecord> prcAgreements = agreementAccessor.GetBySimulationAndCountry(sim.SimulationId, CountryEnum.PRC);
+
+            // Calculate the score for each country
+            int usaScore = 0;
+            int prcScore = 0;
+
+            // Calculate USA score
+            foreach (AgreementRecord agreement in usaAgreements)
+            {
+                if (agreement.Type == AgreementType.ASK) usaScore += agreement.Points;
+                else usaScore -= agreement.Points;
+            }
+
+            // Calculate PRC score
+            foreach (AgreementRecord agreement in prcAgreements)
+            {
+                if (agreement.Type == AgreementType.ASK) prcScore += agreement.Points;
+                else prcScore -= agreement.Points;
+            }
+
+            // Signal
+            await Clients.Group(sim.Code).FinalTallyRevealed(usaScore, prcScore);
+        }
+
+        public async Task ResetCountryAsks(int simulationId, CountryEnum country, string simulationCode)
+        {
+            // Delete all asks for a given country from a given simulation
+            askAccessor.DeleteAsksFromSimulationAndCountry(simulationId, country);
+
+            // Get default/template asks
+            IEnumerable<AskRecord> defaultAsks = _GetDefaultAsks(country, simulationId);
+
+            // Re-create and re-insert all asks for a given country from the default table
+            askAccessor.InsertAsks(defaultAsks);
+
+            // Query for newly inserted records
+            IEnumerable<AskRecord> asks = askAccessor.GetAsksBySimulationAndCountry(simulationId, country);
+
+            // Send signal to all participants in simulation
+            await Clients.Group($"{simulationCode}_{country}").AsksUpdated(asks.ToArray());
+        }
+
+        public async Task ResetCountryConcessions(int simulationId, CountryEnum country, string simulationCode)
+        {
+            // Delete all concessions for a given country from a given simulation
+            concessionAccessor.DeleteConcessionsFromSimulationAndCountry(simulationId, country);
+
+            // Get default/template concessions
+            IEnumerable<ConcessionRecord> defaultConcessions = _GetDefaultConcessions(country, simulationId);
+
+            // Re-create and re-insert all concessions for a given country from the default table
+            concessionAccessor.InsertConcessions(defaultConcessions);
+
+            // Query for newly inserted records
+            IEnumerable<ConcessionRecord> concessions = concessionAccessor.GetConcessionsBySimulationAndCountry(simulationId, country);
+
+            // Send signal to all participants in simulation
+            await Clients.Group($"{simulationCode}_{country}").ConcessionsUpdated(concessions.ToArray());
+        }
+
+        public async Task ResetJointAgreements(int simulationId, string simulationCode)
+        {
+            // Delete all joint agreements from a given simulation
+            agreementAccessor.DeleteBySimulation(simulationId);
+
+            // Send signal to all participants in simulation
+            await Clients.Group(simulationCode).JointAgreementsUpdated([]);
         }
 
         private async void _RemoveFromRoom(string connectionId, string simulationCode, CountryEnum country)
@@ -390,6 +510,30 @@ namespace TWISTServer.Hubs
         private int _FindParticipantId(string connectionId)
         {
             return AllConnections.Find(x => x.ConnectionId == connectionId)?.ParticipantId ?? 0;
+        }
+
+        private IEnumerable<AskRecord> _GetDefaultAsks(CountryEnum country, int simulationId)
+        {
+            var ret = new List<AskRecord>() { };
+            IEnumerable<DefaultAskRecord> defaultAsks = defaultAskAccessor.GetByCountry(country);
+            foreach (DefaultAskRecord ask in defaultAsks)
+            {
+                ret.Add(new AskRecord(0, simulationId, ask.Description, 0, 0, DateTime.Now, DateTime.Now, country, null));
+            }
+
+            return ret;
+        }
+
+        private IEnumerable<ConcessionRecord> _GetDefaultConcessions(CountryEnum country, int simulationId)
+        {
+            var ret = new List<ConcessionRecord>() { };
+            IEnumerable<DefaultConcessionRecord> defaultConcessions = defaultConcessionAccessor.GetByCountry(country);
+            foreach (DefaultConcessionRecord concession in defaultConcessions)
+            {
+                ret.Add(new ConcessionRecord(0, simulationId, concession.Description, 0, 0, DateTime.Now, DateTime.Now, country, null));
+            }
+
+            return ret;
         }
     }
 }

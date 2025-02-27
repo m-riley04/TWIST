@@ -2,7 +2,7 @@ import { Table } from "react-bootstrap";
 import AsksDocumentItem from "./AsksDocumentItem";
 import update from 'immutability-helper';
 import { useCallback, useState } from "react";
-import Ask from "../../models/AskModel";
+import AskModel from "../../models/AskModel";
 import CountryEnum from "../../enums/CountryEnum";
 import SimulationModel from "../../models/SimulationModel";
 import { HubConnection } from "@microsoft/signalr";
@@ -21,7 +21,7 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
     participant,
     connection
 }) => {
-    const [asks, setAsks] = useState<Ask[]>([]);
+    const [asks, setAsks] = useState<AskModel[]>([]);
 
     // Load asks from the database
     useEffect(() => {
@@ -41,7 +41,7 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
     useEffect(() => {
         if (!connection) return;
 
-        const onAsksUpdated = (updatedAsks: Ask[]) => {
+        const onAsksUpdated = (updatedAsks: AskModel[]) => {
             console.log("Received updated asks from hub", updatedAsks);
             setAsks(updatedAsks);
         };
@@ -54,12 +54,12 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
     }, [connection]);
 
     // Function to broadcast the updated asks list to all clients in this team/group.
-    const broadcastAsks = useCallback((newAsks: Ask[]) => {
+    const broadcastAsks = useCallback((newAsks: AskModel[]) => {
         console.log("Broadcasting updated asks to hub");
         connection.invoke("AsksUpdated", simulation, participant, newAsks)
             .catch(console.error);
     }, [simulation, participant, connection]);
-    const broadcastAskChanged = useCallback((newAsk: Ask) => {
+    const broadcastAskChanged = useCallback((newAsk: AskModel) => {
         connection.invoke("AskUpdated", simulation, participant, newAsk)
             .catch(console.error);
     }, [simulation, participant, connection]);
@@ -82,28 +82,28 @@ const AsksDocument: React.FC<AsksDocumentProps> = ({
     );
 
     const handlePointsChange = useCallback((id: number, newPoints: number) => {
-        setAsks((prev) =>
-            prev.map((ask) =>
-                ask.ask_id === id ? { ...ask, points: newPoints } : ask
-            )
-        );
-        // Get the updated list (you could also use the functional update from above)
-        const updatedAsks = asks.map(ask => {
-            if (ask.ask_id === id) {
-                const newAsk: Ask = { ...ask, points: newPoints, modified_date: new Date() }
-                broadcastAskChanged(ask);
-                return newAsk
-            } else return ask;
-            }
-        );
-        broadcastAsks(updatedAsks);
-    }, [asks, setAsks, broadcastAsks, broadcastAskChanged]);
+        setAsks(prevAsks => {
+            const updatedAsks = prevAsks.map(ask => {
+                if (ask.ask_id === id) {
+                    const newAsk = { ...ask, points: newPoints, modified_date: new Date() };
+                    broadcastAskChanged(newAsk);
+                    return newAsk;
+                }
+                return ask;
+            });
+            broadcastAsks(updatedAsks);
+            return updatedAsks;
+        });
+    }, [broadcastAsks, broadcastAskChanged]);
 
     const totalPoints = asks.reduce((acc, item) => acc + item.points, 0);
 
     return (
         <>
-            <p>Total Points: {totalPoints}</p>
+            <h2>Asks</h2>
+            <p
+                style={totalPoints != 100 ? { color: "red" } : { color: "green" }}
+            >Total Points: {totalPoints}</p>
             <Table className="participant-list">
                 <thead>
                     <tr>

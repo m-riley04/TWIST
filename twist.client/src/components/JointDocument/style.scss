@@ -1,0 +1,124 @@
+// Color and sizing variables
+$primary-bg: #f8f8f8;
+$border-color: #ddd;
+$text-color: #333;
+$input-border: #ccc;
+$btn-primary: #007bff;
+$btn-danger: #dc3545;
+
+// Overall layout for the JointDocument component
+.joint-document {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    // The joint agreements list container (should wrap the Joint Agreements table)
+    .joint-agreements-container {
+        margin-bottom: 20px;
+    }
+    // Container for the two pickers
+    .pickers-container {
+        display: flex;
+        gap: 20px;
+        flex-wrap: nowrap; // Ensure they stay in one row if possible
+        // Each picker (TeamAsksPicker and TeamConcessionsPicker) takes equal space
+        > .picker-container {
+            flex: 1;
+            min-width: 300px; // optional: ensures a reasonable minimum width for each picker
+        }
+    }
+}
+
+// Common table styling for joint agreements and pickers
+.joint-agreements-list,
+.picker {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 auto;
+
+    thead {
+        tr {
+            th {
+                padding: 10px;
+                background-color: $primary-bg;
+                border-bottom: 2px solid $border-color;
+                font-weight: bold;
+                color: $text-color;
+                // Column sizing and alignment via nth-child selectors:
+                &:nth-child(1) {
+                    width: 10%;
+                    text-align: center;
+                }
+
+                &:nth-child(2) {
+                    width: 70%;
+                    text-align: left;
+                }
+
+                &:nth-child(3) {
+                    width: 20%;
+                    text-align: right;
+                }
+            }
+        }
+    }
+
+    tbody {
+        tr {
+            td {
+                padding: 10px;
+                border-bottom: 1px solid $border-color;
+                vertical-align: middle;
+
+                &:nth-child(1) {
+                    width: 10%;
+                    text-align: center;
+                }
+
+                &:nth-child(2) {
+                    width: 70%;
+                    text-align: left;
+                }
+
+                &:nth-child(3) {
+                    width: 20%;
+                    text-align: right;
+                }
+            }
+        }
+    }
+}
+
+// Button styling for consistency
+button,
+.btn {
+    border: none;
+    border-radius: 4px;
+    padding: 5px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: $btn-primary;
+    color: #fff;
+
+    &:hover {
+        background-color: darken($btn-primary, 10%);
+    }
+    // Variant for danger buttons (for removal actions)
+    &.danger,
+    &[variant="danger"] {
+        background-color: $btn-danger;
+
+        &:hover {
+            background-color: darken($btn-danger, 10%);
+        }
+    }
+}
+
+// Styling for number inputs in tables
+input[type="number"] {
+    width: 60px;
+    padding: 5px;
+    text-align: center;
+    border: 1px solid $input-border;
+    border-radius: 4px;
+}

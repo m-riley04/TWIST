@@ -39,7 +39,6 @@
   <ItemGroup>
     <Folder Include="Helpers\" />
     <Folder Include="Services\" />
-    <Folder Include="DatabaseComponents\" />
     <Folder Include="Extensions\" />
   </ItemGroup>
 

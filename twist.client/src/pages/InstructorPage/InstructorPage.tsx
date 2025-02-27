@@ -31,7 +31,7 @@ const InstructorPage = () => {
         }
 
         // Delete simulation
-        deleteSimulation(selectedSimulation.code)
+        deleteSimulation(selectedSimulation.code, selectedSimulation.simulation_id)
             .then(() => {
                 // Remove simulation from list
                 setSimulations(simulations.filter((_, i) => i !== selectedIndex));

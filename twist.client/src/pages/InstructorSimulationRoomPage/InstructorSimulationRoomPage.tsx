@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { Button, Container, Dropdown, DropdownButton } from "react-bootstrap";
+import { Button, Container, Dropdown, DropdownButton, Modal } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import SimulationModel from "../../models/SimulationModel";
@@ -22,6 +22,12 @@ const InstructorSimulationRoomPage = () => {
 
     const [simulation, setSimulation] = useState<SimulationModel>();
     const [participants, setParticipants] = useState<ParticipantModel[]>([]);
+
+    // Modal state for reset confirmations
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [resetModalTitle, setResetModalTitle] = useState("");
+    const [resetModalMessage, setResetModalMessage] = useState("");
+    const [pendingResetAction, setPendingResetAction] = useState<(() => void) | null>(null);
 
     const navigate = useNavigate();
     const params = useParams();
@@ -309,6 +315,38 @@ const InstructorSimulationRoomPage = () => {
         handleUpdateRound(simulation?.round - 1);
     }
 
+    const handleReveal = () => {
+        connection?.invoke("RevealFinalTally", simulation)
+            .catch((error) => console.error(`Unable to reveal final score: ${error}`));
+    }
+
+    /// RESETTING HANDLERS
+    const handleResetUSAAsks = () => {
+        connection?.invoke("ResetCountryAsks", simulation?.simulation_id, CountryEnum.USA, simulation?.code)
+            .catch((error) => console.error(`Unable to reset USA asks: ${error}`));
+    }
+
+    const handleResetUSAConcessions = () => {
+        connection?.invoke("ResetCountryConcessions", simulation?.simulation_id, CountryEnum.USA, simulation?.code)
+            .catch((error) => console.error(`Unable to reset USA concessions: ${error}`));
+    }
+
+    const handleResetPRCAsks = () => {
+        connection?.invoke("ResetCountryAsks", simulation?.simulation_id, CountryEnum.PRC, simulation?.code)
+            .catch((error) => console.error(`Unable to reset PRC asks: ${error}`));
+    }
+
+    const handleResetPRCConcessions = () => {
+        connection?.invoke("ResetCountryConcessions", simulation?.simulation_id, CountryEnum.PRC, simulation?.code)
+            .catch((error) => console.error(`Unable to reset PRC concessions: ${error}`));
+    }
+
+    const handleResetJointAgreements = () => {
+        connection?.invoke("ResetJointAgreements", simulation?.simulation_id, simulation?.code)
+            .catch((error) => console.error(`Unable to reset PRC concessions: ${error}`));
+    }
+
+    /// DEBUGGING HANDLERS
     const handlePollConnections = () => {
         connection?.invoke("PollConnections", simulation)
             .catch((error) => console.error(`Unable to poll connections: ${error}`));
@@ -319,10 +357,28 @@ const InstructorSimulationRoomPage = () => {
             .catch((error) => console.error(`Unable to poll groups: ${error}`));
     }
 
+    // --- Modal handlers for reset confirmations ---
+    const openResetModal = (action: () => void, title: string, message: string) => {
+        setPendingResetAction(() => action);
+        setResetModalTitle(title);
+        setResetModalMessage(message);
+        setShowResetModal(true);
+    };
+
+    const closeResetModal = () => {
+        setShowResetModal(false);
+        setPendingResetAction(null);
+    };
+
+    const confirmResetAction = () => {
+        if (pendingResetAction) {
+            pendingResetAction();
+        }
+        closeResetModal();
+    };
+
     if (error) return <div>Oops... {error.message}</div>;
-
     if (isLoading) return <div>Loading...</div>;
-
     if (!simulation) return <div>Loading simulation...</div>;
 
     // Authenticated view
@@ -341,17 +397,94 @@ const InstructorSimulationRoomPage = () => {
                 <Button onClick={handleRandomlyAssignRole}>Randomly Assign Roles</Button>
                 <ParticipantList participants={participants} onKickClicked={handleKickParticipant} onCountryChanged={handleCountryChanged} onRoleChanged={handleRoleChanged} />
             </Container>
-            
-            <Button onClick={handleStartSimulation}>Start Simulation</Button>
-            <Button onClick={handleStopSimulation} variant="warning">Stop Simulation</Button>
-            <Button onClick={handleCloseRoom} variant="danger">Close Room</Button>
 
-            <Button onClick={handlePreviousRound}>Previous Round</Button>
-            <Button onClick={handleNextRound}>Next Round</Button>
-            <Button onClick={handlePollConnections}>Get Connections</Button>
-            <Button onClick={handlePollGroups}>Get Groups</Button>
+            <h3>Basic Simulation Controls</h3>
+            <Container>
+                <Button onClick={handleStartSimulation}>Start Simulation</Button>
+                <Button onClick={handleStopSimulation} variant="warning">Stop Simulation</Button>
+                <Button onClick={handleCloseRoom} variant="danger">Close Room</Button>
+                <Button onClick={handlePreviousRound}>Previous Round</Button>
+                <Button onClick={handleNextRound}>Next Round</Button>
+                <Button onClick={handleReveal} variant="warning">Reveal Final Score</Button>
+            </Container>
+
+            <h3>Resetting</h3>
+            <Container>
+                <Button
+                    onClick={() =>
+                        openResetModal(handleResetUSAAsks, "Reset USA Asks", "Are you sure you want to reset USA Asks?")
+                    }
+                >
+                    Reset USA Asks
+                </Button>
+                <Button
+                    onClick={() =>
+                        openResetModal(
+                            handleResetUSAConcessions,
+                            "Reset USA Concessions",
+                            "Are you sure you want to reset USA Concessions?"
+                        )
+                    }
+                >
+                    Reset USA Concessions
+                </Button>
+                <Button
+                    onClick={() =>
+                        openResetModal(handleResetPRCAsks, "Reset PRC Asks", "Are you sure you want to reset PRC Asks?")
+                    }
+                >
+                    Reset PRC Asks
+                </Button>
+                <Button
+                    onClick={() =>
+                        openResetModal(
+                            handleResetPRCConcessions,
+                            "Reset PRC Concessions",
+                            "Are you sure you want to reset PRC Concessions?"
+                        )
+                    }
+                >
+                    Reset PRC Concessions
+                </Button>
+                <Button
+                    onClick={() =>
+                        openResetModal(
+                            handleResetJointAgreements,
+                            "Reset Joint Agreements",
+                            "Are you sure you want to reset Joint Agreements?"
+                        )
+                    }
+                >
+                    Reset Joint Agreements
+                </Button>
+            </Container>
+
+            <h3>Debugging</h3>
+            <Container>
+                <Button onClick={handlePollConnections}>Get Connections</Button>
+                <Button onClick={handlePollGroups}>Get Groups</Button>
+            </Container>
+
             <br/>
             <a href="/instructor">Instructor Home</a>
+
+            {/* Confirmation Modal for Reset Actions */}
+            <Modal show={showResetModal} onHide={closeResetModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>{resetModalTitle}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>{resetModalMessage}</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={closeResetModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={confirmResetAction}>
+                        Confirm
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </>
     );
 

@@ -1,0 +1,12 @@
+// Container for the two documents
+.documents-container {
+    display: flex;
+    gap: 20px; // Space between the two documents
+    flex-wrap: nowrap; // Keep them on one line if possible
+    margin-top: 20px;
+
+    > .document-container {
+        flex: 1; // Each document takes equal space
+        min-width: 300px; // Optional: ensure a minimum width for each document
+    }
+}
