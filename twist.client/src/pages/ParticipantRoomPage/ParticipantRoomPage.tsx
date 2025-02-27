@@ -200,18 +200,18 @@ const ParticipantRoomPage = () => {
                                 <h2>Round 1 - Domestic</h2>
                                 <div className="documents-container">
                                     <div className="document-container">
-                                        <AsksDocument
+                                        {!currentParticipant || !connection ? <>Loading...</> : (<AsksDocument
                                             simulation={simulation}
-                                            participant={currentParticipant!}
-                                            connection={connection!}
-                                        />
+                                            participant={currentParticipant}
+                                            connection={connection}
+                                        />)}
                                     </div>
                                     <div className="document-container">
-                                        <ConcessionsDocument
+                                        {!currentParticipant || !connection ? <>Loading...</> : (<ConcessionsDocument
                                             simulation={simulation}
-                                            participant={currentParticipant!}
+                                            participant={currentParticipant}
                                             connection={connection!}
-                                        />
+                                        />)}
                                     </div>
                                 </div>
                             </>
@@ -219,11 +219,11 @@ const ParticipantRoomPage = () => {
                         {simulation.round === RoundEnum.INTERNATIONAL && (
                             <>
                                 <h2>Round 2 - International</h2>
-                                <JointDocument
+                                {!currentParticipant || !connection ? <>Loading...</> : (<JointDocument
                                     simulation={simulation}
-                                    participant={currentParticipant!}
+                                    participant={currentParticipant}
                                     connection={connection!}
-                                />
+                                />)}
                             </>
                         )}
                         {simulation.round === RoundEnum.FINAL_TALLY && (
