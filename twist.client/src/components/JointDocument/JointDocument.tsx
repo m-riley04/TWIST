@@ -1,4 +1,4 @@
-import { Container, Table } from "react-bootstrap";
+import { Button, Container, Table } from "react-bootstrap";
 import { useCallback, useState, useEffect } from "react";
 import { HubConnection } from "@microsoft/signalr";
 import { getAsksBySimAndCountry, getConcessionsBySimAndCountry, getAgreementsBySim } from "../../server/simulation_management";
@@ -25,6 +25,10 @@ const JointDocument: React.FC<JointDocumentProps> = ({
     participant,
     connection
 }) => {
+    const [asksLoading, setAsksLoading] = useState(true);
+    const [concessionsLoading, setConcessionsLoading] = useState(true);
+    const [agreementsLoading, setAgreementsLoading] = useState(true);
+
     const [agreements, setAgreements] = useState<AgreementModel[]>([]);
     const [teamAsks, setTeamAsks] = useState<AskModel[]>([]);
     const [teamConcessions, setTeamConcessions] = useState<ConcessionModel[]>([]);
@@ -37,17 +41,9 @@ const JointDocument: React.FC<JointDocumentProps> = ({
         // Check team
         if (participant.country === CountryEnum.NONE) console.error("Error: Participant has no country, so there probably won't be any asks/concessions");
 
-        // Load asks from the database
-        getAsksBySimAndCountry(simulation.simulation_id, participant.country)
-            .then((data) => setTeamAsks(data ?? []))
-
-        // Load concessions
-        getConcessionsBySimAndCountry(simulation.simulation_id, participant.country)
-            .then((data) => setTeamConcessions(data ?? []))
-
-        // Load agreements
-        getAgreementsBySim(simulation.simulation_id)
-             .then((data) => setAgreements(data ?? []))
+        // Load from database
+        handleRefresh();
+        
     }, [simulation, participant]);
 
     useEffect(() => {
@@ -64,6 +60,38 @@ const JointDocument: React.FC<JointDocumentProps> = ({
             connection.off("JointAgreementsUpdated", onAgreementsUpdated);
         };
     }, [connection]);
+
+    const handleRefresh = useCallback(() => {
+        console.log("Refreshing data...");
+
+        setAsksLoading(true);
+        setConcessionsLoading(true);
+        setAgreementsLoading(true);
+
+        // Load asks from the database
+        getAsksBySimAndCountry(simulation.simulation_id, participant.country)
+            .then((data) => {
+                console.log("Asks loaded.")
+                setAsksLoading(false);
+                setTeamAsks(data ?? []);
+            })
+
+        // Load concessions
+        getConcessionsBySimAndCountry(simulation.simulation_id, participant.country)
+            .then((data) => {
+                console.log("Concessions loaded.")
+                setConcessionsLoading(false);
+                setTeamConcessions(data ?? []);
+            })
+
+        // Load agreements
+        getAgreementsBySim(simulation.simulation_id)
+            .then((data) => {
+                console.log("Agreements loaded.")
+                setAgreementsLoading(false);
+                setAgreements(data ?? []);
+            })
+    }, [simulation, participant]);
 
     // Function to broadcast the updated agreements list to all clients in the game.
     const broadcastAgreements = useCallback((newAgreements: AgreementModel[]) => {
@@ -169,16 +197,27 @@ const JointDocument: React.FC<JointDocumentProps> = ({
 
     const totalPoints = agreements.reduce((acc, item) => acc + item.points, 0);
 
+    // Loading page
+    if (asksLoading || concessionsLoading || agreementsLoading) return (
+        <>
+            <p>Loading...</p>
+        </>
+    );
+
     return (
         <div className="joint-document">
-            <div className="joint-agreements-container">
+            
+            <Container className="joint-agreements-container">
                 <h2>Joint Agreements</h2>
                 <p style={totalPoints != 100 ? { color: "red" } : { color: "green" }}>Total Points: {totalPoints}</p>
+                <Button onClick={handleRefresh}>Refresh Data</Button>
                 <Table className="joint-agreements-list">
                     <thead>
                         <tr>
                             <th>Points</th>
                             <th>Description</th>
+                            <th>Country</th>
+                            <th>Type</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -190,22 +229,24 @@ const JointDocument: React.FC<JointDocumentProps> = ({
                                 index={index}
                                 description={item.description}
                                 points={item.points}
+                                country={CountryEnum[item.country]}
+                                type={item.type === AgreementTypeEnum.ASK ? "A" : "C"}
                                 onPointsChanged={handlePointsChange}
                                 onRemove={handleRemove}
                             />
                         ))}
                     </tbody>
                 </Table>
-            </div>
+            </Container>
 
-            <div className="pickers-container">
+            <Container className="pickers-container">
                 <div className="picker-container">
                     <TeamAsksPicker asks={teamAsks} onAddClicked={handleAddAsk} />
                 </div>
                 <div className="picker-container">
                     <TeamConcessionsPicker concessions={teamConcessions} onAddClicked={handleAddConcession} />
                 </div>
-            </div>
+            </Container>
         </div>
     );
 };

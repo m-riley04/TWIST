@@ -74,6 +74,7 @@ namespace TWISTServer.Hubs
         Task JointAgreementsUpdated(AgreementRecord[] agreements);
         Task ConnectionsPolled(ParticipantConnection[] connections);
         Task GroupsPolled(Dictionary<string, List<ParticipantConnection>> groups);
+        Task FinalTallyRevealed(int usaScore, int prcScore);
     }
 
     public class RoomHub : Hub<IRoomClient>
@@ -395,6 +396,34 @@ namespace TWISTServer.Hubs
             await Clients.Group(sim.Code).GroupsPolled(AllGroups.ToDictionary());
         }
 
+        public async Task RevealFinalTally(SimulationRecord sim)
+        {
+            // Calculate the score for each country
+            IEnumerable<AgreementRecord> usaAgreements = agreementAccessor.GetBySimulationAndCountry(sim.SimulationId, CountryEnum.USA);
+            IEnumerable<AgreementRecord> prcAgreements = agreementAccessor.GetBySimulationAndCountry(sim.SimulationId, CountryEnum.PRC);
+
+            // Calculate the score for each country
+            int usaScore = 0;
+            int prcScore = 0;
+
+            // Calculate USA score
+            foreach (AgreementRecord agreement in usaAgreements)
+            {
+                if (agreement.Type == AgreementType.ASK) usaScore += agreement.Points;
+                else usaScore -= agreement.Points;
+            }
+
+            // Calculate PRC score
+            foreach (AgreementRecord agreement in prcAgreements)
+            {
+                if (agreement.Type == AgreementType.ASK) prcScore += agreement.Points;
+                else prcScore -= agreement.Points;
+            }
+
+            // Signal
+            await Clients.Group(sim.Code).FinalTallyRevealed(usaScore, prcScore);
+        }
+
         public async Task ResetCountryAsks(int simulationId, CountryEnum country, string simulationCode)
         {
             // Delete all asks for a given country from a given simulation
@@ -433,7 +462,7 @@ namespace TWISTServer.Hubs
 
         public async Task ResetJointAgreements(int simulationId, string simulationCode)
         {
-            // Delete all asks for a given country from a given simulation
+            // Delete all joint agreements from a given simulation
             agreementAccessor.DeleteBySimulation(simulationId);
 
             // Send signal to all participants in simulation
