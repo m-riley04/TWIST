@@ -23,8 +23,15 @@ jobs:
         with:
           dotnet-version: '9.x'
 
+      - name: Create .env.production File
+        run: |
+            echo "VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}" > ./twist.client/.env.production
+            
       - name: Build with dotnet
         run: dotnet build --configuration Release
+
+      - name: Create certificate folder(s)
+        run: mkdir $env:APPDATA\\ASP.NET\\https
 
       - name: dotnet publish
         run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
