@@ -15,7 +15,7 @@ export interface JointDocumentItemProps {
 
 const JointDocumentItem: React.FC<JointDocumentItemProps> = ({
     id,
-    index,
+    //index,
     points,
     description,
     country,

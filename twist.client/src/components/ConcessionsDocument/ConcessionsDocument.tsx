@@ -2,7 +2,6 @@ import { Table } from "react-bootstrap";
 import ConcessionsDocumentItem from "./ConcessionsDocumentItem";
 import update from 'immutability-helper';
 import { useCallback, useState } from "react";
-import CountryEnum from "../../enums/CountryEnum";
 import SimulationModel from "../../models/SimulationModel";
 import { HubConnection } from "@microsoft/signalr";
 import ParticipantModel from "../../models/ParticipantModel";

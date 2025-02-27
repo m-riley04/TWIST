@@ -146,15 +146,6 @@ const ParticipantRoomPage = () => {
             .catch((error) => console.error(`Failed to join simulation: ${error}`));
     }
 
-    const handleReveal = () => {
-        connection?.invoke("RevealFinalTally")
-            .then(() => {
-                setFinalTallyVisible(true);
-                console.log("Revealed final tally")
-            })
-            .catch((error) => console.error(`Failed to reveal final tally: ${error}`));
-    }
-
     // Persistent participant info header (shown if signed in)
     const ParticipantInfoHeader = () => (
         <div className="participant-info" style={{ textAlign: "left" }}>

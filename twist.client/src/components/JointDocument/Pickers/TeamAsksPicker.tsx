@@ -16,7 +16,7 @@ const TeamAsksPicker: React.FC<TeamAsksPickerProps> = ({
 
     useEffect(() => {
         const _ = [...asks];
-        _.sort((a, b) => a.points - b.points);
+        _.sort((a, b) => b.points - a.points);
         setSortedAsks(_)
     }, [asks])
 
@@ -32,7 +32,7 @@ const TeamAsksPicker: React.FC<TeamAsksPickerProps> = ({
                     </tr>
                 </thead>
                 <tbody>
-                    {asks.map((item, index) => (
+                    {sortedAsks.map((item, index) => (
                         <TeamPickerItem
                             key={item.ask_id}
                             id={item.ask_id}

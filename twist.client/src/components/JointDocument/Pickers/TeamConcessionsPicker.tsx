@@ -1,6 +1,8 @@
 import { Table } from "react-bootstrap";
 import ConcessionModel from "../../../models/ConcessionModel";
 import TeamPickerItem from "./TeamPickerItem";
+import { useState } from "react";
+import { useEffect } from "react";
 
 interface TeamConcessionsPickerProps {
     concessions: ConcessionModel[];
@@ -11,6 +13,14 @@ const TeamConcessionsPicker: React.FC<TeamConcessionsPickerProps> = ({
     concessions,
     onAddClicked
 }) => {
+
+    const [sortedConcessions, setSortedConcessions] = useState<ConcessionModel[]>([]);
+
+    useEffect(() => {
+        const _ = [...concessions];
+        _.sort((a, b) => b.points - a.points);
+        setSortedConcessions(_)
+    }, [concessions])
 
     return (
         <>
@@ -24,7 +34,7 @@ const TeamConcessionsPicker: React.FC<TeamConcessionsPickerProps> = ({
                     </tr>
                 </thead>
                 <tbody>
-                    {concessions.map((item, index) => (
+                    {sortedConcessions.map((item, index) => (
                         <TeamPickerItem
                             key={item.concession_id}
                             id={item.concession_id}
