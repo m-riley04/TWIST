@@ -21,17 +21,10 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '3.1'
-
-      - name: Create .env.production File
-        run: |
-            echo "VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}" > ./twist.client/.env.production
+          dotnet-version: '9.x'
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
-
-      - name: Create certificate folder(s)
-        run: mkdir $env:APPDATA\\ASP.NET\\https
 
       - name: dotnet publish
         run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
@@ -61,9 +54,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_39FA08BBE75B4CD4926CE9EB0B0AB7DC }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_AC477C0D3ECF4661955DB04722DC349A }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B6E4DB6AE8EF4EC69F566833306F3006 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_90A133E6EAC04C27A8308C75F30E9598 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0EDB2A2074334158B27B017F859C08E9 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_A4E29C66EFDD48E1933D63F8C5A62A03 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
